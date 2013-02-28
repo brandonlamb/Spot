@@ -4,7 +4,7 @@ namespace Spot\Adapter;
 /**
  * Postgresql Database Adapter
  */
-class Pgsql extends AbstractAdapter
+class Pgsql extends AbstractAdapter implements AdapterInterface
 {
 	// Format for date columns, formatted for PHP's date() function
 	protected $formatDate = 'Y-m-d';
