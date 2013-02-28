@@ -10,140 +10,152 @@ use Spot\Entity;
  */
 abstract class RelationAbstract
 {
-    protected $_mapper;
-    protected $_sourceEntity;
-    protected $_entityName;
-    protected $_foreignKeys;
-    protected $_conditions;
-    protected $_relationData;
-    protected $_collection;
-    protected $_relationRowCount;
+	protected $mapper;
+	protected $sourceEntity;
+	protected $entityName;
+	protected $foreignKeys;
+	protected $conditions;
+	protected $relationData;
+	protected $collection;
+	protected $relationRowCount;
 
-    /**
-     * Constructor function
-     *
-     * @param object $mapper Spot_Mapper_Abstract object to query on for relationship data
-     * @param array $resultsIdentities Array of key values for given result set primary key
-     */
-    public function __construct(\Spot\Mapper $mapper, \Spot\Entity $entity, array $relationData)
-    {
-        $entityName = get_class($entity);
+	/**
+	 * Constructor function
+	 *
+	 * @param \Spot\Mapper $mapper Spot_Mapper_Abstract object to query on for relationship data
+	 * @param \Spot\Entity $entity
+	 * @param array $resultsIdentities Array of key values for given result set primary key
+	 * @throws \InvalidArgumentException
+	 */
+	public function __construct(\Spot\Mapper $mapper, \Spot\Entity $entity, array $relationData = array())
+	{
+		$entityName = get_class($entity);
 
-        $this->_mapper = $mapper;
-        $this->_sourceEntity = $entity;
-        $this->_entityName = isset($relationData['entity']) ? $relationData['entity'] : null;
-        $this->_conditions = isset($relationData['where']) ? $relationData['where'] : array();
-        $this->_relationData = $relationData;
+		$this->mapper = $mapper;
+		$this->sourceEntity = $entity;
+		$this->entityName = isset($relationData['entity']) ? $relationData['entity'] : null;
+		$this->conditions = isset($relationData['where']) ? $relationData['where'] : array();
+		$this->relationData = $relationData;
 
-        // Checks ...
-        if(null === $this->_entityName) {
-            throw new \InvalidArgumentException("Relation description key 'entity' must be set to an Entity class name.");
-        }
-    }
+		// Checks ...
+		if (null === $this->entityName) {
+			throw new \InvalidArgumentException("Relation description key 'entity' must be set to an Entity class name.");
+		}
+	}
 
-    /**
-     * Get source entity object
-     */
-    public function sourceEntity()
-    {
-        return $this->_sourceEntity;
-    }
+	/**
+	 * Get source entity object
+	 * @return \Spot\Entity
+	 */
+	public function sourceEntity()
+	{
+		return $this->sourceEntity;
+	}
 
-    /**
-     * Get related entity name
-     */
-    public function entityName()
-    {
-        return ($this->_entityName == ':self') ? get_class($this->sourceEntity()) : $this->_entityName;
-    }
+	/**
+	 * Get related entity name
+	 * @return string
+	 */
+	public function entityName()
+	{
+		return ($this->entityName === ':self') ? get_class($this->sourceEntity()) : $this->entityName;
+	}
 
-    /**
-     * Get mapper instance
-     */
-    public function mapper()
-    {
-        return $this->_mapper;
-    }
+	/**
+	 * Get mapper instance
+	 * @return \Spot\Mapper
+	 */
+	public function mapper()
+	{
+		return $this->mapper;
+	}
 
-    /**
-     * Get foreign key relations
-     *
-     * @return array
-     */
-    public function conditions()
-    {
-        return $this->resolveEntityConditions($this->sourceEntity(), $this->_conditions);
-    }
+	/**
+	 * Get foreign key relations
+	 *
+	 * @return array
+	 */
+	public function conditions()
+	{
+		return $this->resolveEntityConditions($this->sourceEntity(), $this->conditions);
+	}
 
-    /**
-     * Replace entity value placeholders on relation definitions
-     * Currently replaces ':entity.[col]' with the field value from the passed entity object
-     */
-    public function resolveEntityConditions(Entity $entity, array $conditions, $replace = ':entity.')
-    {
-        // Load foreign keys with data from current row
-        // Replace ':entity.[col]' with the field value from the passed entity object
-        if($conditions) {
-            foreach($conditions as $relationCol => $col) {
-                if(is_string($col) && false !== strpos($col, $replace)) {
-                    $col = str_replace($replace, '', $col);
-                    $conditions[$relationCol] = $entity->$col;
-                }
-            }
-        }
-        return $conditions;
-    }
+	/**
+	 * Replace entity value placeholders on relation definitions
+	 * Currently replaces ':entity.[col]' with the field value from the passed entity object
+	 * @param \Spot\Entity $entity
+	 * @param array $conditions
+	 * @param string $replace
+	 * @return array
+	 */
+	public function resolveEntityConditions(Entity $entity, array $conditions, $replace = ':entity.')
+	{
+		// Load foreign keys with data from current row
+		// Replace ':entity.[col]' with the field value from the passed entity object
+		if ($conditions) {
+			foreach ($conditions as $relationCol => $col) {
+				if (is_string($col) && false !== strpos($col, $replace)) {
+					$col = str_replace($replace, '', $col);
+					$conditions[$relationCol] = $entity->$col;
+				}
+			}
+		}
+		return $conditions;
+	}
 
-    /**
-     * Get sorting for relations
-     *
-     * @return array
-     */
-    public function relationOrder()
-    {
-        $sorting = isset($this->_relationData['order']) ? $this->_relationData['order'] : array();
-        return $sorting;
-    }
+	/**
+	 * Get sorting for relations
+	 *
+	 * @return array
+	 */
+	public function relationOrder()
+	{
+		$sorting = isset($this->relationData['order']) ? $this->relationData['order'] : array();
+		return $sorting;
+	}
 
-    /**
-     * Called automatically when attribute is printed
-     */
-    public function __toString()
-    {
-        // Load related records for current row
-        $res = $this->execute();
-        return ($res) ? "1" : "0";
-    }
+	/**
+	 * Called automatically when attribute is printed
+	 * @return string
+	 */
+	public function __toString()
+	{
+		// Load related records for current row
+		$res = $this->execute();
+		return ($res) ? '1' : '0';
+	}
 
+	/**
+	 * Fetch and cache returned query object from internal toQuery() method
+	 * @param \Spot\Entity\Collection
+	 */
+	public function execute()
+	{
+		if (!$this->collection) {
+			$this->collection = $this->toQuery();
+		}
+		return $this->collection;
+	}
 
-    /**
-     * Load query object with current relation data
-     *
-     * @return \Spot\Query
-     */
-    abstract protected function toQuery();
+	/**
+	 * Passthrough for missing methods on expected object result
+	 * @param string $func
+	 * @param array $args
+	 */
+	public function __call($func, $args)
+	{
+		$obj = $this->execute();
+		if (is_object($obj)) {
+			return call_user_func_array(array($obj, $func), $args);
+		} else {
+			return $obj;
+		}
+	}
 
-    /**
-     * Fetch and cache returned query object from internal toQuery() method
-     */
-    public function execute()
-    {
-        if(!$this->_collection) {
-            $this->_collection = $this->toQuery();
-        }
-        return $this->_collection;
-    }
-
-    /**
-     * Passthrough for missing methods on expected object result
-     */
-    public function __call($func, $args)
-    {
-        $obj = $this->execute();
-        if(is_object($obj)) {
-            return call_user_func_array(array($obj, $func), $args);
-        } else {
-            return $obj;
-        }
-    }
+	/**
+	 * Load query object with current relation data
+	 *
+	 * @return \Spot\Query
+	 */
+	abstract protected function toQuery();
 }

@@ -20,4 +20,15 @@ class Db2 extends AbstractAdapter implements AdapterInterface
 	{
 		return $field === '*' ? $field : '"' . $field . '"';
 	}
+
+	/**
+	 * DB2 doesnt support LIMIT or OFFSET
+	 * @{inherit}
+	 */
+	public function read(\Spot\Query $query, array $options = array())
+	{
+		$this->limit = null;
+		$this->offset = null;
+		return parent::read($query, $options);
+	}
 }
