@@ -31,7 +31,6 @@ interface QueryInterface
 	 * From
 	 *
 	 * @param string $table Name of the table to perform the SELECT query on
-	 * @todo Support multiple tables/joins
 	 */
 	public function from($table = null);
 
