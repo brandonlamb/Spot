@@ -116,7 +116,7 @@ class Config implements \Serializable
 	 * @return Model\Adapter\AdapterInterface
 	 * @throws Model\Exception
 	 */
-	public function getConnection($name = null)
+	public function connection($name = null)
 	{
 		null === $name && $name = $this->defaultConnection;
 
@@ -132,9 +132,9 @@ class Config implements \Serializable
 	 * Get default connection
 	 * @return Model\Adapter\AdapterInterface
 	 */
-	public function getDefaultConnection()
+	public function defaultConnection()
 	{
-		return $this->getConnection($this->defaultConnection);
+		return $this->connection($this->defaultConnection);
 	}
 
 	/**
