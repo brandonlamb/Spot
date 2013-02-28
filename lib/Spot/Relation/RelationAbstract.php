@@ -4,7 +4,7 @@ use Spot\Entity;
 
 /**
  * Abstract class for relations
- * 
+ *
  * @package Spot
  * @link http://spot.os.ly
  */
@@ -18,8 +18,7 @@ abstract class RelationAbstract
     protected $_relationData;
     protected $_collection;
     protected $_relationRowCount;
-    
-    
+
     /**
      * Constructor function
      *
@@ -41,8 +40,7 @@ abstract class RelationAbstract
             throw new \InvalidArgumentException("Relation description key 'entity' must be set to an Entity class name.");
         }
     }
-    
-    
+
     /**
      * Get source entity object
      */
@@ -51,7 +49,6 @@ abstract class RelationAbstract
         return $this->_sourceEntity;
     }
 
-
     /**
      * Get related entity name
      */
@@ -59,8 +56,7 @@ abstract class RelationAbstract
     {
         return ($this->_entityName == ':self') ? get_class($this->sourceEntity()) : $this->_entityName;
     }
-    
-    
+
     /**
      * Get mapper instance
      */
@@ -68,8 +64,7 @@ abstract class RelationAbstract
     {
         return $this->_mapper;
     }
-    
-    
+
     /**
      * Get foreign key relations
      *
@@ -79,7 +74,6 @@ abstract class RelationAbstract
     {
         return $this->resolveEntityConditions($this->sourceEntity(), $this->_conditions);
     }
-
 
     /**
      * Replace entity value placeholders on relation definitions
@@ -99,8 +93,7 @@ abstract class RelationAbstract
         }
         return $conditions;
     }
-    
-    
+
     /**
      * Get sorting for relations
      *
@@ -111,8 +104,7 @@ abstract class RelationAbstract
         $sorting = isset($this->_relationData['order']) ? $this->_relationData['order'] : array();
         return $sorting;
     }
-    
-    
+
     /**
      * Called automatically when attribute is printed
      */
@@ -122,17 +114,15 @@ abstract class RelationAbstract
         $res = $this->execute();
         return ($res) ? "1" : "0";
     }
-    
-    
-    
+
+
     /**
      * Load query object with current relation data
      *
      * @return \Spot\Query
      */
     abstract protected function toQuery();
-    
-    
+
     /**
      * Fetch and cache returned query object from internal toQuery() method
      */
@@ -143,7 +133,6 @@ abstract class RelationAbstract
         }
         return $this->_collection;
     }
-
 
     /**
      * Passthrough for missing methods on expected object result

@@ -105,7 +105,7 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
 
     /**
      * Execute a CREATE TABLE command
-     * 
+     *
      * @param String $table Table name
      * @param Array $fields Fields and their attributes as defined in the mapper
      * @param Array $options Options that may affect migrations or how tables are setup
@@ -204,7 +204,7 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
 
 
     /**
-     * Prepare an SQL statement 
+     * Prepare an SQL statement
      */
     public function prepare($sql)
     {
@@ -402,7 +402,7 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
 
         return $result;
     }
-	
+
     /**
      * Update entity
      */
@@ -877,5 +877,50 @@ abstract class PDO_Abstract extends AdapterAbstract implements AdapterInterface
             $stmt->bindValue($field, $value);
         }
         return true;
+    }
+
+
+
+
+
+    /**
+     * Add a table join (INNER, LEFT OUTER, RIGHT OUTER, FULL OUTER, CROSS)
+     * array('user.id', '=', 'profile.user_id') will compile to ON `user`.`id` = `profile`.`user_id`
+     *
+     * @param string $table, should be the name of the table to join to
+     * @param string $constraint, may be either a string or an array with three elements. If it
+     * is a string, it will be compiled into the query as-is, with no escaping. The
+     * recommended way to supply the constraint is as an array with three elements:
+     * array(column1, operator, column2)
+     * @param string $type, will be prepended to JOIN
+     * @param  string $alias, table alias for the joined table
+     * @return Query
+     */
+    public function join($table, $constraint, $type = 'INNER', $alias = null)
+    {
+        $type = strtoupper($type);
+        switch ($type) {
+            case 'INNER':
+            case 'LEFT OUTER':
+            case 'RIGHT OUTER':
+            case 'FULL OUTER':
+            case 'CROSS':
+                break;
+            default:
+                $type = 'INNER';
+        }
+
+        // Add table alias if present
+        $table = null === $alias ? trim($table) : trim($table) . ' ' . trim($alias);
+
+        // Build the constraint
+        if (is_string($constraint)) {
+            $this->join[] = trim($type) . ' JOIN' . ' ' . $table . ' ON (' . trim($constraint) . ')';
+        } elseif (is_array($constraint) && count($constraint) == 3) {
+            $this->join[] = trim($type) . ' JOIN' . ' ' . $table
+                . ' ON (' . trim($constraint[0]) . ' ' . trim($constraint[1]) . ' ' . trim($constraint[2]) . ')';
+        }
+
+        return $this;
     }
 }
