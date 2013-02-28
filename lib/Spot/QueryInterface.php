@@ -47,7 +47,7 @@ interface QueryInterface
 	 * @param string $alias, table alias for the joined table
 	 * @return Query
 	 */
-	public function join($table, $constraint, $type = 'INNER')
+	public function join($table, $constraint, $type = 'INNER');
 
 	/**
 	 * WHERE conditions
