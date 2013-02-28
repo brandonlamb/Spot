@@ -119,13 +119,7 @@ class Config implements \Serializable
 	public function connection($name = null)
 	{
 		null === $name && $name = $this->defaultConnection;
-
-		// Connection name must be unique
-		if (!isset($this->connections[$name])) {
-			throw new Exception('Connection not defined');
-		}
-
-		return $this->connections[$name];
+		return (isset($this->connections[$name])) ? $this->connections[$name] : false;
 	}
 
 	/**
