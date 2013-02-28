@@ -576,7 +576,7 @@ abstract class AbstractAdapter
 	{
 		if (count($conditions) === 0) { return; }
 
-		$sqlStatement = '(');
+		$sqlStatement = '(';
 		$defaultColOperators = array(0 => '', 1 => '=');
 		$loopOnce = false;
 
