@@ -189,7 +189,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 
 		// Add join array
 		$this->joins[] = array(
-			trim($table)
+			trim($table),
 			$constraint,
 			$type,
 		);
