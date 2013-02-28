@@ -69,7 +69,7 @@ class Mysql extends PDO_Abstract implements AdapterInterface
 		}
 		return $this->_engine;
 	}
-	
+
 	/**
 	 * Escape/quote direct user input
 	 *
@@ -114,16 +114,16 @@ class Mysql extends PDO_Abstract implements AdapterInterface
 
 
 	/**
-     * Ensure migration options are full and have all keys required
-     */
-    public function formatMigrateOptions(array $options)
-    {
-        return $options + array(
-            'engine' => $this->_engine,
-            'charset' => $this->_charset,
-            'collate' => $this->_collate,
-        );
-    }
+	 * Ensure migration options are full and have all keys required
+	 */
+	public function formatMigrateOptions(array $options)
+	{
+		return $options + array(
+			'engine' => $this->_engine,
+			'charset' => $this->_charset,
+			'collate' => $this->_collate,
+		);
+	}
 
 
 	/**
@@ -141,7 +141,7 @@ class Mysql extends PDO_Abstract implements AdapterInterface
 		}
 		//Ensure this class will choose adapter type
 		unset($fieldInfo['adapter_type']);
-		
+
 		$fieldInfo = array_merge($this->_fieldTypeMap[$fieldInfo['type']],$fieldInfo);
 
 		$syntax = "`" . $fieldName . "` " . $fieldInfo['adapter_type'];
@@ -223,7 +223,7 @@ class Mysql extends PDO_Abstract implements AdapterInterface
 				$usedKeyNames[] = $fieldKeyName;
 			}
 			if($fieldInfo['index']) {
-        $fieldKeyName = $fieldName;
+		$fieldKeyName = $fieldName;
 				if(is_string($fieldInfo['index'])) {
 					// Named group
 					$fieldKeyName = $fieldInfo['index'];
@@ -242,7 +242,7 @@ class Mysql extends PDO_Abstract implements AdapterInterface
 			// Ensure table type is MyISAM if FULLTEXT columns have been specified
 			if('myisam' !== strtolower($options['engine'])) {
 				$options['engine'] = 'MyISAM';
-			} 
+			}
 			$syntax .= "\n, FULLTEXT(`" . implode('`, `', $fulltextFields) . "`)";
 		}
 
@@ -304,7 +304,7 @@ class Mysql extends PDO_Abstract implements AdapterInterface
 
 		// Columns
 		$syntax .= implode(",\n", $columnsSyntax);
-		
+
 		// Keys...
 		$ki = 0;
 		$tableKeys = array(
@@ -351,10 +351,10 @@ class Mysql extends PDO_Abstract implements AdapterInterface
 			// Ensure table type is MyISAM if FULLTEXT columns have been specified
 			if('myisam' !== strtolower($options['engine'])) {
 				$options['engine'] = 'MyISAM';
-			} 
+			}
 			$syntax .= "\n, FULLTEXT(`" . implode('`, `', $fulltextFields) . "`)";
 		}
-		
+
 		// PRIMARY
 		if($tableKeys['primary']) {
 			$syntax .= "\n, PRIMARY KEY(`" . implode('`, `', $tableKeys['primary']) . "`)";

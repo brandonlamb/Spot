@@ -1,5 +1,5 @@
 <?php
-namespace Spot;
+namespace Spot\Exception\Datasource;
 
 /**
  * Datasource does not exist
@@ -7,4 +7,4 @@ namespace Spot;
  * @package Spot
  * @link http://spot.os.ly
  */
-class Exception_Datasource_Missing extends \Spot\Exception {}
+class Missing extends \Spot\Exception {}
