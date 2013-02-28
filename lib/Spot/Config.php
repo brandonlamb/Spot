@@ -14,7 +14,7 @@ class Config implements \Serializable
 	protected $connections = array();
 
 	/** @var \Model\Config */
-	protected static$instance;
+	protected static $instance;
 
 	/** @var array */
 	protected static $typeHandlers = array();
