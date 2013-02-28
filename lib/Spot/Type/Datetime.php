@@ -5,7 +5,7 @@ use Spot\Entity;
 class Datetime implements TypeInterface
 {
 	/**
-	 * Cast given value to type required
+	 * @{inherit}
 	 */
 	public static function cast($value)
 	{
@@ -23,7 +23,7 @@ class Datetime implements TypeInterface
 	}
 
 	/**
-	 * Geting value off Entity object
+	 * @{inherit}
 	 */
 	public static function get(Entity $entity, $value)
 	{
@@ -31,7 +31,7 @@ class Datetime implements TypeInterface
 	}
 
 	/**
-	 * Setting value on Entity object
+	 * @{inherit}
 	 */
 	public static function set(Entity $entity, $value)
 	{

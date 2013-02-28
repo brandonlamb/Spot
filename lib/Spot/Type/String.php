@@ -5,16 +5,15 @@ use Spot\Entity;
 class String implements TypeInterface
 {
 	/**
-	 * Cast given value to type required
+	 * @{inherit}
 	 */
 	public static function cast($value)
 	{
 		return (null !== $value) ? (string) $value : $value;
-
 	}
 
 	/**
-	 * Geting value off Entity object
+	 * @{inherit}
 	 */
 	public static function get(Entity $entity, $value)
 	{
@@ -22,7 +21,7 @@ class String implements TypeInterface
 	}
 
 	/**
-	 * Setting value on Entity object
+	 * @{inherit}
 	 */
 	public static function set(Entity $entity, $value)
 	{
