@@ -13,7 +13,7 @@ class Config implements \Serializable
 	/** @var array */
 	protected $connections = array();
 
-	/** @var \Model\Config */
+	/** @var \\Spot\Config */
 	protected static $instance;
 
 	/** @var array */
@@ -22,25 +22,25 @@ class Config implements \Serializable
 	protected function __construct()
 	{
 		static::$typeHandlers = array(
-			'string' => '\\Model\\Type\\String',
-			'text' => '\\Model\\Type\\String',
+			'string' => '\\Spot\\Type\\String',
+			'text' => '\\Spot\\Type\\String',
 
-			'int' => '\\Model\\Type\\Integer',
-			'integer' => '\\Model\\Type\\Integer',
+			'int' => '\\Spot\\Type\\Integer',
+			'integer' => '\\Spot\\Type\\Integer',
 
-			'float' => '\\Model\\Type\\Float',
-			'double' => '\\Model\\Type\\Float',
-			'decimal' => '\\Model\\Type\\Float',
+			'float' => '\\Spot\\Type\\Float',
+			'double' => '\\Spot\\Type\\Float',
+			'decimal' => '\\Spot\\Type\\Float',
 
-			'bool' => '\\Model\\Type\\Boolean',
-			'boolean' => '\\Model\\Type\\Boolean',
+			'bool' => '\\Spot\\Type\\Boolean',
+			'boolean' => '\\Spot\\Type\\Boolean',
 
-			'datetime' => '\\Model\\Type\\Datetime',
-			'date' => '\\Model\\Type\\Datetime',
-			'timestamp' => '\\Model\\Type\\Integer',
-			'year' => '\\Model\\Type\\Integer',
-			'month' => '\\Model\\Type\\Integer',
-			'day' => '\\Model\\Type\\Integer',
+			'datetime' => '\\Spot\\Type\\Datetime',
+			'date' => '\\Spot\\Type\\Datetime',
+			'timestamp' => '\\Spot\\Type\\Integer',
+			'year' => '\\Spot\\Type\\Integer',
+			'month' => '\\Spot\\Type\\Integer',
+			'day' => '\\Spot\\Type\\Integer',
 		);
 	}
 
@@ -90,8 +90,8 @@ class Config implements \Serializable
 	 * @param PDO $conn PDO connection, managed outside
 	 * @param array $options Array of key => value options for adapter
 	 * @param boolean $defaut Use this connection as the default? The first connection added is automatically set as the default, even if this flag is false.
-	 * @return Model\Adapter\AdapterInterface
-	 * @throws Model\Exception
+	 * @return \Spot\Adapter\AdapterInterface
+	 * @throws \Spot\Exception
 	 */
 	public function addConnection($name, AdapterInterface $adapter, $default = false)
 	{
@@ -113,8 +113,8 @@ class Config implements \Serializable
 	/**
 	 * Get connection by name
 	 * @param string $name Unique name of the connection to be returned
-	 * @return Model\Adapter\AdapterInterface
-	 * @throws Model\Exception
+	 * @return \Spot\Adapter\AdapterInterface
+	 * @throws \Spot\Exception
 	 */
 	public function connection($name = null)
 	{
@@ -124,7 +124,7 @@ class Config implements \Serializable
 
 	/**
 	 * Get default connection
-	 * @return Model\Adapter\AdapterInterface
+	 * @return \Spot\Adapter\AdapterInterface
 	 */
 	public function defaultConnection()
 	{
