@@ -1,59 +1,106 @@
 <?php
 namespace Spot;
+use Spot\Adapter\AdapterInterface;
 
 /**
  * @package Spot
  */
 class Config implements \Serializable
 {
+	/** @var string */
 	protected $defaultConnection;
+
+	/** @var array */
 	protected $connections = array();
+
+	/** @var \Model\Config */
+	protected static$instance;
+
+	/** @var array */
 	protected static $typeHandlers = array();
 
-	public function __construct()
+	protected function __construct()
 	{
-		// Setup default type hanlders
-		self::typeHandler('string', '\Spot\Type\String');
-		self::typeHandler('text', '\Spot\Type\String');
+		static::$typeHandlers = array(
+			'string' => '\\Model\\Type\\String',
+			'text' => '\\Model\\Type\\String',
 
-		self::typeHandler('int', '\Spot\Type\Integer');
-		self::typeHandler('integer', '\Spot\Type\Integer');
+			'int' => '\\Model\\Type\\Integer',
+			'integer' => '\\Model\\Type\\Integer',
 
-		self::typeHandler('float', '\Spot\Type\Float');
-		self::typeHandler('double', '\Spot\Type\Float');
-		self::typeHandler('decimal', '\Spot\Type\Float');
+			'float' => '\\Model\\Type\\Float',
+			'double' => '\\Model\\Type\\Float',
+			'decimal' => '\\Model\\Type\\Float',
 
-		self::typeHandler('bool', '\Spot\Type\Boolean');
-		self::typeHandler('boolean', '\Spot\Type\Boolean');
+			'bool' => '\\Model\\Type\\Boolean',
+			'boolean' => '\\Model\\Type\\Boolean',
 
-		self::typeHandler('datetime', '\Spot\Type\Datetime');
-		self::typeHandler('date', '\Spot\Type\Datetime');
-		self::typeHandler('timestamp', '\Spot\Type\Integer');
-		self::typeHandler('year', '\Spot\Type\Integer');
-		self::typeHandler('month', '\Spot\Type\Integer');
-		self::typeHandler('day', '\Spot\Type\Integer');
+			'datetime' => '\\Model\\Type\\Datetime',
+			'date' => '\\Model\\Type\\Datetime',
+			'timestamp' => '\\Model\\Type\\Integer',
+			'year' => '\\Model\\Type\\Integer',
+			'month' => '\\Model\\Type\\Integer',
+			'day' => '\\Model\\Type\\Integer',
+		);
+	}
+
+	/**
+	 * Dont allow cloning
+	 */
+	protected function __clone()
+	{
+	}
+
+	/**
+	 * Singleton method
+	 * @return \Spot\Config
+	 */
+	public static function getInstance()
+	{
+		if (!isset(static::$instance)) {
+			static::$instance = new static;
+		}
+		return static::$instance;
+	}
+
+	/**
+	 * Set type handler class by type
+	 * @param string $type Field type (i.e. 'string' or 'int', etc.)
+	 * @param string $class
+	 */
+	public static function setTypeHandler($type, $class)
+	{
+		static::$typeHandlers[(string) $type] = (string) $class;
+	}
+
+	/**
+	 * Get type handler class by type
+	 * @param string $type
+	 * @return string
+	 */
+	public static function getTypeHandler($type)
+	{
+		if (!isset(static::$typeHandlers[$type])) {
+			throw new \InvalidArgumentException("Type '$type' not registered. Register the type class handler with \Spot\Config::typeHanlder('$type', '\Namespaced\Path\Class').");
+		}
+		return static::$typeHandlers[$type];
 	}
 
 	/**
 	 * Add database connection
-	 *
 	 * @param string $name Unique name for the connection
-	 * @param string $dsn DSN string for this connection
+	 * @param PDO $conn PDO connection, managed outside
 	 * @param array $options Array of key => value options for adapter
 	 * @param boolean $defaut Use this connection as the default? The first connection added is automatically set as the default, even if this flag is false.
-	 * @return Spot_Adapter_Interface Spot adapter instance
-	 * @throws Spot_Exception
+	 * @return Model\Adapter\AdapterInterface
+	 * @throws Model\Exception
 	 */
-	public function addConnection($name, $dsn, array $options = array(), $default = false)
+	public function addConnection($name, AdapterInterface $adapter, $default = false)
 	{
 		// Connection name must be unique
 		if (isset($this->connections[$name])) {
 			throw new Exception("Connection for '" . $name . "' already exists. Connection name must be unique.");
 		}
-
-		$dsnp = \Spot\Adapter\AdapterAbstract::parseDSN($dsn);
-		$adapterClass = "\\Spot\\Adapter\\" . ucfirst($dsnp['adapter']);
-		$adapter = new $adapterClass($dsn, $options);
 
 		// Set as default connection?
 		if (true === $default || null === $this->defaultConnection) {
@@ -67,57 +114,44 @@ class Config implements \Serializable
 
 	/**
 	 * Get connection by name
-	 *
 	 * @param string $name Unique name of the connection to be returned
-	 * @return Spot_Adapter_Interface Spot adapter instance
-	 * @throws Spot_Exception
+	 * @return Model\Adapter\AdapterInterface
+	 * @throws Model\Exception
 	 */
-	public function connection($name = null)
+	public function getConnection($name = null)
 	{
-		if (null === $name) {
-			return $this->defaultConnection();
-		}
+		null === $name && $name = $this->defaultConnection;
 
 		// Connection name must be unique
 		if (!isset($this->connections[$name])) {
-			return false;
+			throw new Exception('Connection not defined');
 		}
 
 		return $this->connections[$name];
 	}
 
 	/**
-	 * Get type handler class by type
-	 *
-	 * @param string $type Field type (i.e. 'string' or 'int', etc.)
-	 * @return Spot_Adapter_Interface Spot adapter instance
+	 * Get default connection
+	 * @return Model\Adapter\AdapterInterface
 	 */
-	public static function typeHandler($type, $class = null)
+	public function getDefaultConnection()
 	{
-		if (null === $class) {
-			if (!isset(self::$typeHandlers[$type])) {
-				throw new \InvalidArgumentException("Type '$type' not registered. Register the type class handler with \Spot\Config::typeHanlder('$type', '\Namespaced\Path\Class').");
-			}
-			return self::$typeHandlers[$type];
-		}
-
-		if (!class_exists($class)) {
-			throw new \InvalidArgumentException("Second parameter must be valid className with full namespace. Check the className and ensure the class is loaded before registering it as a type handler.");
-		}
-
-		return self::$typeHandlers[$type] = $class;
+		return $this->getConnection($this->defaultConnection);
 	}
 
 	/**
-	 * Get default connection
-	 *
-	 * @return Spot_Adapter_Interface Spot adapter instance
-	 * @throws Spot_Exception
+	 * Prevent adapter connections from being serialized
+	 * @return string
 	 */
-	public function defaultConnection()
+	public function serialize()
 	{
-		return $this->connections[$this->defaultConnection];
+		return serialize(array());
 	}
+
+	/**
+	 * {@inherit}
+	 */
+	public function unserialize($serialized) {}
 
 	/**
 	 * Class loader
@@ -136,17 +170,6 @@ class Config implements \Serializable
 
 		return $loaded;
 	}
-
-	/**
-	 * Default serialization behavior is to not attempt to serialize stored
-	 * adapter connections at all (thanks @TheSavior re: Issue #7)
-	 */
-	public function serialize()
-	{
-		return serialize(array());
-	}
-
-	public function unserialize($serialized) {}
 }
 
 /**
