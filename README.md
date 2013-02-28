@@ -104,6 +104,33 @@ class Post extends \Spot\Entity
 }
 ```
 
+Another entity example of a model class inside an application's Model namespace.
+This is the simplest definition, only defining the model's fields.
+
+```
+<?php
+namespace Blog\Model;
+use \Spot\Entity;
+
+class Game extends Entity
+{
+	protected static $datasource = 'game';
+
+	public static function fields()
+	{
+		return array(
+			'id' => array('type' => 'int', 'primary' => true, 'serial' => true),
+			'status_id' => array('type' => 'int', 'default' => 0, 'index' => true),
+			'date_created' => array('type' => 'datetime', 'default' => date('Y-m-d h:m:i'), 'required' => true),
+			'image_count' => array('type' => 'int', 'default' => 0, 'index' => true),
+			'name' => array('type' => 'string', 'required' => true),
+			'slug' => array('type' => 'string', 'required' => true),
+		);
+	}
+}
+
+```
+
 ### Built-in Field Types
 
 All the basic field types are built-in with all the default
