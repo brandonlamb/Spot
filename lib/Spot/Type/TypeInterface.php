@@ -20,7 +20,7 @@ interface TypeInterface
 	public static function get(Entity $entity, $value);
 
 	/**
-	 * Get value
+	 * Set value
 	 * @param \Spot\Entity $entity
 	 * @param mixed $value
 	 * @return mixed
