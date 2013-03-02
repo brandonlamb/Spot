@@ -314,7 +314,7 @@ class Mapper
 	 * @param string $entityName Name of the entity class
 	 * @param string $sql Raw query or SQL to run against the datastore
 	 * @param array Optional $conditions Array of binds in column => value pairs to use for prepared statement
-	 * @return \Spot\Entity\Collection|bool
+	 * @return \Spot\Entity\CollectionInterface|bool
 	 */
 	public function query($entityName, $sql, array $params = array())
 	{

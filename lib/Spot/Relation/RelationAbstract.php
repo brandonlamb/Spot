@@ -127,7 +127,7 @@ abstract class RelationAbstract
 
 	/**
 	 * Fetch and cache returned query object from internal toQuery() method
-	 * @param \Spot\Entity\Collection
+	 * @param \Spot\Entity\CollectionInterface
 	 */
 	public function execute()
 	{

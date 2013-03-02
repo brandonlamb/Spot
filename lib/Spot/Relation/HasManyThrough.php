@@ -87,13 +87,14 @@ class HasManyThrough extends RelationAbstract implements \Countable, \IteratorAg
 	 * SPL IteratorAggregate function
 	 * Called automatically when attribute is used in a 'foreach' loop
 	 *
-	 * @return \Spot\Entity\Collection
+	 * @return \Spot\Entity\CollectionInterface
 	 */
 	public function getIterator()
 	{
 		// Load related records for current row
 		$data = $this->execute();
-		return $data ? $data : new \Spot\Entity\Collection();
+		$collectionClass = $this->mapper()->collectionClass();
+		return $data ? $data : new $collectionClass();
 	}
 
 	// SPL - ArrayAccess functions
@@ -101,13 +102,13 @@ class HasManyThrough extends RelationAbstract implements \Countable, \IteratorAg
 	public function offsetExists($key)
 	{
 		$this->execute();
-		return isset($this->_collection[$key]);
+		return isset($this->collection[$key]);
 	}
 
 	public function offsetGet($key)
 	{
 		$this->execute();
-		return $this->_collection[$key];
+		return $this->collection[$key];
 	}
 
 	public function offsetSet($key, $value)
@@ -115,15 +116,15 @@ class HasManyThrough extends RelationAbstract implements \Countable, \IteratorAg
 		$this->execute();
 
 		if ($key === null) {
-			return $this->_collection[] = $value;
+			return $this->collection[] = $value;
 		} else {
-			return $this->_collection[$key] = $value;
+			return $this->collection[$key] = $value;
 		}
 	}
 
 	public function offsetUnset($key)
 	{
 		$this->execute();
-		unset($this->_collection[$key]);
+		unset($this->collection[$key]);
 	}
 }

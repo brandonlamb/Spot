@@ -47,7 +47,7 @@ class HasMany extends RelationAbstract implements \Countable, \IteratorAggregate
 	 * SPL IteratorAggregate function
 	 * Called automatically when attribute is used in a 'foreach' loop
 	 *
-	 * @return \Spot\Entity\Collection
+	 * @return \Spot\Entity\CollectionInterface
 	 */
 	public function getIterator()
 	{
@@ -61,13 +61,13 @@ class HasMany extends RelationAbstract implements \Countable, \IteratorAggregate
 	public function offsetExists($key)
 	{
 		$this->execute();
-		return isset($this->_collection[$key]);
+		return isset($this->collection[$key]);
 	}
 
 	public function offsetGet($key)
 	{
 		$this->execute();
-		return $this->_collection[$key];
+		return $this->collection[$key];
 	}
 
 	public function offsetSet($key, $value)
@@ -75,15 +75,15 @@ class HasMany extends RelationAbstract implements \Countable, \IteratorAggregate
 		$this->execute();
 
 		if ($key === null) {
-			return $this->_collection[] = $value;
+			return $this->collection[] = $value;
 		} else {
-			return $this->_collection[$key] = $value;
+			return $this->collection[$key] = $value;
 		}
 	}
 
 	public function offsetUnset($key)
 	{
 		$this->execute();
-		unset($this->_collection[$key]);
+		unset($this->collection[$key]);
 	}
 }
