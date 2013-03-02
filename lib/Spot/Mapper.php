@@ -12,9 +12,6 @@ class Mapper
 	/** @var \Spot\Config */
 	protected $config;
 
-	/** @var \Spot\Entity\Manager */
-	protected static $entityManager;
-
 	/** @var string, Class Names for required classes - Here so they can be easily overridden */
 	protected $collectionClass = '\\Spot\\Entity\\Collection';
 	protected $queryClass = '\\Spot\\Query';
@@ -22,6 +19,9 @@ class Mapper
 
 	/** @vary array, Array of error messages and types */
 	protected $errors = array();
+
+	/** @var \Spot\Entity\Manager */
+	protected static $entityManager;
 
 	/**
 	 * Constructor Method
@@ -198,22 +198,23 @@ class Mapper
 	 * Create collection
 	 *
 	 * @param string $entityName
-	 * @param \PDOStatement
+	 * @param \PDOStatement $stmt
+	 * @return \Spot\Entity\CollectionInterface
 	 */
-	public function collection($entityName, \PDOStatement $cursor)
+	public function collection($entityName, \PDOStatement $stmt)
 	{
 		$results = array();
 		$resultsIdentities = array();
 
 		// Ensure PDO only gives key => value pairs, not index-based fields as well
 		// Raw PDOStatement objects generally only come from running raw SQL queries or other custom stuff
-		if ($cursor instanceof \PDOStatement) {
-			$cursor->setFetchMode(\PDO::FETCH_ASSOC);
+		if ($stmt instanceof \PDOStatement) {
+			$stmt->setFetchMode(\PDO::FETCH_ASSOC);
 		}
 
 		// Fetch all results into new entity class
 		// @todo Move this to collection class so entities will be lazy-loaded by Collection iteration
-		foreach ($cursor as $data) {
+		foreach ($stmt as $data) {
 			// Entity with data set
 			$entity = new $entityName($data);
 
