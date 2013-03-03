@@ -40,32 +40,38 @@ class Mapper
 	}
 
 	/**
-	 * Get config class mapper was instantiated with
+	 * Get config class mapper was instantiated with. Optionally set config
 	 *
+	 * @param \Spot\Config $config
 	 * @return \Spot\Config
 	 */
-	public function config()
+	public function config(Config $config = null)
 	{
+		$config instanceof Config && $this->config = $config;
 		return $this->config;
 	}
 
 	/**
-	 * Get query class name to use
+	 * Get query class name to use. Optionally set the class name
 	 *
+	 * @param string $queryClass
 	 * @return string
 	 */
-	public function queryClass()
+	public function queryClass($queryClass = null)
 	{
+		null !== $queryClass && $this->queryClass = (string) $queryClass;
 		return $this->queryClass;
 	}
 
 	/**
-	 * Get collection class name to use
+	 * Get collection class name to use. Optionally set the class name
 	 *
+	 * @param string $collectionClass
 	 * @return string
 	 */
-	public function collectionClass()
+	public function collectionClass($collectionClass = null)
 	{
+		null !== $collectionClass && $this->collectionClass = (string) $collectionClass;
 		return $this->collectionClass;
 	}
 
@@ -76,10 +82,10 @@ class Mapper
 	 */
 	public function entityManager()
 	{
-		if (null === self::$entityManager) {
-			self::$entityManager = new Entity\Manager();
+		if (null === static::$entityManager) {
+			static::$entityManager = new Entity\Manager();
 		}
-		return self::$entityManager;
+		return static::$entityManager;
 	}
 
 	/**
