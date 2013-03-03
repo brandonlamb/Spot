@@ -576,11 +576,14 @@ abstract class AbstractAdapter
 	 */
 	public function statementConditions(array $conditions = array(), $ci = 0)
 	{
+echo __METHOD__ . "\n";
 		if (count($conditions) === 0) { return; }
 
 		$sqlStatement = '(';
-		$defaultColOperators = array(0 => '', 1 => '=');
 		$loopOnce = false;
+
+		// @todo - what is this
+		$defaultColOperators = array(0 => '', 1 => '=');
 
 		foreach ($conditions as $condition) {
 			if (is_array($condition) && isset($condition['conditions'])) {
@@ -594,12 +597,15 @@ abstract class AbstractAdapter
 			foreach ($subConditions as $column => $value) {
 				$whereClause = '';
 
+#echo "COLUMN: $column\nVALUE: $value\n\n";
+
+
 				// Column name with comparison operator
 				$colData = explode(' ', $column);
 				$operator = isset($colData[1]) ? $colData[1] : '=';
 				if (count($colData) > 2) {
 					$operator = array_pop($colData);
-					$colData = array( implode(' ', $colData), $operator);
+					$colData = array(implode(' ', $colData), $operator);
 				}
 				$col = $colData[0];
 
@@ -707,7 +713,7 @@ abstract class AbstractAdapter
 				// to maintain compatibility with statementConditions()
 				$ci++;
 			}
-			if ( $sqlStatement != '(' ) {
+			if ($sqlStatement != '(') {
 				$sqlStatement .= ' ' . (isset($condition['setType']) ? $condition['setType'] : 'AND') . ' (';
 			}
 			$sqlStatement .= implode(' ' . (isset($condition['type']) ? $condition['type'] : 'AND') . ' ', $sqlWhere );
@@ -719,7 +725,7 @@ abstract class AbstractAdapter
 		if (0 == $ci) {
 			$sqlStatement = '';
 		}
-
+echo "\n\nsqlStatement: \n$sqlStatement\n\n\n\n-----------\n\n\n";
 		return $sqlStatement;
 	}
 
