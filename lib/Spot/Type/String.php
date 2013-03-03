@@ -2,14 +2,14 @@
 namespace Spot\Type;
 use Spot\Entity;
 
-class Integer implements TypeInterface
+class String implements TypeInterface
 {
 	/**
 	 * {@inherit}
 	 */
 	public static function cast($value)
 	{
-		return (strlen($value)) ? (int) $value : null;
+		return (null !== $value) ? (string) $value : $value;
 	}
 
 	/**
