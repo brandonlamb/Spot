@@ -576,7 +576,6 @@ abstract class AbstractAdapter
 	 */
 	public function statementConditions(array $conditions = array(), $ci = 0)
 	{
-echo __METHOD__ . "\n";
 		if (count($conditions) === 0) { return; }
 
 		$sqlStatement = '(';
@@ -596,9 +595,6 @@ echo __METHOD__ . "\n";
 			$sqlWhere = array();
 			foreach ($subConditions as $column => $value) {
 				$whereClause = '';
-
-#echo "COLUMN: $column\nVALUE: $value\n\n";
-
 
 				// Column name with comparison operator
 				$colData = explode(' ', $column);
@@ -725,7 +721,7 @@ echo __METHOD__ . "\n";
 		if (0 == $ci) {
 			$sqlStatement = '';
 		}
-echo "\n\nsqlStatement: \n$sqlStatement\n\n\n\n-----------\n\n\n";
+
 		return $sqlStatement;
 	}
 
