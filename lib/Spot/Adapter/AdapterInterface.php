@@ -10,9 +10,9 @@ namespace Spot\Adapter;
 interface AdapterInterface
 {
 	/**
-	 * @param PDO $connection pre-existing raw connection object to be used
+	 * @param PDO|PdoInterface $connection pre-existing raw connection object to be used
 	 */
-	public function __construct(\PDO $connection);
+	public function __construct($connection);
 
 	/**
 	 * Get database connection

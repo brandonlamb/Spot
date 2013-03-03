@@ -25,10 +25,16 @@ abstract class AbstractAdapter
 
 	/**
 	 * @param PDO $connection DSN string or pre-existing Mongo object
+	 * @throws \InvalidArgumentException
 	 */
-	public function __construct(\PDO $connection)
+	public function __construct($connection)
 	{
-		$this->connection = $connection;
+		if ($connection instanceof \PDO || $connection instanceof PdoInterface) {
+			$this->connection = $connection;
+		} else {
+			throw new \InvalidArgumentException('Connection is not a PDO object or PdoInterface');
+		}
+
 
 		$this->fieldTypeMap = array(
 			'string' => array('adapter_type' => 'varchar', 'length' => 255),
