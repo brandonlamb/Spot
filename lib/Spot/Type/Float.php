@@ -5,7 +5,7 @@ use Spot\Entity;
 class Float implements TypeInterface
 {
 	/**
-	 * Cast given value to type required
+	 * @{inherit}
 	 */
 	public static function cast($value)
 	{
@@ -13,7 +13,7 @@ class Float implements TypeInterface
 	}
 
 	/**
-	 * Geting value off Entity object
+	 * @{inherit}
 	 */
 	public static function get(Entity $entity, $value)
 	{
@@ -21,7 +21,7 @@ class Float implements TypeInterface
 	}
 
 	/**
-	 * Setting value on Entity object
+	 * @{inherit}
 	 */
 	public static function set(Entity $entity, $value)
 	{

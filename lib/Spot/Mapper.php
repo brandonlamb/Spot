@@ -12,9 +12,6 @@ class Mapper
 	/** @var \Spot\Config */
 	protected $config;
 
-	/** @var \Spot\Entity\Manager */
-	protected static $entityManager;
-
 	/** @var string, Class Names for required classes - Here so they can be easily overridden */
 	protected $collectionClass = '\\Spot\\Entity\\Collection';
 	protected $queryClass = '\\Spot\\Query';
@@ -22,6 +19,9 @@ class Mapper
 
 	/** @vary array, Array of error messages and types */
 	protected $errors = array();
+
+	/** @var \Spot\Entity\Manager */
+	protected static $entityManager;
 
 	/**
 	 * Constructor Method
@@ -40,32 +40,38 @@ class Mapper
 	}
 
 	/**
-	 * Get config class mapper was instantiated with
+	 * Get config class mapper was instantiated with. Optionally set config
 	 *
+	 * @param \Spot\Config $config
 	 * @return \Spot\Config
 	 */
-	public function config()
+	public function config(Config $config = null)
 	{
+		$config instanceof Config && $this->config = $config;
 		return $this->config;
 	}
 
 	/**
-	 * Get query class name to use
+	 * Get query class name to use. Optionally set the class name
 	 *
+	 * @param string $queryClass
 	 * @return string
 	 */
-	public function queryClass()
+	public function queryClass($queryClass = null)
 	{
+		null !== $queryClass && $this->queryClass = (string) $queryClass;
 		return $this->queryClass;
 	}
 
 	/**
-	 * Get collection class name to use
+	 * Get collection class name to use. Optionally set the class name
 	 *
+	 * @param string $collectionClass
 	 * @return string
 	 */
-	public function collectionClass()
+	public function collectionClass($collectionClass = null)
 	{
+		null !== $collectionClass && $this->collectionClass = (string) $collectionClass;
 		return $this->collectionClass;
 	}
 
@@ -76,10 +82,10 @@ class Mapper
 	 */
 	public function entityManager()
 	{
-		if (null === self::$entityManager) {
-			self::$entityManager = new Entity\Manager();
+		if (null === static::$entityManager) {
+			static::$entityManager = new Entity\Manager();
 		}
-		return self::$entityManager;
+		return static::$entityManager;
 	}
 
 	/**
@@ -198,22 +204,23 @@ class Mapper
 	 * Create collection
 	 *
 	 * @param string $entityName
-	 * @param \PDOStatement
+	 * @param \PDOStatement $stmt
+	 * @return \Spot\Entity\CollectionInterface
 	 */
-	public function collection($entityName, \PDOStatement $cursor)
+	public function collection($entityName, \PDOStatement $stmt)
 	{
 		$results = array();
 		$resultsIdentities = array();
 
 		// Ensure PDO only gives key => value pairs, not index-based fields as well
 		// Raw PDOStatement objects generally only come from running raw SQL queries or other custom stuff
-		if ($cursor instanceof \PDOStatement) {
-			$cursor->setFetchMode(\PDO::FETCH_ASSOC);
+		if ($stmt instanceof \PDOStatement) {
+			$stmt->setFetchMode(\PDO::FETCH_ASSOC);
 		}
 
 		// Fetch all results into new entity class
 		// @todo Move this to collection class so entities will be lazy-loaded by Collection iteration
-		foreach ($cursor as $data) {
+		foreach ($stmt as $data) {
 			// Entity with data set
 			$entity = new $entityName($data);
 
@@ -313,7 +320,7 @@ class Mapper
 	 * @param string $entityName Name of the entity class
 	 * @param string $sql Raw query or SQL to run against the datastore
 	 * @param array Optional $conditions Array of binds in column => value pairs to use for prepared statement
-	 * @return \Spot\Entity\Collection|bool
+	 * @return \Spot\Entity\CollectionInterface|bool
 	 */
 	public function query($entityName, $sql, array $params = array())
 	{

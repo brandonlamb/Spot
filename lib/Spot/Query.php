@@ -130,7 +130,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 	 */
 	public function select($fields = '*', $datasource = null)
 	{
-		$this->fields = (is_string($fields) ? explode(',', $fields) : $fields);
+		$this->fields = (is_string($fields)) ? explode(',', $fields) : $fields;
 		if (null !== $datasource) {
 			$this->from($datasource);
 		}
@@ -171,10 +171,9 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 	 * recommended way to supply the constraint is as an array with three elements:
 	 * array(column1, operator, column2)
 	 * @param string $type, will be prepended to JOIN
-	 * @param string $alias, table alias for the joined table
 	 * @return $this
 	 */
-	public function join($table, $constraint, $type = 'INNER', $alias = null)
+	public function join($table, $constraint, $type = 'INNER')
 	{
 		$type = strtoupper($type);
 		switch ($type) {
@@ -190,8 +189,8 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 
 		// Add join array
 		$this->joins[] = array(
-			null === $alias ? array(trim($table)) : array(trim($table), trim($alias)),
-			$constraints,
+			trim($table),
+			$constraint,
 			$type,
 		);
 

@@ -257,6 +257,7 @@ abstract class AbstractAdapter
 	public function read(\Spot\Query $query, array $options = array())
 	{
 		$conditions = $this->statementConditions($query->conditions);
+		$joins = $this->statementJoins($query->joins);
 		$binds = $this->statementBinds($query->params());
 
 		$order = array();
@@ -521,7 +522,7 @@ abstract class AbstractAdapter
 	{
 		$preparedFields = array();
 		foreach ($fields as $field) {
-			if (stripos($field, ' as ') !== false) {
+			if (stripos($field, ' AS ') !== false) {
 				// Leave calculated fields and SQL fragements alone
 				$preparedFields[] = $field;
 			} else {
@@ -529,7 +530,7 @@ abstract class AbstractAdapter
 				$preparedFields[] = $this->escapeField($field);
 			}
 		}
-		return count($fields) > 0 ? implode(', ', $preparedFields) : "*";
+		return count($fields) > 0 ? implode(', ', $preparedFields) : '*';
 	}
 
 	/**
