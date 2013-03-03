@@ -297,7 +297,6 @@ abstract class AbstractAdapter
 				}
 			}
 		}
-print_r($sql);
 
 		// Add query to log
 		\Spot\Log::addQuery($this, $sql, $binds);
