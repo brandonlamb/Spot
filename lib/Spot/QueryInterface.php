@@ -31,7 +31,6 @@ interface QueryInterface
 	 * From
 	 *
 	 * @param string $table Name of the table to perform the SELECT query on
-	 * @todo Support multiple tables/joins
 	 */
 	public function from($table = null);
 
@@ -48,7 +47,7 @@ interface QueryInterface
 	 * @param string $alias, table alias for the joined table
 	 * @return Query
 	 */
-	public function join($table, $constraint, $type = 'INNER', $alias = null);
+	public function join($table, $constraint, $type = 'INNER');
 
 	/**
 	 * WHERE conditions

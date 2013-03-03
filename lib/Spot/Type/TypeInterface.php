@@ -4,7 +4,26 @@ use Spot\Entity;
 
 interface TypeInterface
 {
+	/**
+	 * Cast a value
+	 * @param mixed $value
+	 * @return mixed
+	 */
 	public static function cast($value);
-	public static function get(Entity $entity, $name);
-	public static function set(Entity $entity, $name);
+
+	/**
+	 * Get value
+	 * @param \Spot\Entity $entity
+	 * @param mixed $value
+	 * @return mixed
+	 */
+	public static function get(Entity $entity, $value);
+
+	/**
+	 * Set value
+	 * @param \Spot\Entity $entity
+	 * @param mixed $value
+	 * @return mixed
+	 */
+	public static function set(Entity $entity, $value);
 }

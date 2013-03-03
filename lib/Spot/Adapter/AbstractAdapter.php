@@ -51,6 +51,42 @@ abstract class AbstractAdapter
 			'time' => array('adapter_type' => 'time'),
 			'timestamp' => array('adapter_type' => 'int', 'length' => 11),
 		);
+
+		$this->fieldTypeMap = array(
+				'string' => array(					'adapter_type' => 'varchar',
+					'length' => 255
+					),
+				'email' => array(
+					'adapter_type' => 'varchar',
+					'length' => 255
+					),
+				'url' => array(
+					'adapter_type' => 'varchar',
+					'length' => 255
+					),
+				'tel' => array(
+					'adapter_type' => 'varchar',
+					'length' => 255
+					),
+				'password' => array(
+					'adapter_type' => 'varchar',
+					'length' => 255
+					),
+				'text' => array('adapter_type' => 'text'),
+				'int' => array('adapter_type' => 'int'),
+				'integer' => array('adapter_type' => 'int'),
+				'bool' => array('adapter_type' => 'tinyint', 'length' => 1),
+				'boolean' => array('adapter_type' => 'tinyint', 'length' => 1),
+				'float' => array('adapter_type' => 'float'),
+				'double' => array('adapter_type' => 'double'),
+				'decimal' => array('adapter_type' => 'decimal'),
+				'date' => array('adapter_type' => 'date'),
+				'datetime' => array('adapter_type' => 'datetime'),
+				'year' => array('adapter_type' => 'year', 'length' => 4),
+				'month' => array('adapter_type' => 'month', 'length' => 2),
+				'time' => array('adapter_type' => 'time'),
+				'timestamp' => array('adapter_type' => 'int', 'length' => 11)
+		  );
 	}
 
 	/**
@@ -257,6 +293,7 @@ abstract class AbstractAdapter
 	public function read(\Spot\Query $query, array $options = array())
 	{
 		$conditions = $this->statementConditions($query->conditions);
+		$joins = $this->statementJoins($query->joins);
 		$binds = $this->statementBinds($query->params());
 
 		$order = array();
@@ -521,7 +558,7 @@ abstract class AbstractAdapter
 	{
 		$preparedFields = array();
 		foreach ($fields as $field) {
-			if (stripos($field, ' as ') !== false) {
+			if (stripos($field, ' AS ') !== false) {
 				// Leave calculated fields and SQL fragements alone
 				$preparedFields[] = $field;
 			} else {
@@ -529,7 +566,7 @@ abstract class AbstractAdapter
 				$preparedFields[] = $this->escapeField($field);
 			}
 		}
-		return count($fields) > 0 ? implode(', ', $preparedFields) : "*";
+		return count($fields) > 0 ? implode(', ', $preparedFields) : '*';
 	}
 
 	/**
@@ -541,6 +578,15 @@ abstract class AbstractAdapter
 	 */
 	public function statementJoins(array $joins = array())
 	{
+		$sqlJoin = '';
+
+		// array('table', array('constraint'), 'INNER')
+		foreach ($joins as $join) {
+			print_r($join);
+
+		}
+return '';
+
 		$type = strtoupper($type);
 		switch ($type) {
 			case 'INNER':
@@ -565,6 +611,7 @@ abstract class AbstractAdapter
 		}
 
 		return $this;
+		return count($this->join) == 0 ? null : implode(', ', $this->join) . ' ';
 	}
 
 	/**

@@ -7,7 +7,7 @@ namespace Spot\Entity;
  * @package Spot
  * @link http://spot.os.ly
  */
-class Collection implements \Iterator, \Countable, \ArrayAccess
+class Collection implements CollectionInterface
 {
 	/** @var array */
 	protected $results = array();
@@ -39,25 +39,18 @@ class Collection implements \Iterator, \Countable, \ArrayAccess
 	}
 
 	/**
-	* Add a single entity to the collection
-	*
-	* @param \Spot\Entity $entity to add
+	* {@inherit}
 	*/
-	public function add($entity)
+	public function add(\Spot\Entity $entity)
 	{
 		$this->results[] = $entity;
 	}
 
 	/**
-	* Merge another collection into this collections set of entities
-	* This will only add entitys that don't already exist in the current
-	* collection
-	*
-	* @param \Spot\Entity\Collection $collection
-	* @return \Spot\Entity\Collection
-	* @todo Implement faster uniqueness checking by hash, entity manager, primary key field, etc.
-	*/
-	public function merge(\Spot\Entity\Collection $collection, $onlyUnique = true)
+	 * {@inherit}
+	 * @todo Implement faster uniqueness checking by hash, entity manager, primary key field, etc.
+	 */
+	public function merge(\Spot\Entity\CollectionInterface $collection, $onlyUnique = true)
 	{
 		foreach ($collection as $entity) {
 			if ($onlyUnique && in_array($entity, $this->results)) {
@@ -71,8 +64,7 @@ class Collection implements \Iterator, \Countable, \ArrayAccess
 	/**
 	 * Return an array representation of the Collection.
 	 *
-	 * @param mixed $keyColumn
-	 * @param mixed $valueColumn
+	 * {@inherit}
 	 * @return array    If $keyColumn and $valueColumn are not set, or are both null
 	 *                      then this will return the array of entity objects
 	 * @return array    If $keyColumn is not null, and the value column is null or undefined
@@ -111,22 +103,15 @@ class Collection implements \Iterator, \Countable, \ArrayAccess
 	}
 
 	/**
-	* Run a function on the set of entities
-	*
-	* @param string|array $function A callback of the function to run
-	* @return mixed
-	*/
+	 * {@inherit}
+	 */
 	public function run($callback)
 	{
 		 return call_user_func_array($callback, array($this->results));
 	}
 
 	/**
-	 * Runs a function on every object in the query, returning the resulting array
-	 *
-	 * @param function The function to run
-	 * @return mixed An array containing the result of running the passed function
-	 *  on each member of the collect
+	 * {@inherit}
 	 */
 	public function map($func)
 	{
@@ -138,11 +123,7 @@ class Collection implements \Iterator, \Countable, \ArrayAccess
 	}
 
 	/**
-	 * Runs a function on every object in the query, returning an array containing every
-	 *  object for which the function returns true.
-	 *
-	 * @param function The function to run
-	 * @return mixed An array of Entity objects
+	 * {@inherit}
 	 */
 	public function filter($func)
 	{
@@ -166,17 +147,14 @@ class Collection implements \Iterator, \Countable, \ArrayAccess
 		return __CLASS__ . '[' . $this->count() . ']';
 	}
 
-	// SPL - Countable functions
-
 	/**
-	 * Get a count of all the records in the result set
+	 * SPL Countable, Iterator, ArrayAccess functions
 	 */
+
 	public function count()
 	{
 		return count($this->results);
 	}
-
-	// SPL - Iterator functions
 
 	public function current()
 	{
@@ -202,8 +180,6 @@ class Collection implements \Iterator, \Countable, \ArrayAccess
 	{
 		return (current($this->results) !== FALSE);
 	}
-
-	// SPL - ArrayAccess functions
 
 	public function offsetExists($key)
 	{
