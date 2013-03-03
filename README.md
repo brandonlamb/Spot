@@ -6,15 +6,9 @@ For Relational Databases and MongoDB
 Connecting to a Database
 ========================
 The `Spot\Config` object stores and references database connections by name.
-<<<<<<< HEAD
 Create a new instance of `Spot\Config` and add database connections created outside
 of Spot. This was a change to allow your app to create the raw PDO connection and
 just reuse this. A big complaint I have always had is pretty much every ORM/Model
-=======
-Create a new instance of `Spot\Config` and add database connections created outside 
-of Spot. This was a change to allow your app to create the raw PDO connection and 
-just reuse this. A big complaint I have always had is pretty much every ORM/Model 
->>>>>>> fd90a1ae56d8d1deb67af65f3b2bed2e8edb96a6
 class always wants to create this for you instead of being passed this connection.
 
 ```
@@ -120,21 +114,6 @@ use \Spot\Entity;
 
 class Game extends Entity
 {
-<<<<<<< HEAD
-    protected static $datasource = 'game';
-
-    public static function fields()
-    {
-        return array(
-            'id' => array('type' => 'int', 'primary' => true, 'serial' => true),
-            'status_id' => array('type' => 'int', 'default' => 0, 'index' => true),
-            'date_created' => array('type' => 'datetime', 'default' => date('Y-m-d h:m:i'), 'required' => true),
-            'image_count' => array('type' => 'int', 'default' => 0, 'index' => true),
-            'name' => array('type' => 'string', 'required' => true),
-            'slug' => array('type' => 'string', 'required' => true),
-        );
-    }
-=======
 	protected static $datasource = 'game';
 
 	public static function fields()
@@ -148,7 +127,6 @@ class Game extends Entity
 			'slug' => array('type' => 'string', 'required' => true),
 		);
 	}
->>>>>>> fd90a1ae56d8d1deb67af65f3b2bed2e8edb96a6
 }
 
 ```
@@ -246,12 +224,7 @@ $posts->limit($limit);
 
 // Loop over results
 foreach ($posts as $post) {
-<<<<<<< HEAD
-    echo "Title: " . $post->title . "<br>";
-    echo "Created: " . $post->date_created . "<br>";
-=======
 	echo "Title: " . $post->title . "<br>";
 	echo "Created: " . $post->date_created . "<br>";
->>>>>>> fd90a1ae56d8d1deb67af65f3b2bed2e8edb96a6
 }
 ```
