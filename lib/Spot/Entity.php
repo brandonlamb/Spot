@@ -19,6 +19,8 @@ abstract class Entity
 
 	/** @var array, Entity data storage */
 	protected $data = array();
+
+	/** @var array, Entity modified data storage */
 	protected $dataModified = array();
 
 	/** @var array, Entity error messages (may be present after save attempt) */

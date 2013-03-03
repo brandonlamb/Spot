@@ -542,6 +542,7 @@ abstract class AbstractAdapter
 	 */
 	public function statementJoins(array $joins = array())
 	{
+		return '';
 		$type = strtoupper($type);
 		switch ($type) {
 			case 'INNER':
