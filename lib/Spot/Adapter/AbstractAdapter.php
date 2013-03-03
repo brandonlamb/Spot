@@ -35,7 +35,6 @@ abstract class AbstractAdapter
 			throw new \InvalidArgumentException('Connection is not a PDO object or PdoInterface');
 		}
 
-
 		$this->fieldTypeMap = array(
 			'string' => array('adapter_type' => 'varchar', 'length' => 255),
 			'email' => array('adapter_type' => 'varchar', 'length' => 255),
@@ -280,6 +279,7 @@ abstract class AbstractAdapter
 		$sql = "
 			SELECT " . $this->statementFields($query->fields) . "
 			FROM " . $query->datasource . "
+
 			" . ($conditions ? 'WHERE ' . $conditions : '') . "
 			" . ($query->group ? 'GROUP BY ' . implode(', ', $query->group) : '') . "
 			" . ($query->having ? 'HAVING' . $havingConditions : '') . "
