@@ -139,7 +139,7 @@ class Mapper
 	 */
 	public function primaryKey($entity)
 	{
-		$pkField = $this->entityManager()->primaryKeyField(get_class($entity));
+		$pkField = $this->entityManager()->primaryKeyField($entity->toString());
 		return $entity->$pkField;
 	}
 
@@ -402,8 +402,9 @@ class Mapper
 		// Run validation
 		if ($this->validate($entity)) {
 			$pk = $this->primaryKey($entity);
+			$attributes = $this->entityManager()->fields($entity->toString(), $this->primaryKeyField($entity->toString()));
 
-			if (empty($pk)) {
+			if (empty($pk) || $attributes['serial'] === false) {
 				// No primary key, insert
 				$result = $this->insert($entity);
 			} else {
@@ -432,7 +433,7 @@ class Mapper
 	public function insert($entity, array $options = array())
 	{
 		if (is_object($entity)) {
-			$entityName = get_class($entity);
+			$entityName = $entity->toString();
 			$data = $entity->data();
 		} elseif (is_string($entity)) {
 			$entityName = $entity;

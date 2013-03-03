@@ -346,7 +346,7 @@ abstract class Entity
 	 */
 	public function toString()
 	{
-		return __CLASS__;
+		return get_called_class();
 	}
 
 	/**

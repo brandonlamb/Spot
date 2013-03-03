@@ -217,7 +217,7 @@ abstract class AbstractAdapter
 		// build the statement
 		$sql = "INSERT INTO " . $datasource .
 			" (" . implode(', ', array_map(array($this, 'escapeField'), array_keys($data))) . ")" .
-			" VALUES(:" . implode(', :', array_keys($binds)) . ")";
+			" VALUES (:" . implode(', :', array_keys($binds)) . ")";
 
 		// Add query to log
 		\Spot\Log::addQuery($this, $sql, $binds);

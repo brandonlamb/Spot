@@ -27,9 +27,10 @@ class Manager
 	 * Merges defaults with defined field values to ensure all options exist for each field.
 	 *
 	 * @param string $entityName Name of the entity class
+	 * @param string $field Name of the field to return attributes for
 	 * @return array Defined fields plus all defaults for full array of all possible options
 	 */
-	public function fields($entityName)
+	public function fields($entityName, $field = null)
 	{
 		if (!is_string($entityName)) {
 			throw new \Spot\Exception(__METHOD__ . " only accepts a string. Given (" . gettype($entityName) . ")");
@@ -137,7 +138,7 @@ class Manager
 				static::$relations[$entityName][$relationAlias] = $relationOpts;
 			}
 		}
-		return $returnFields;
+		return null === $field ? $returnFields : $returnFields[$field];
 	}
 
 	/**
