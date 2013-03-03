@@ -370,7 +370,7 @@ class Mapper
 	 * @param mixed $fields String for single field or array of fields
 	 * @return \Spot\Query
 	 */
-	public function select($entityName, $fields = "*")
+	public function select($entityName, $fields = '*')
 	{
 		$query = new $this->queryClass($this, $entityName);
 		$query->select($fields, $this->datasource($entityName));

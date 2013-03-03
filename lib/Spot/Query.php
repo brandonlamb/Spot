@@ -130,10 +130,21 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 	 */
 	public function select($fields = '*', $datasource = null)
 	{
-		$this->fields = (is_string($fields)) ? explode(',', $fields) : $fields;
+		if (null === $fields) {
+			$this->fields = array();
+		} elseif (is_string($fields)) {
+			foreach (explode(',', $fields) as $field) {
+				$this->fields[] = trim($field);
+			}
+		} elseif (is_array($fields)) {
+			$this->fields = array_merge($this->fields, $fields);
+		}
+
+		// Set the datasource (FROM) table
 		if (null !== $datasource) {
 			$this->from($datasource);
 		}
+
 		return $this;
 	}
 
