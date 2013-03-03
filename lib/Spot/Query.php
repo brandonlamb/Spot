@@ -176,7 +176,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 	 * Add a table join (INNER, LEFT OUTER, RIGHT OUTER, FULL OUTER, CROSS)
 	 * array('user.id', '=', 'profile.user_id') will compile to ON `user`.`id` = `profile`.`user_id`
 	 *
-	 * @param string $table, should be the name of the table to join to
+	 * @param string|array $table, should be the name of the table to join to
 	 * @param string|array $constraint, may be either a string or an array with three elements. If it
 	 * is a string, it will be compiled into the query as-is, with no escaping. The
 	 * recommended way to supply the constraint is as an array with three elements:
@@ -184,8 +184,18 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 	 * @param string $type, will be prepended to JOIN
 	 * @return $this
 	 */
-	public function join($table, $constraint, $type = 'INNER')
+	public function join($table, $constraint = null, $type = 'INNER')
 	{
+		// If $table is passed as an array then assume we are receiving multiple join statements
+		// Loop through each one and pass the parms to $this->join()
+		if (is_array($table)) {
+			foreach ($table as $join) {
+				$type = isset($join[2]) ? $join[2] : 'INNER';
+				$this->join($join[0], $join[1], $type);
+			}
+			return $this;
+		}
+
 		$type = strtoupper($type);
 		switch ($type) {
 			case 'INNER':
@@ -206,6 +216,66 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 		);
 
 		return $this;
+	}
+
+	/**
+	 * Add an INNER JOIN
+	 *
+	 * @param  string $table
+	 * @param  string $constraint
+	 * @return $this
+	 */
+	public function innerJoin($table, $constraint)
+	{
+		return $this->join($table, $constraint, 'INNER');
+	}
+
+	/**
+	 * Add a LEFT OUTER JOIN
+	 *
+	 * @param  string $table
+	 * @param  string $constraint
+	 * @return $this
+	 */
+	public function leftOuterJoin($table, $constraint)
+	{
+		return $this->join($table, $constraint, 'LEFT OUTER');
+	}
+
+	/**
+	 * Add an RIGHT OUTER JOIN
+	 *
+	 * @param  string $table
+	 * @param  string $constraint
+	 * @return $this
+	 */
+	public function rightOuterJoin($table, $constraint)
+	{
+		return $this->join($table, $constraint, 'RIGHT OUTER');
+	}
+
+	/**
+	 * Add an FULL OUTER JOIN
+	 *
+	 * @param  string $table
+	 * @param  string $constraint
+	 * @return $this
+	 */
+	public function fullOuterJoin($table, $constraint)
+	{
+		return $this->join($table, $constraint, 'FULL OUTER');
+	}
+
+	/**
+	 * Add an CROSS JOIN
+	 *
+	 * @param  string $table
+	 * @param  string $constraint
+	 * @return $this
+	 */
+	public function crossJoin($table, $constraint)
+	{
+		return $this->join($table, $constraint, 'CROSS');
 	}
 
 	/**

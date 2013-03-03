@@ -1,5 +1,6 @@
 <?php
 namespace Spot\Adapter;
+use Spot\Query;
 
 /**
  * Abstract Adapter
@@ -259,7 +260,7 @@ abstract class AbstractAdapter
 	 * @throws \Spot\Exception
 	 * @todo Add support for JOINs
 	 */
-	public function read(\Spot\Query $query, array $options = array())
+	public function read(Query $query, array $options = array())
 	{
 		$conditions = $this->statementConditions($query->conditions);
 		$joins = $this->statementJoins($query->joins);
@@ -279,12 +280,13 @@ abstract class AbstractAdapter
 		$sql = "
 			SELECT " . $this->statementFields($query->fields) . "
 			FROM " . $query->datasource . "
-
+			" . ($joins ? $joins : '') . "
 			" . ($conditions ? 'WHERE ' . $conditions : '') . "
 			" . ($query->group ? 'GROUP BY ' . implode(', ', $query->group) : '') . "
 			" . ($query->having ? 'HAVING' . $havingConditions : '') . "
 			" . ($order ? 'ORDER BY ' . implode(', ', $order) : '') . "
-			" . ($query->limit ? 'LIMIT ' . $query->limit : '') . " " . ($query->limit && $query->offset ? 'OFFSET ' . $query->offset: '') . "
+			" . ($query->limit ? 'LIMIT ' . $query->limit : '') . "
+			" . ($query->limit && $query->offset ? 'OFFSET ' . $query->offset: '') . "
 			";
 
 		// Unset any NULL values in binds (compared as "IS NULL" and "IS NOT NULL" in SQL instead)
@@ -295,6 +297,7 @@ abstract class AbstractAdapter
 				}
 			}
 		}
+print_r($sql);
 
 		// Add query to log
 		\Spot\Log::addQuery($this, $sql, $binds);
@@ -329,7 +332,7 @@ abstract class AbstractAdapter
 	 * @param array $options
 	 * @throws \Spot\Exception
 	 */
-	public function count(\Spot\Query $query, array $options = array())
+	public function count(Query $query, array $options = array())
 	{
 		$conditions = $this->statementConditions($query->conditions);
 		$binds = $this->statementBinds($query->params());
@@ -528,7 +531,7 @@ abstract class AbstractAdapter
 	{
 		$preparedFields = array();
 		foreach ($fields as $field) {
-			if (stripos($field, ' AS ') !== false) {
+			if (stripos($field, ' AS ') !== false || strpos($field, '.') !== false) {
 				// Leave calculated fields and SQL fragements alone
 				$preparedFields[] = $field;
 			} else {
@@ -548,31 +551,13 @@ abstract class AbstractAdapter
 	 */
 	public function statementJoins(array $joins = array())
 	{
-		return '';
-		$type = strtoupper($type);
-		switch ($type) {
-			case 'INNER':
-			case 'LEFT OUTER':
-			case 'RIGHT OUTER':
-			case 'FULL OUTER':
-			case 'CROSS':
-				break;
-			default:
-				$type = 'INNER';
+		$sqlJoins = array();
+
+		foreach ($joins as $join) {
+			$sqlJoins[] = trim($join[2]) . ' JOIN' . ' ' . $join[0] . ' ON (' . trim($join[1]) . ')';
 		}
 
-		// Add table alias if present
-		$table = null === $alias ? trim($table) : trim($table) . ' ' . trim($alias);
-
-		// Build the constraint
-		if (is_string($constraint)) {
-			$this->join[] = trim($type) . ' JOIN' . ' ' . $table . ' ON (' . trim($constraint) . ')';
-		} elseif (is_array($constraint) && count($constraint) == 3) {
-			$this->join[] = trim($type) . ' JOIN' . ' ' . $table
-				. ' ON (' . trim($constraint[0]) . ' ' . trim($constraint[1]) . ' ' . trim($constraint[2]) . ')';
-		}
-
-		return $this;
+		return join(' ', $sqlJoins);
 	}
 
 	/**
@@ -705,7 +690,13 @@ abstract class AbstractAdapter
 				if (empty($whereClause)) {
 					// Add to binds array and add to WHERE clause
 					$colParam = preg_replace('/\W+/', '_', $col) . $ci;
-					$sqlWhere[] = $this->escapeField($col) . ' ' . $operator . ' :' . $colParam . '';
+
+					// Dont escape calculated/aliased columns
+					if (strpos($col, '.') !== false) {
+						$sqlWhere[] = $col . ' ' . $operator . ' :' . $colParam . '';
+					} else {
+						$sqlWhere[] = $this->escapeField($col) . ' ' . $operator . ' :' . $colParam . '';
+					}
 				} else {
 					$sqlWhere[] = $whereClause;
 				}
@@ -807,7 +798,7 @@ abstract class AbstractAdapter
 	 * @param \PDOStatement $stmt
 	 * @return array
 	 */
-	public function toCollection(\Spot\Query $query, $stmt)
+	public function toCollection(Query $query, $stmt)
 	{
 		$mapper = $query->mapper();
 		$entityClass = $query->entityName();
