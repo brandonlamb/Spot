@@ -820,7 +820,6 @@ echo "\nFROM CACHE\n";
 
 			return $collection;
 		} else {
-			throw new \Exception(__METHOD__ . " - Unable to execute query " . implode(' | ', $this->connection()->errorInfo()));
 #			$mapper->addError(__METHOD__ . " - Unable to execute query " . implode(' | ', $this->connection()->errorInfo()));
 			return array();
 		}
@@ -848,8 +847,6 @@ echo "\nFROM CACHE\n";
 	 */
 	protected function cacheCollection(\Spot\QueryInterface $query, \Spot\Entity\CollectionInterface $collection)
 	{
-		if ($cache = $query->mapper()->getCache()) {
-			$cache->set($query->cacheKey(), $collection->toArray(), $query->cacheTtl());
-		}
+		($cache = $query->mapper()->getCache()) && $cache->set($query->cacheKey(), $collection->toArray(), $query->cacheTtl());
 	}
 }
