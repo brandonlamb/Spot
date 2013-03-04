@@ -19,6 +19,9 @@ class CacheManager
 {
 	const _DEFAULT = 'default';
 
+	/** @var array */
+	protected $caches = array();
+
 	/** @var Logger */
 	public static $logger;
 
@@ -33,9 +36,6 @@ class CacheManager
 		'ttl' => null,
 		'variation' => 0
 	);
-
-	/** @var array */
-	private static $caches = array();
 
 	/**
 	 * Setups the cache manager.
@@ -61,18 +61,57 @@ class CacheManager
 	 * @param Logger $logger
 	 * @param int $logLevel
 	 */
-	public static function setup($caches, Logger $logger = null, $logLevel = null)
+	public function setup($caches, Logger $logger = null, $logLevel = null)
 	{
 		if (!is_array($caches)) {
-			$caches = array(self::_DEFAULT => array('backend' => $caches));
+			$caches = array(static::_DEFAULT => array('backend' => $caches));
 		}
 
-		self::$logger = $logger;
-		self::$logLevel = $logLevel;
+		static::$logger = $logger;
+		static::$logLevel = $logLevel;
 
 		foreach ($caches as $name => $options) {
-			self::$caches[$name] = self::factory($options);
+			$this->caches[$name] = static::factory($options);
 		}
+	}
+
+	/**
+	 * Makes a {@see Cache} instance available through $name
+	 *
+	 * @param string $name
+	 * @param Cache $cache
+	 */
+	public function set($name, Cache $cache)
+	{
+		$this->caches[$name] = $cache;
+	}
+
+	/**
+	 * Returns the {@see Cache} instance under $name
+	 *
+	 * @param string $name If null will used the instance named CacheManager::_DEFAULT
+	 * @return Cache
+	 */
+	public function get($name = null)
+	{
+		$name = $name ?: static::_DEFAULT;
+		if (!isset($this->caches[$name])) {
+			throw new CacheException("Cache '$name' not found");
+		}
+		return $this->caches[$name];
+	}
+
+	/**
+	 * Shorcut to static::get()->ns()
+	 *
+	 * @see Cache::ns()
+	 * @param string $namespace
+	 * @param int $defaultTTL
+	 * @return Cache
+	 */
+	public function ns($namespace, $defaultTTL = null)
+	{
+		return $this->get()->ns($namespace, $defaultTTL);
 	}
 
 	/**
@@ -102,7 +141,7 @@ class CacheManager
 			throw new CacheException("Options for '$name' in CacheManager::create() must be an array");
 		}
 
-		$options = array_merge(self::$defaults, $options);
+		$options = array_merge(static::$defaults, $options);
 		if (!isset($options['backend'])) {
 			throw new CacheException("No backend specified for '$name' in CacheManager::create()");
 		}
@@ -117,50 +156,11 @@ class CacheManager
 			}
 		}
 
-		if (self::$logger !== null) {
-			$backend = new LoggingBackend($backend, self::$logger, self::$logLevel);
+		if (static::$logger !== null) {
+			$backend = new LoggingBackend($backend, static::$logger, static::$logLevel);
 		}
 
 		$cache = new Cache($backend, $options['namespace'], $options['ttl'], $options['variation']);
 		return $cache;
-	}
-
-	/**
-	 * Makes a {@see Cache} instance available through $name
-	 *
-	 * @param string $name
-	 * @param Cache $cache
-	 */
-	public static function set($name, Cache $cache)
-	{
-		self::$caches[$name] = $cache;
-	}
-
-	/**
-	 * Returns the {@see Cache} instance under $name
-	 *
-	 * @param string $name If null will used the instance named CacheManager::_DEFAULT
-	 * @return Cache
-	 */
-	public static function get($name = null)
-	{
-		$name = $name ?: self::_DEFAULT;
-		if (!isset(self::$caches[$name])) {
-			throw new CacheException("Cache '$name' not found");
-		}
-		return self::$caches[$name];
-	}
-
-	/**
-	 * Shorcut to self::get()->ns()
-	 *
-	 * @see Cache::ns()
-	 * @param string $namespace
-	 * @param int $defaultTTL
-	 * @return Cache
-	 */
-	public static function ns($namespace, $defaultTTL = null)
-	{
-		return self::get()->ns($namespace, $defaultTTL);
 	}
 }
