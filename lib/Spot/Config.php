@@ -13,7 +13,7 @@ class Config implements \Serializable
 	/** @var array */
 	protected $connections = array();
 
-	/** @var \\Spot\Config */
+	/** @var \Spot\Config */
 	protected static $instance;
 
 	/** @var array */
