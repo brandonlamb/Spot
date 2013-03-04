@@ -6,7 +6,7 @@ namespace Spot;
 *
 * @package Spot
 */
-abstract class Entity
+abstract class Entity implements \Serializable
 {
 	/** @var string */
 	protected static $datasource;
@@ -365,5 +365,22 @@ abstract class Entity
 	public function toJson()
 	{
 		return json_encode($this->data());
+	}
+
+	/**
+	 * Serialize data array
+	 * @return string
+	 */
+	public function serialize()
+	{
+		return serialize($this->data());
+	}
+
+	/**
+	 * {@inherit}
+	 */
+	public function unserialize($serialized)
+	{
+		$this->data(unserialize($serialized));
 	}
 }

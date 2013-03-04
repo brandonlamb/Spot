@@ -17,6 +17,9 @@ class Mapper
 	protected $queryClass = '\\Spot\\Query';
 	protected $exceptionClass = '\\Spot\\Exception';
 
+	/** @var \Spot\Cache\BackendInterface */
+	protected $cache;
+
 	/** @vary array, Array of error messages and types */
 	protected $errors = array();
 
@@ -204,10 +207,10 @@ class Mapper
 	 * Create collection
 	 *
 	 * @param string $entityName
-	 * @param \PDOStatement $stmt
+	 * @param \PDOStatement|array $stmt
 	 * @return \Spot\Entity\CollectionInterface
 	 */
-	public function collection($entityName, \PDOStatement $stmt)
+	public function collection($entityName, $stmt)
 	{
 		$results = array();
 		$resultsIdentities = array();
@@ -669,5 +672,28 @@ class Mapper
 	public function isEmpty($value)
 	{
 		return empty($value) && !is_numeric($value);
+	}
+
+	/**
+	 * Set the mapper's cache object
+	 * @param \Spot\Cache\BackendInterface $cache
+	 * @return $this
+	 */
+	public function setCache(\Spot\Cache\BackendInterface $cache)
+	{
+		$this->cache = $cache;
+		return $this;
+	}
+
+	/**
+	 * Retrieve the cache object, or false if none is set
+	 * @return \Spot\Cache\BackendInterface|bool
+	 */
+	public function getCache()
+	{
+		if (null === $this->cache) {
+			return false;
+		}
+		return $this->cache;
 	}
 }

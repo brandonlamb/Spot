@@ -19,6 +19,12 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 	/** @var array */
 	protected $cache = array();
 
+	/** @var string */
+	protected $cacheKey;
+
+	/** @var int, cache ttl/timeout in seconds*/
+	protected $cacheTtl = 30;
+
 	/** @var array, Storage for query properties */
 	public $fields = array();
 	public $joins = array();
@@ -447,7 +453,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 		$that = $this;
 
 		// New scope with closure to get only PUBLIC properties of object instance (can't include cache property)
-		$cacheKey = function() use($that) { return sha1(var_export(get_object_vars($that), true)) . "_count"; };
+		$cacheKey = function() use ($that) { return sha1(var_export(get_object_vars($that), true)) . "_count"; };
 		$cacheResult = isset($this->cache[$cacheKey()]) ? $this->cache[$cacheKey()] : false;
 
 		// Check cache
@@ -554,5 +560,27 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 	public function execute()
 	{
 		return $this->mapper()->connection($this->entityName())->read($this);
+	}
+
+	/**
+	 * Get/set cache key
+	 * @param string $key
+	 * @return string|bool
+	 */
+	public function cacheKey($cacheKey = null)
+	{
+		null !== $cacheKey && $this->cacheKey = (string) $cacheKey;
+		return null !== $this->cacheKey ? $this->cacheKey : false;
+	}
+
+	/**
+	 * Get/set the cache ttl
+	 * @param int $cacheTtl
+	 * @return int
+	 */
+	public function cacheTtl($cacheTtl = null)
+	{
+		null !== $cacheTtl && $this->cacheTtl = (int) $cacheTtl;
+		return $this->cacheTtl;
 	}
 }
