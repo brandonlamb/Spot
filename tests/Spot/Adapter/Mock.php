@@ -2,7 +2,7 @@
 
 namespace Spot\Adapter;
 
-class Adapter_Mock implements PdoInterface
+class Mock implements PdoInterface
 {
 	public function __construct($connection = null)
 	{
