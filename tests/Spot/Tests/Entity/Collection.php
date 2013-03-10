@@ -38,7 +38,6 @@ class Collection extends SpotTestCase
 	 * arrayAccess[0] of empty collection
 	 * arrayAccess[1] of collection with 2 element is second element
 	 */
-
 	public function testNewCollectionHasSizeZero()
 	{
 		$this->assertEquals(0, count($this->collection));

@@ -21,4 +21,9 @@ class Mock implements AdapterInterface
 	public function beginTransaction() {}
 	public function commit() {}
 	public function rollback() {}
+	public function migrate($table, array $fields, array $options = array()) {}
+	public function createDatabase($database) {}
+	public function dropDatabase($database) {}
+	public function truncateDatasource($source) {}
+	public function dropDatasource($source) {}
 }

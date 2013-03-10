@@ -36,13 +36,14 @@ $options = array(
 	\PDO::ATTR_PERSISTENT => true,
 );
 
+// Setup config
 $cfg = \Spot\Config::getInstance(true);
 $cfg->addConnection('db', new \Spot\Adapter\Mock());
 
-
 // Return Spot mapper for use
 $mapper = new \Spot\Mapper($cfg);
-function test_spot_mapper() {
+function test_spot_mapper()
+{
 	global $mapper;
 	return $mapper;
 }

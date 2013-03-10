@@ -12,7 +12,7 @@ class Validation extends SpotTestCase
 	public static function setupBeforeClass()
 	{
 		$mapper = test_spot_mapper();
-#		$mapper->migrate('Entity_User');
+		$mapper->migrate('Entity_User');
 	}
 	public static function tearDownAfterClass()
 	{
