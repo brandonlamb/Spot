@@ -8,8 +8,8 @@
 	processIsolation="false"
 	stopOnFailure="false"
 	syntaxCheck="false"
-	bootstrap="./tests/init.php"
->
+	bootstrap="./tests/init.php">
+
 	<testsuites>
 		<testsuite name="Spot">
 			<directory suffix=".php">./tests/Test</directory>
