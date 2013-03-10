@@ -1,5 +1,6 @@
 <?php
-use Spot\Adapter\PdoInterface;
+
+namespace Spot\Adapter;
 
 class Adapter_Mock implements PdoInterface
 {
