@@ -2,6 +2,7 @@ Spot PHP ORM+ODM
 ----------------
 For Relational Databases and MongoDB
 
+[![Build Status](https://www.travis-ci.org/brandonlamb/Spot.png?branch=develop)](https://www.travis-ci.org/brandonlamb/Spot)
 
 Connecting to a Database
 ========================
