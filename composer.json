@@ -17,7 +17,7 @@
 		"psr-0": {
 			"Spot": "src/"
 		}
-	}
+	},
 	"require": {
 		"php": ">=5.3.2",
 		"brandonlamb/CacheCache" : ">=1.0.0"
@@ -27,5 +27,5 @@
 			"type": "vcs",
 			"url": "https://github.com/brandonlamb/CacheCache"
 		}
-	],
+	]
 }
