@@ -6,6 +6,7 @@ namespace Spot\Adapter;
  *
  * @package Spot
  * @link http://spot.os.ly
+ * @todo Add back in the migration methods
  */
 interface AdapterInterface
 {
