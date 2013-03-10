@@ -566,39 +566,6 @@ class Mapper
 	}
 
 	/**
-	 * Transaction with closure
-	 *
-	 * @param \Closure $work
-	 * @param string $entityName
-	 * @return $this
-	 */
-	public function transaction(\Closure $work, $entityName = null)
-	{
-		$connection = $this->connection($entityName);
-
-		try {
-			$connection->beginTransaction();
-
-			// Execute closure for work inside transaction
-			$result = $work($this);
-
-			// Rollback on boolean 'false' return
-			if ($result === false) {
-				$connection->rollback();
-			} else {
-				$connection->commit();
-			}
-		} catch(\Exception $e) {
-			// Rollback on uncaught exception
-			$connection->rollback();
-
-			// Re-throw exception so we don't bury it
-			throw $e;
-		}
-		return $this;
-	}
-
-	/**
 	 * Load defined relations
 	 *
 	 * @param \Spot\Entity
@@ -672,6 +639,76 @@ class Mapper
 	public function isEmpty($value)
 	{
 		return empty($value) && !is_numeric($value);
+	}
+
+	/**
+	 * Transaction with closure
+	 *
+	 * @param \Closure $work
+	 * @param string $entityName
+	 * @return $this
+	 */
+	public function transaction(\Closure $work, $entityName = null)
+	{
+		$connection = $this->connection($entityName);
+
+		try {
+			$connection->beginTransaction();
+
+			// Execute closure for work inside transaction
+			$result = $work($this);
+
+			// Rollback on boolean 'false' return
+			if ($result === false) {
+				$connection->rollback();
+			} else {
+				$connection->commit();
+			}
+		} catch(\Exception $e) {
+			// Rollback on uncaught exception
+			$connection->rollback();
+
+			// Re-throw exception so we don't bury it
+			throw $e;
+		}
+		return $this;
+	}
+
+	/**
+	 * Truncate data source
+	 * Should delete all rows and reset serial/auto_increment keys to 0
+	 *
+	 * @param string $entityName Name of the entity class
+	 */
+	public function truncateDatasource($entityName)
+	{
+		return $this->connection($entityName)->truncateDatasource($this->datasource($entityName));
+	}
+
+	/**
+	 * Drop/delete data source
+	 * Destructive and dangerous - drops entire data source and all data
+	 *
+	 * @param string $entityName Name of the entity class
+	 */
+	public function dropDatasource($entityName)
+	{
+		return $this->connection($entityName)->dropDatasource($this->datasource($entityName));
+	}
+
+	/**
+	 * Migrate table structure changes from model to database
+	 *
+	 * @param string $entityName Name of the entity class
+	 */
+	public function migrate($entityName)
+	{
+		return $this->connection($entityName)
+			->migrate(
+				$this->datasource($entityName),
+				$this->fields($entityName),
+				$this->entityManager()->datasourceOptions($entityName)
+			);
 	}
 
 	/**
