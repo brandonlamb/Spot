@@ -1,11 +1,11 @@
 <?php
-require_once dirname(dirname(__FILE__)) . '/init.php';
 /**
  * @package Spot
- * @link http://spot.os.ly
  */
 
 namespace Spot\Tests;
+
+#require_once dirname(dirname(__FILE__)) . '/bootstrap.php';
 
 class Entity extends SpotTestCase
 {

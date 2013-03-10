@@ -1,4 +1,7 @@
 <?php
+/**
+ * @package Spot
+ */
 
 namespace Spot\Tests;
 

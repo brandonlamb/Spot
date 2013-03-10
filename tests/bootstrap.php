@@ -3,6 +3,9 @@
  * @package Spot
  */
 
+// Setup autoloader from composer
+require_once __DIR__ . '/../vendor/autoload.php';
+
 // Date setup
 date_default_timezone_set('America/Los_Angeles');
 
