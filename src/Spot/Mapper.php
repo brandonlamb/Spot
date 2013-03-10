@@ -1,12 +1,15 @@
 <?php
-namespace Spot;
-
 /**
  * Base DataMapper
  *
  * @package Spot
  * @link http://spot.os.ly
  */
+
+namespace Spot;
+
+use CacheCache\Cache\BackendInterface;
+
 class Mapper
 {
 	/** @var \Spot\Config */
@@ -17,7 +20,7 @@ class Mapper
 	protected $queryClass = '\\Spot\\Query';
 	protected $exceptionClass = '\\Spot\\Exception';
 
-	/** @var \Spot\Cache\BackendInterface */
+	/** @var \CacheCache\Cache\BackendInterface */
 	protected $cache;
 
 	/** @vary array, Array of error messages and types */
@@ -713,10 +716,10 @@ class Mapper
 
 	/**
 	 * Set the mapper's cache object
-	 * @param \Spot\Cache\BackendInterface $cache
+	 * @param \CacheCache\Cache\BackendInterface $cache
 	 * @return $this
 	 */
-	public function setCache(\Spot\Cache\BackendInterface $cache)
+	public function setCache(BackendInterface $cache)
 	{
 		$this->cache = $cache;
 		return $this;
@@ -724,7 +727,7 @@ class Mapper
 
 	/**
 	 * Retrieve the cache object, or false if none is set
-	 * @return \Spot\Cache\BackendInterface|bool
+	 * @return \CacheCache\Cache\BackendInterface|bool
 	 */
 	public function getCache()
 	{

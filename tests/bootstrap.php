@@ -47,3 +47,18 @@ function test_spot_mapper()
 	global $mapper;
 	return $mapper;
 }
+
+/**
+ * Debug function, dont die after output
+ */
+function d()
+{
+	$string = '';
+	foreach(func_get_args() as $value)
+	{
+		$string .= '<pre>';
+		$string .= $value === NULL ? 'NULL' : (is_scalar($value) ? $value : print_r($value, TRUE));
+		$string .= "</pre>\n";
+	}
+	exit($string);
+}

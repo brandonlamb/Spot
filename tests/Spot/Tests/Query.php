@@ -253,6 +253,7 @@ class Query extends SpotTestCase
 	{
 		$mapper = test_spot_mapper();
 		$posts = $mapper->all('\Spot\Entity\Post');
+#d($posts);
 		$mappedPosts = $posts->map(function($p) {
 			return $p->status;
 		});
