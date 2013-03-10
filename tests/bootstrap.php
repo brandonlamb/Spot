@@ -21,17 +21,21 @@ spl_autoload_register(function($className) {
 	}
 });
 
+// Setup cache manager
+$cache = new \CacheCache\Cache(new \CacheCache\Backends\Dummy());
+$cacheManager = new \CacheCache\CacheManager();
+$cacheManager->set('cacheDummy', $cache);
+
 // Setup available adapters for testing
 $options = array(
 	\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
 	\PDO::ATTR_CASE => \PDO::CASE_LOWER,
 	\PDO::ATTR_PERSISTENT => true,
 );
-$db = new \Spot\Adapter\Mock();
-$db->query("SET SCHEMA 'test'");
 
 $cfg = \Spot\Config::getInstance();
-$cfg->addConnection('db', new \Spot\Adapter\Pgsql($db));
+$cfg->addConnection('db', new \Spot\Adapter\Mock());
+
 
 // Return Spot mapper for use
 $mapper = new \Spot\Mapper($cfg);
