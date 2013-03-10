@@ -1,6 +1,6 @@
 <?php
 
-namespace Spot\Adapter {}
+namespace Spot\Adapter;
 
 class Mock implements AdapterInterface
 {
