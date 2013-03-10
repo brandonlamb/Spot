@@ -19,7 +19,7 @@ class Datetime implements TypeInterface
 				$value = null;
 			}
 		}
-		return $value->format('Y-m-d');
+		return null === $value ? $value : $value->format('Y-m-d');
 	}
 
 	/**

@@ -12,8 +12,8 @@ class Relations extends SpotTestCase
 	public static function setupBeforeClass()
 	{
 		$mapper = test_spot_mapper();
-		$mapper->migrate('\Spot\Entity\Post');
-		$mapper->migrate('\Spot\Entity\Post\Comment');
+#		$mapper->migrate('\Spot\Entity\Post');
+#		$mapper->migrate('\Spot\Entity\Post\Comment');
 	}
 	public static function tearDownAfterClass()
 	{

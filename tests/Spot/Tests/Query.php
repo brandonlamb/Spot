@@ -16,11 +16,11 @@ class Query extends SpotTestCase
 	{
 		$mapper = test_spot_mapper();
 
-		$mapper->migrate('\Spot\Entity\Post');
-		$mapper->truncateDatasource('\Spot\Entity\Post');
+#		$mapper->migrate('\Spot\Entity\Post');
+#		$mapper->truncateDatasource('\Spot\Entity\Post');
 
-		$mapper->migrate('\Spot\Entity\Post\Comment');
-		$mapper->truncateDatasource('\Spot\Entity\Post\Comment');
+#		$mapper->migrate('\Spot\Entity\Post\Comment');
+#		$mapper->truncateDatasource('\Spot\Entity\Post\Comment');
 
 		// Insert blog dummy data
 		for( $i = 1; $i <= 10; $i++ ) {
@@ -129,18 +129,18 @@ class Query extends SpotTestCase
 	public function testArrayMultiple()
 	{
 		$mapper = test_spot_mapper();
-		$posts = $mapper->all('\Spot\Entity\Post', array('status' => array(3,4,5)));
+		$posts = $mapper->all('\Spot\Entity\Post', array('status' => array(3, 4, 5)));
 		$this->assertEquals(3, $posts->count());
-		$posts = $mapper->all('\Spot\Entity\Post', array('status :in' => array(3,4,5)));
+		$posts = $mapper->all('\Spot\Entity\Post', array('status :in' => array(3, 4, 5)));
 		$this->assertEquals(3, $posts->count());
 	}
 
 	public function testArrayNotInMultiple()
 	{
 		$mapper = test_spot_mapper();
-		$posts = $mapper->all('\Spot\Entity\Post', array('status !=' => array(3,4,5)));
+		$posts = $mapper->all('\Spot\Entity\Post', array('status !=' => array(3, 4, 5)));
 		$this->assertEquals(7, $posts->count());
-		$posts = $mapper->all('\Spot\Entity\Post', array('status :not' => array(3,4,5)));
+		$posts = $mapper->all('\Spot\Entity\Post', array('status :not' => array(3, 4, 5)));
 		$this->assertEquals(7, $posts->count());
 	}
 
@@ -179,7 +179,7 @@ class Query extends SpotTestCase
 		$count1 = \Spot\Log::queryCount();
 
 		// Change query so count will NOT be cached
-		$this->assertEquals(3, $posts->where(array('status' => array(3,4,5)))->count());
+		$this->assertEquals(3, $posts->where(array('status' => array(3, 4, 5)))->count());
 
 		// Count again to ensure it is NOT cached since there are query changes
 		$count2 = \Spot\Log::queryCount();
@@ -254,13 +254,13 @@ class Query extends SpotTestCase
 	{
 		$mapper = test_spot_mapper();
 		$posts = $mapper->all('\Spot\Entity\Post');
-		$mapped_array = $posts->map(function($p) {
+		$mappedPosts = $posts->map(function($p) {
 			return $p->status;
 		});
 
-		sort($mapped_array);
+		sort($mappedPosts);
 
-		$this->assertEquals(array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), $mapped_array);
+		$this->assertEquals(array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), $mappedPosts);
 	}
 
 	public function testFilter()
@@ -269,11 +269,11 @@ class Query extends SpotTestCase
 		$posts = $mapper->all('\Spot\Entity\Post');
 		$this->assertNotEquals(1, $posts->count());
 
-		$filtered_array = $posts->filter(function($p) {
+		$filteredPosts = $posts->filter(function($p) {
 			return $p->title == 'odd_title';
 		});
 
-		$this->assertEquals(5, count($filtered_array));
+		$this->assertEquals(5, count($filteredPosts));
 
 	}
 }

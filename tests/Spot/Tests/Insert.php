@@ -12,7 +12,7 @@ class Insert extends SpotTestCase
 	public static function setupBeforeClass()
 	{
 		$mapper = test_spot_mapper();
-		$mapper->migrate('\Spot\Entity\Post');
+#		$mapper->migrate('\Spot\Entity\Post');
 	}
 
 	public function testInsertPostEntity()

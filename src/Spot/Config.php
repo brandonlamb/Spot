@@ -51,11 +51,12 @@ class Config implements \Serializable
 
 	/**
 	 * Singleton method
+	 * @param bool $reset, if flag is true, re-instantiate the singleton instance
 	 * @return \Spot\Config
 	 */
-	public static function getInstance()
+	public static function getInstance($reset = false)
 	{
-		if (!isset(static::$instance)) {
+		if ($reset === true || !isset(static::$instance)) {
 			static::$instance = new static;
 		}
 		return static::$instance;

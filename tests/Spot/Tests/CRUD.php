@@ -12,12 +12,12 @@ class CRUD extends SpotTestCase
 	public static function setupBeforeClass()
 	{
 		$mapper = test_spot_mapper();
-		$mapper->migrate('\Spot\Entity\Post');
+#		$mapper->migrate('\Spot\Entity\Post');
 	}
 	public static function tearDownAfterClass()
 	{
 		$mapper = test_spot_mapper();
-		$mapper->truncateDatasource('\Spot\Entity\Post');
+#		$mapper->truncateDatasource('\Spot\Entity\Post');
 	}
 
 	public function testSampleNewsInsert()

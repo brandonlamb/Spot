@@ -36,7 +36,7 @@ $options = array(
 	\PDO::ATTR_PERSISTENT => true,
 );
 
-$cfg = \Spot\Config::getInstance();
+$cfg = \Spot\Config::getInstance(true);
 $cfg->addConnection('db', new \Spot\Adapter\Mock());
 
 
