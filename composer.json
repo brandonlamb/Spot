@@ -13,19 +13,19 @@
 			"homepage": "http://www.vancelucas.com"
 		}
 	],
+	"autoload": {
+		"psr-0": {
+			"Spot": "src/"
+		}
+	}
+	"require": {
+		"php": ">=5.3.2",
+		"brandonlamb/CacheCache" : ">=1.0.0"
+	},
 	"repositories": [
 		{
 			"type": "vcs",
 			"url": "https://github.com/brandonlamb/CacheCache"
 		}
 	],
-	"require": {
-		"php": ">=5.3.2",
-		"brandonlamb/CacheCache" : "master"
-	},
-	"autoload": {
-		"psr-0": {
-			"Spot": "lib/"
-		}
-	}
 }
