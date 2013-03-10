@@ -4,7 +4,7 @@
  */
 
 // Require Spot_Config
-require_once dirname(__DIR__) . '/lib/Spot/Config.php';
+require_once dirname(__DIR__) . '/src/Spot/Config.php';
 
 // Date setup
 date_default_timezone_set('America/Los_Angeles');

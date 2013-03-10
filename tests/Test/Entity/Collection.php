@@ -21,21 +21,20 @@ class Test_Entity_Collection extends PHPUnit_Framework_TestCase
 	public function tearDown() {}
 
 	/**
-	* New collection has size 0
-	Collection with one element has size 1
-	Collection with two elements has size 2
-	Two collection, size 1 and size 2 merged have size 3
-	collection from array with 0 elements has size 0
-	collection from array with 2 elements has size 2
-	toString of collection with 2 elements
-
-	@todo The following Collection tests
-	collection with two elements, first is first
-	after iterating through collection, first is first
-	arrayAccess[0] of empty collection
-	arrayAccess[1] of collection with 2 element is second element
-	*/
-
+	 * New collection has size 0
+	 * Collection with one element has size 1
+	 * Collection with two elements has size 2
+	 * Two collection, size 1 and size 2 merged have size 3
+	 * collection from array with 0 elements has size 0
+	 * collection from array with 2 elements has size 2
+	 * toString of collection with 2 elements
+	 *
+	 * @todo The following Collection tests
+	 * collection with two elements, first is first
+	 * after iterating through collection, first is first
+	 * arrayAccess[0] of empty collection
+	 * arrayAccess[1] of collection with 2 element is second element
+	 */
 
 	public function testNewCollectionHasSizeZero()
 	{
@@ -132,22 +131,22 @@ class Test_Entity_Collection extends PHPUnit_Framework_TestCase
 
 		$this->assertEquals("Spot\\Entity\\Collection[1]", (string) $this->collection);
 	}
-	
+
 	public function testFunctionalMethods()
 	{
 		$this->assertEquals(array(), $this->collection->map(function($x){ return $x; }));
-		
+
 		$ep = new Entity_Post(array('key'=>'value'));
 		$this->collection->add(new Entity_Post(array('key'=>'value2')));
 		$this->collection->add($ep);
-		
+
 		$this->assertEquals(
 			array('value2', 'value'),
 			$this->collection->map(function($x){ return $x->key; })
 		);
-		
+
 		$filterResult = $this->collection->filter(function($x) { return $x->key == 'value'; });
-		
+
 		$this->assertTrue($filterResult instanceOf \Spot\Entity\Collection);
 		$this->assertSame(1, $filterResult->count());
 		$this->assertSame($ep, $filterResult->first());
