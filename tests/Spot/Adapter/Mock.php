@@ -6,7 +6,20 @@ use Spot\Query;
 
 class Mock implements AdapterInterface
 {
-	public function __construct($connection = null) {}
+	/**
+	 * @var array, fake datasource
+	 * datasource['tableName1']
+	 */
+	protected $datasource;
+
+	/**
+	 * If passed an array assume its a format to use for datasource
+	 */
+	public function __construct($connection = null)
+	{
+		$this->datasource = is_array($connection) ? $connection : array();
+	}
+
 	public function connection() {}
 	public function dateFormat() {}
 	public function timeFormat() {}
@@ -22,7 +35,7 @@ class Mock implements AdapterInterface
 
 	}
 
-	public function count(Query $query, array $options = array()) {}
+	public function count( Query $query, array $options = array()) {}
 	public function update($source, array $data, array $where = array(), array $options = array()) {}
 	public function delete($source, array $where, array $options = array()) {}
 	public function beginTransaction() {}
