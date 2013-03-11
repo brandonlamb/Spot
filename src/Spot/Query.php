@@ -103,6 +103,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 
 			return call_user_func_array($callback, $args);
 		} else if (method_exists('\\Spot\\Entity\\Collection', $method)) {
+d($this->execute());
 			return $this->execute()->$method($args[0]);
 		} else {
 			throw new \BadMethodCallException("Method '" . __CLASS__ . "::" . $method . "' not found");

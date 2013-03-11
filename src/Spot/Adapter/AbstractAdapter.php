@@ -263,7 +263,7 @@ abstract class AbstractAdapter
 	public function read(Query $query, array $options = array())
 	{
 		if (($cache = $query->mapper()->getCache()) && $data = $cache->get($query->cacheKey())) {
-echo "\nFROM CACHE\n";
+#echo "\nFROM CACHE\n";
 			return $query->mapper()->collection($query->entityName(), $data);
 		}
 

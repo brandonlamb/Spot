@@ -8,7 +8,8 @@
 
 namespace Spot;
 
-use CacheCache\Cache\BackendInterface;
+use CacheCache\Cache,
+	CacheCache\BackendInterface;
 
 class Mapper
 {
@@ -20,7 +21,7 @@ class Mapper
 	protected $queryClass = '\\Spot\\Query';
 	protected $exceptionClass = '\\Spot\\Exception';
 
-	/** @var \CacheCache\Cache\BackendInterface */
+	/** @var \CacheCache\BackendInterface */
 	protected $cache;
 
 	/** @vary array, Array of error messages and types */
@@ -716,10 +717,10 @@ class Mapper
 
 	/**
 	 * Set the mapper's cache object
-	 * @param \CacheCache\Cache\BackendInterface $cache
+	 * @param \CacheCache\BackendInterface $cache
 	 * @return $this
 	 */
-	public function setCache(BackendInterface $cache)
+	public function setCache(Cache $cache)
 	{
 		$this->cache = $cache;
 		return $this;
@@ -727,7 +728,7 @@ class Mapper
 
 	/**
 	 * Retrieve the cache object, or false if none is set
-	 * @return \CacheCache\Cache\BackendInterface|bool
+	 * @return \CacheCache\BackendInterface|bool
 	 */
 	public function getCache()
 	{
