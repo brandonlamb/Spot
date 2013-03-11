@@ -49,9 +49,9 @@ class Transactions extends SpotTestCase
 				$result = $mapper->insert($post);
 
 				// Throw exception AFTER save to trigger rollback
-				throw new LogicException("Exceptions should trigger auto-rollback");
+				throw new \LogicException("Exceptions should trigger auto-rollback");
 			});
-		} catch(LogicException $e) {
+		} catch(\LogicException $e) {
 			// Ensure record was NOT saved
 			$this->assertFalse($mapper->first('\Spot\Entity\Post', array('title' => $post->title)));
 		}
