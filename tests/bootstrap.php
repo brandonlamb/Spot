@@ -32,11 +32,12 @@ $cacheManager->set('cacheDummy', $cache);
 // Setup available adapters for testing
 $options = array(
 	\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
-	\PDO::ATTR_CASE => \PDO::CASE_LOWER,
+#	\PDO::ATTR_CASE => \PDO::CASE_LOWER,
 	\PDO::ATTR_PERSISTENT => true,
 );
 
-$db = new Pdo('mysql:host=localhost;dbname=test', 'testuser', 'testpass', $options);
+$db = new \Pdo('mysql:host=localhost;dbname=test', 'test', 'test', $options);
+#$db = new \Pdo('sqlite::memory:');
 
 // Setup config
 $cfg = \Spot\Config::getInstance(true);
