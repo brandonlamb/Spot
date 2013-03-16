@@ -12,23 +12,21 @@ class Config extends SpotTestCase
 	public function testAddConnectionWithDSNString()
 	{
 		$cfg = \Spot\Config::getInstance(true);
-		$adapter = $cfg->addConnection('test_mysql', 'mysql://test:password@localhost/test');
-		$this->assertInstanceOf('\Spot\Adapter\Mysql', $adapter);
+		$adapter = $cfg->addConnection('test_adapter', new \Spot\Adapter\Mock());
+		$this->assertInstanceOf('\Spot\Adapter\Mock', $adapter);
 	}
 
 	public function testConfigCanSerialize()
 	{
 		$cfg = \Spot\Config::getInstance(true);
-		$adapter = $cfg->addConnection('test_mysql', 'mysql://test:password@localhost/test');
-
+		$adapter = $cfg->addConnection('test_adapter', new \Spot\Adapter\Mock());
 		$this->assertInternalType('string', serialize($cfg));
 	}
 
 	public function testConfigCanUnserialize()
 	{
 		$cfg = \Spot\Config::getInstance(true);
-		$adapter = $cfg->addConnection('test_mysql', 'mysql://test:password@localhost/test');
-
+		$adapter = $cfg->addConnection('test_adapter', new \Spot\Adapter\Mock());
 		$this->assertInstanceOf('\Spot\Config', unserialize(serialize($cfg)));
 	}
 }

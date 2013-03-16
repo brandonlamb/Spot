@@ -453,7 +453,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 		$that = $this;
 
 		// New scope with closure to get only PUBLIC properties of object instance (can't include cache property)
-		$cacheKey = function() use ($that) { return sha1(var_export(get_object_vars($that), true)) . "_count"; };
+		$cacheKey = function() use ($that) { return sha1(var_export(get_object_vars($that), true)) . '_count'; };
 		$cacheResult = isset($this->cache[$cacheKey()]) ? $this->cache[$cacheKey()] : false;
 
 		// Check cache

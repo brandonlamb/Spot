@@ -12,12 +12,12 @@ class Validation extends SpotTestCase
 	public static function setupBeforeClass()
 	{
 		$mapper = test_spot_mapper();
-		$mapper->migrate('Entity_User');
+		$mapper->migrate('\Spot\Entity\User');
 	}
 	public static function tearDownAfterClass()
 	{
 		$mapper = test_spot_mapper();
-		$mapper->truncateDatasource('Entity_User');
+		$mapper->truncateDatasource('\Spot\Entity\User');
 	}
 
 	public function testUniqueFieldCreatesValidationError()
@@ -25,7 +25,7 @@ class Validation extends SpotTestCase
 		$mapper = test_spot_mapper();
 
 		// Setup new user
-		$user1 = new Entity_User(array(
+		$user1 = new \Spot\Entity\User(array(
 			'email' => 'test@test.com',
 			'password' => 'test',
 			'is_admin' => true
@@ -33,7 +33,7 @@ class Validation extends SpotTestCase
 		$mapper->save($user1);
 
 		// Setup new user (identical, expecting a validation error)
-		$user2 = new Entity_User(array(
+		$user2 = new \Spot\Entity\User(array(
 			'email' => 'test@test.com',
 			'password' => 'test',
 			'is_admin' => false

@@ -44,7 +44,7 @@ class Relations extends SpotTestCase
 	/**
 	 * @depends testBlogPostInsert
 	 */
-	public function testBlogCommentsRelationInsertByObject($postId)
+	public function testBlogCommentsRelationInsertByObject($postId = 1)
 	{
 		$mapper = test_spot_mapper();
 		$post = $mapper->get('\Spot\Entity\Post', $postId);
@@ -79,7 +79,7 @@ class Relations extends SpotTestCase
 	/**
 	 * @depends testBlogPostInsert
 	 */
-	public function testBlogCommentsCanIterateEntity($postId)
+	public function testBlogCommentsCanIterateEntity($postId = 1)
 	{
 		$mapper = test_spot_mapper();
 		$post = $mapper->get('\Spot\Entity\Post', $postId);
@@ -117,7 +117,7 @@ class Relations extends SpotTestCase
 	/**
 	 * @depends testBlogPostInsert
 	 */
-	public function testBlogCommentsRelationCountOne($postId)
+	public function testBlogCommentsRelationCountOne($postId = 1)
 	{
 		$mapper = test_spot_mapper();
 		$post = $mapper->get('\Spot\Entity\Post', $postId);
@@ -127,7 +127,7 @@ class Relations extends SpotTestCase
 	/**
 	 * @depends testBlogPostInsert
 	 */
-	public function testBlogCommentsRelationReturnsRelationObject($postId)
+	public function testBlogCommentsRelationReturnsRelationObject($postId = 1)
 	{
 		$mapper = test_spot_mapper();
 		$post = $mapper->get('\Spot\Entity\Post', $postId);
@@ -137,7 +137,7 @@ class Relations extends SpotTestCase
 	/**
 	 * @depends testBlogPostInsert
 	 */
-	public function testBlogCommentsRelationCanBeModified($postId)
+	public function testBlogCommentsRelationCanBeModified($postId = 1)
 	{
 		$mapper = test_spot_mapper();
 		$post = $mapper->get('\Spot\Entity\Post', $postId);
@@ -150,7 +150,7 @@ class Relations extends SpotTestCase
 	/**
 	 * @depends testBlogPostInsert
 	 */
-	public function testRelationshipQueryNotReset($postId)
+	public function testRelationshipQueryNotReset($postId = 1)
 	{
 		$mapper = test_spot_mapper();
 		$post = $mapper->get('\Spot\Entity\Post', $postId);
@@ -168,7 +168,7 @@ class Relations extends SpotTestCase
 	/**
 	 * @depends testBlogPostInsert
 	 */
-	public function testRelationshipQueryResetting($postId)
+	public function testRelationshipQueryResetting($postId = 1)
 	{
 		$mapper = test_spot_mapper();
 		$post = $mapper->get('\Spot\Entity\Post', $postId);
@@ -188,7 +188,7 @@ class Relations extends SpotTestCase
 	/**
 	 * @depends testBlogPostInsert
 	 */
-	public function testRelationshipQueryAdditionalConditionResetting($postId)
+	public function testRelationshipQueryAdditionalConditionResetting($postId = 1)
 	{
 		$mapper = test_spot_mapper();
 		$post = $mapper->get('\Spot\Entity\Post', $postId);

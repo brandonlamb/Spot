@@ -12,7 +12,7 @@
 
 	<testsuites>
 		<testsuite name="Spot Test Suite">
-			<directory suffix="CRUD.php">./tests/Spot/Tests</directory>
+			<directory suffix=".php">./tests/Spot/Tests</directory>
 		</testsuite>
 	</testsuites>
 
