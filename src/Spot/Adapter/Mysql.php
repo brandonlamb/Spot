@@ -7,12 +7,12 @@ namespace Spot\Adapter;
  * @package Spot
  * @link http://spot.os.ly
  */
-class Mysql extends PDO_Abstract implements AdapterInterface
+class Mysql extends AbstractAdapter implements AdapterInterface
 {
 	// Format for date columns, formatted for PHP's date() function
-	protected $formatDate = "Y-m-d";
-	protected $formatTime = " H:i:s";
-	protected $formatDatetime = "Y-m-d H:i:s";
+	protected $formatDate = 'Y-m-d';
+	protected $formatTime = ' H:i:s';
+	protected $formatDatetime = 'Y-m-d H:i:s';
 
 	// Driver-Specific settings
 	protected $engine = 'InnoDB';
@@ -84,7 +84,7 @@ class Mysql extends PDO_Abstract implements AdapterInterface
 
 		// Get current fields for table
 		$tableExists = false;
-		$tableColumns = $this->getColumnsForTable($table, $this->_database);
+		$tableColumns = $this->getColumnsForTable($table, $this->database);
 
 		if ($tableColumns) {
 			$tableExists = true;
@@ -132,7 +132,6 @@ class Mysql extends PDO_Abstract implements AdapterInterface
 		return true;
 	}
 
-
 	/**
 	 * Execute an ALTER/UPDATE TABLE command
 	 *
@@ -150,13 +149,13 @@ class Mysql extends PDO_Abstract implements AdapterInterface
 		*/
 
 		// Prepare fields and get syntax for each
-		$tableColumns = $this->getColumnsForTable($table, $this->_database);
+		$tableColumns = $this->getColumnsForTable($table, $this->database);
 		$updateFormattedFields = array();
 		foreach ($tableColumns as $fieldName => $columnInfo) {
 			if (isset($formattedFields[$fieldName])) {
 				// TODO: Need to do a more exact comparison and make this non-mysql specific
 				if (
-						$this->_fieldTypeMap[$formattedFields[$fieldName]['type']] != $columnInfo['DATA_TYPE'] ||
+						$this->fieldTypeMap[$formattedFields[$fieldName]['type']] != $columnInfo['DATA_TYPE'] ||
 						$formattedFields[$fieldName]['default'] !== $columnInfo['COLUMN_DEFAULT']
 					) {
 					$updateFormattedFields[$fieldName] = $formattedFields[$fieldName];
@@ -186,7 +185,7 @@ class Mysql extends PDO_Abstract implements AdapterInterface
 			try {
 				// Run SQL
 				$this->connection()->exec($sql);
-			} catch(\PDOException $e) {
+			} catch (\PDOException $e) {
 				// Table does not exist - special Exception case
 				if ($e->getCode() == "42S02") {
 					throw new \Spot\Exception\Datasource\Missing("Table '" . $table . "' does not exist");
@@ -209,6 +208,271 @@ class Mysql extends PDO_Abstract implements AdapterInterface
 			'charset' => $this->charset,
 			'collate' => $this->collate,
 		);
+	}
+
+	/**
+	 * Syntax for each column in CREATE TABLE command
+	 *
+	 * @param string $fieldName Field name
+	 * @param array $fieldInfo Array of field settings
+	 * @return string SQL syntax
+	 */
+	public function migrateSyntaxFieldCreate($fieldName, array $fieldInfo)
+	{
+		// Ensure field type exists
+		if (!isset($this->fieldTypeMap[$fieldInfo['type']])) {
+			throw new \Spot\Exception("Field type '" . $fieldInfo['type'] . "' not supported");
+		}
+
+		//Ensure this class will choose adapter type
+		unset($fieldInfo['adapter_type']);
+
+		$fieldInfo = array_merge($this->fieldTypeMap[$fieldInfo['type']],$fieldInfo);
+		$syntax = "`" . $fieldName . "` " . $fieldInfo['adapter_type'];
+
+		// Column type and length
+		$syntax .= ($fieldInfo['length']) ? '(' . $fieldInfo['length'] . ')' : '';
+
+		// Unsigned
+		$syntax .= ($fieldInfo['unsigned']) ? ' unsigned' : '';
+
+		// Collate
+		$syntax .= ($fieldInfo['type'] == 'string' || $fieldInfo['type'] == 'text') ? ' COLLATE ' . $this->collate : '';
+
+		// Nullable
+		$isNullable = true;
+		if ($fieldInfo['required'] || !$fieldInfo['null']) {
+			$syntax .= ' NOT NULL';
+			$isNullable = false;
+		}
+
+		// Default value
+		if ($fieldInfo['default'] === null && $isNullable) {
+			$syntax .= " DEFAULT NULL";
+		} elseif ($fieldInfo['default'] !== null) {
+			$default = $fieldInfo['default'];
+			// If it's a boolean and $default is boolean then it should be 1 or 0
+			if ( is_bool($default) && $fieldInfo['type'] == "boolean" ) {
+				$default = $default ? 1 : 0;
+			}
+
+			if (is_scalar($default)) {
+				$syntax .= " DEFAULT '" . $default . "'";
+			}
+		}
+
+		// Extra
+		$syntax .= ($fieldInfo['primary'] && $fieldInfo['serial']) ? ' AUTO_INCREMENT' : '';
+		return $syntax;
+	}
+
+	/**
+	 * Syntax for CREATE TABLE with given fields and column syntax
+	 *
+	 * @param string $table Table name
+	 * @param array $formattedFields Array of fields with all settings
+	 * @param array $columnsSyntax Array of SQL syntax of columns produced by 'migrateSyntaxFieldCreate' function
+	 * @param Array $options Options that may affect migrations or how tables are setup
+	 * @return string SQL syntax
+	 */
+	public function migrateSyntaxTableCreate($table, array $formattedFields, array $columnsSyntax, array $options)
+	{
+		$options = $this->formatMigrateOptions($options);
+
+		// Begin syntax soup
+		$syntax = "CREATE TABLE IF NOT EXISTS `" . $table . "` (\n";
+
+		// Columns
+		$syntax .= implode(",\n", $columnsSyntax);
+
+		// Keys...
+		$ki = 0;
+		$tableKeys = array(
+			'primary' => array(),
+			'unique' => array(),
+			'index' => array()
+		);
+		$fulltextFields = array();
+		$usedKeyNames = array();
+
+		foreach ($formattedFields as $fieldName => $fieldInfo) {
+			// Determine key field name (can't use same key name twice, so we have to append a number)
+			$fieldKeyName = $fieldName;
+			while (in_array($fieldKeyName, $usedKeyNames)) {
+				$fieldKeyName = $fieldName . '_' . $ki;
+			}
+
+			// Key type
+			if ($fieldInfo['primary']) {
+				$tableKeys['primary'][] = $fieldName;
+			}
+
+			if ($fieldInfo['unique']) {
+				if (is_string($fieldInfo['unique'])) {
+					// Named group
+					$fieldKeyName = $fieldInfo['unique'];
+				}
+				$tableKeys['unique'][$fieldKeyName][] = $fieldName;
+				$usedKeyNames[] = $fieldKeyName;
+			}
+
+			if ($fieldInfo['index']) {
+				$fieldKeyName = $fieldName;
+				if (is_string($fieldInfo['index'])) {
+					// Named group
+					$fieldKeyName = $fieldInfo['index'];
+				}
+				$tableKeys['index'][$fieldKeyName][] = $fieldName;
+				$usedKeyNames[] = $fieldKeyName;
+			}
+
+			// FULLTEXT search
+			if ($fieldInfo['fulltext']) {
+				$fulltextFields[] = $fieldName;
+			}
+		}
+
+		// FULLTEXT
+		if ($fulltextFields) {
+			// Ensure table type is MyISAM if FULLTEXT columns have been specified
+			if ('myisam' !== strtolower($options['engine'])) {
+				$options['engine'] = 'MyISAM';
+			}
+			$syntax .= "\n, FULLTEXT(`" . implode('`, `', $fulltextFields) . "`)";
+		}
+
+		// PRIMARY
+		if ($tableKeys['primary']) {
+			$syntax .= "\n, PRIMARY KEY(`" . implode('`, `', $tableKeys['primary']) . "`)";
+		}
+
+		// UNIQUE
+		foreach ($tableKeys['unique'] as $keyName => $keyFields) {
+			$syntax .= "\n, UNIQUE KEY `" . $keyName . "` (`" . implode('`, `', $keyFields) . "`)";
+		}
+
+		// INDEX
+		foreach ($tableKeys['index'] as $keyName => $keyFields) {
+			$syntax .= "\n, KEY `" . $keyName . "` (`" . implode('`, `', $keyFields) . "`)";
+		}
+
+		// Extra
+		$syntax .= "\n) ENGINE=" . $options['engine'] . " DEFAULT CHARSET=" . $options['charset'] . " COLLATE=" . $options['collate'] . ";";
+
+		return $syntax;
+	}
+
+	/**
+	 * Syntax for each column in CREATE TABLE command
+	 *
+	 * @param string $fieldName Field name
+	 * @param array $fieldInfo Array of field settings
+	 * @return string SQL syntax
+	 */
+	public function migrateSyntaxFieldUpdate($fieldName, array $fieldInfo, $add = false)
+	{
+		return ( $add ? "ADD COLUMN " : "MODIFY " ) . $this->migrateSyntaxFieldCreate($fieldName, $fieldInfo);
+	}
+
+	/**
+	 * Syntax for ALTER TABLE with given fields and column syntax
+	 *
+	 * @param string $table Table name
+	 * @param array $formattedFields Array of fields with all settings
+	 * @param array $columnsSyntax Array of SQL syntax of columns produced by 'migrateSyntaxFieldUpdate' function
+	 * @return string SQL syntax
+	 */
+	public function migrateSyntaxTableUpdate($table, array $formattedFields, array $columnsSyntax, array $options)
+	{
+		/*
+		  Example:
+
+			ALTER TABLE `posts`
+			CHANGE `title` `title` VARCHAR( 255 ) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL ,
+			CHANGE `status` `status` VARCHAR( 40 ) CHARACTER SET utf8 COLLATE utf8_unicode_ci NULL DEFAULT 'draft'
+		*/
+
+		$options = $this->formatMigrateOptions($options);
+
+		// Begin syntax soup
+		$syntax = "ALTER TABLE `" . $table . "` \n";
+
+		// Columns
+		$syntax .= implode(",\n", $columnsSyntax);
+
+		// Keys...
+		$ki = 0;
+		$tableKeys = array(
+			'primary' => array(),
+			'unique' => array(),
+			'index' => array()
+		);
+		$fulltextFields = array();
+		$usedKeyNames = array();
+		foreach ($formattedFields as $fieldName => $fieldInfo) {
+			// Determine key field name (can't use same key name twice, so we have to append a number)
+			$fieldKeyName = $fieldName;
+			while (in_array($fieldKeyName, $usedKeyNames)) {
+				$fieldKeyName = $fieldName . '_' . $ki;
+			}
+
+			// Key type
+			if ($fieldInfo['primary']) {
+				$tableKeys['primary'][] = $fieldName;
+			}
+
+			if ($fieldInfo['unique']) {
+				if (is_string($fieldInfo['unique'])) {
+					// Named group
+					$fieldKeyName = $fieldInfo['unique'];
+				}
+				$tableKeys['unique'][$fieldKeyName][] = $fieldName;
+				$usedKeyNames[] = $fieldKeyName;
+			}
+
+			if ($fieldInfo['index']) {
+				if (is_string($fieldInfo['index'])) {
+					// Named group
+					$fieldKeyName = $fieldInfo['index'];
+				}
+				$tableKeys['index'][$fieldKeyName][] = $fieldName;
+				$usedKeyNames[] = $fieldKeyName;
+			}
+
+			// FULLTEXT search
+			if ($fieldInfo['fulltext']) {
+				$fulltextFields[] = $fieldName;
+			}
+		}
+
+		// FULLTEXT
+		if ($fulltextFields) {
+			// Ensure table type is MyISAM if FULLTEXT columns have been specified
+			if ('myisam' !== strtolower($options['engine'])) {
+				$options['engine'] = 'MyISAM';
+			}
+			$syntax .= "\n, FULLTEXT(`" . implode('`, `', $fulltextFields) . "`)";
+		}
+
+		// PRIMARY
+		if ($tableKeys['primary']) {
+			$syntax .= "\n, PRIMARY KEY(`" . implode('`, `', $tableKeys['primary']) . "`)";
+		}
+
+		// UNIQUE
+		foreach ($tableKeys['unique'] as $keyName => $keyFields) {
+			$syntax .= "\n, UNIQUE KEY `" . $keyName . "` (`" . implode('`, `', $keyFields) . "`)";
+		}
+
+		// INDEX
+		foreach ($tableKeys['index'] as $keyName => $keyFields) {
+			$syntax .= "\n, KEY `" . $keyName . "` (`" . implode('`, `', $keyFields) . "`)";
+		}
+
+		// Extra
+		$syntax .= ",\n ENGINE=" . $options['engine'] . " DEFAULT CHARSET=" . $options['charset'] . " COLLATE=" . $options['collate'] . ";";
+
+		return $syntax;
 	}
 
 	/**
@@ -249,9 +513,9 @@ class Mysql extends PDO_Abstract implements AdapterInterface
 
 		try {
 			return $this->connection()->exec($sql);
-		} catch(\PDOException $e) {
+		} catch (\PDOException $e) {
 			// Table does not exist
-			if($e->getCode() == "42S02") {
+			if ($e->getCode() == "42S02") {
 				throw new \Spot\Exception\Datasource\Missing("Table or datasource '" . $datasource . "' does not exist");
 			}
 
@@ -274,9 +538,9 @@ class Mysql extends PDO_Abstract implements AdapterInterface
 
 		try {
 			return $this->connection()->exec($sql);
-		} catch(\PDOException $e) {
+		} catch (\PDOException $e) {
 			// Table does not exist
-			if($e->getCode() == '42S02') {
+			if ($e->getCode() == '42S02') {
 				throw new \Spot\Exception\Datasource\Missing("Table or datasource '" . $datasource . "' does not exist");
 			}
 
@@ -285,5 +549,16 @@ class Mysql extends PDO_Abstract implements AdapterInterface
 		}
 
 		return $this;
+	}
+
+	/**
+	 * Get/set the database name
+	 * @param string $database
+	 * @return string
+	 */
+	public function database($database = null)
+	{
+		null !== $database && $this->database = (string) $database;
+		return $this->database;
 	}
 }

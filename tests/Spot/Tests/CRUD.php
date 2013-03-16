@@ -41,7 +41,7 @@ class CRUD extends SpotTestCase
 		$post->date_created = null;
 		try {
 			$result = $mapper->insert($post); // returns an id
-		} catch(Exception $e) {
+		} catch (Exception $e) {
 			$result = false;
 		}
 
@@ -61,6 +61,7 @@ class CRUD extends SpotTestCase
 		// Insert Post into database
 		$mapper = test_spot_mapper();
 		$post = $mapper->get('\Spot\Entity\Post');
+
 		$post->title = "Types Test";
 		$post->body = "<p>This is a really awesome super-duper post.</p><p>It's really quite lovely.</p>";
 		$post->status = 1;
@@ -69,6 +70,7 @@ class CRUD extends SpotTestCase
 
 		// Read Post from database
 		$post = $mapper->get('\Spot\Entity\Post', $result);
+		$this->assertTrue($post instanceof \Spot\Entity\Post);
 
 		// Strict equality
 		$this->assertSame(1, $post->status);

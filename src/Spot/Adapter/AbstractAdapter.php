@@ -27,14 +27,11 @@ abstract class AbstractAdapter
 	/**
 	 * @param PDO $connection DSN string or pre-existing Mongo object
 	 * @throws \InvalidArgumentException
+	 * @todo Tighter control of passing connection object. PdoInterface or \PDO?
 	 */
 	public function __construct($connection)
 	{
-		if ($connection instanceof \PDO || $connection instanceof PdoInterface) {
-			$this->connection = $connection;
-		} else {
-			throw new \InvalidArgumentException('Connection is not a PDO object or PdoInterface');
-		}
+		$this->connection = $connection;
 
 		$this->fieldTypeMap = array(
 			'string' => array('adapter_type' => 'varchar', 'length' => 255),
@@ -263,7 +260,6 @@ abstract class AbstractAdapter
 	public function read(Query $query, array $options = array())
 	{
 		if (($cache = $query->mapper()->getCache()) && $data = $cache->get($query->cacheKey())) {
-#echo "\nFROM CACHE\n";
 			return $query->mapper()->collection($query->entityName(), $data);
 		}
 

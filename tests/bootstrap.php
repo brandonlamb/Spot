@@ -36,9 +36,13 @@ $options = array(
 	\PDO::ATTR_PERSISTENT => true,
 );
 
+$db = new Pdo('mysql:host=localhost;dbname=test', 'testuser', 'testpass', $options);
+
 // Setup config
 $cfg = \Spot\Config::getInstance(true);
-$cfg->addConnection('db', new \Spot\Adapter\Mock());
+$adapter = new \Spot\Adapter\Mysql($db);
+$adapter->database('test');
+$cfg->addConnection('db', $adapter);
 
 // Return Spot mapper for use
 $mapper = new \Spot\Mapper($cfg);
