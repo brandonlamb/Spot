@@ -25,11 +25,11 @@ class Log
 	public static function addQuery($adapter, $query, $data = null)
 	{
 		// Shift element off beginning of array if we're at the query limit
-		if (self::queryCount() >= self::queryLimit()) {
-			array_shift(self::$queries);
+		if (static::queryCount() >= static::queryLimit()) {
+			array_shift(static::$queries);
 		}
 
-		self::$queries[] = array(
+		static::$queries[] = array(
 			'adapter' => get_class($adapter),
 			'query' => $query,
 			'data' => $data
@@ -43,7 +43,7 @@ class Log
 	 */
 	public static function queries()
 	{
-		return self::$queries;
+		return static::$queries;
 	}
 
 	/**
@@ -53,7 +53,7 @@ class Log
 	 */
 	public static function lastQuery()
 	{
-		return end(self::$queries);
+		return end(static::$queries);
 	}
 
 	/**
@@ -63,7 +63,7 @@ class Log
 	 */
 	public static function queryCount()
 	{
-		return count(self::$queries);
+		return count(static::$queries);
 	}
 
 	/**
@@ -75,8 +75,8 @@ class Log
 	public static function queryLimit($limit = null)
 	{
 		if (null !== $limit) {
-			self::$queryLimit = $limit;
+			static::$queryLimit = $limit;
 		}
-		return self::$queryLimit;
+		return static::$queryLimit;
 	}
 }
