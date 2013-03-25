@@ -3,8 +3,8 @@ namespace Spot\Type;
 
 use Spot\Entity;
 
-class Date extends Datetime
+class Time extends Datetime
 {
 	/** @var string */
-	protected $format = 'Y-m-d';
+	public static $format = 'H:i:s';
 }

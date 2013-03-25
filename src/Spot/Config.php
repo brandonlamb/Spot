@@ -80,7 +80,7 @@ class Config implements \Serializable
 	public static function getTypeHandler($type)
 	{
 		if (!isset(static::$typeHandlers[$type])) {
-			throw new \InvalidArgumentException("Type '$type' not registered. Register the type class handler with \Spot\Config::typeHanlder('$type', '\Namespaced\Path\Class').");
+			throw new \InvalidArgumentException("Type '$type' not registered. Register the type class handler with \Spot\Config::typeHandler('$type', '\Namespaced\Path\Class').");
 		}
 		return static::$typeHandlers[$type];
 	}

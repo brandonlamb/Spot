@@ -1,9 +1,13 @@
 <?php
 namespace Spot\Type;
+
 use Spot\Entity;
 
 class Datetime implements TypeInterface
 {
+	/** @var string */
+	protected $format = 'Y-m-d h:i:s';
+
 	/**
 	 * @{inherit}
 	 */
@@ -19,7 +23,7 @@ class Datetime implements TypeInterface
 				$value = null;
 			}
 		}
-		return null === $value ? $value : $value->format('Y-m-d h:i:s');
+		return null === $value ? $value : $value->format($this->format);
 	}
 
 	/**

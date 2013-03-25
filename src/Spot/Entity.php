@@ -9,6 +9,9 @@ namespace Spot;
 abstract class Entity implements \Serializable
 {
 	/** @var string */
+	protected static $schema;
+
+	/** @var string */
 	protected static $datasource;
 
 	/** @var array */
@@ -39,6 +42,19 @@ abstract class Entity implements \Serializable
 		if ($data) {
 			$this->data($data, false);
 		}
+	}
+
+	/**
+	 * Schema getter/setter
+	 * @param string $schema
+	 * @return string
+	 */
+	public static function schema($schema = null)
+	{
+		if (null !== $schema) {
+			static::$schema = $schema;
+		}
+		return static::$schema;
 	}
 
 	/**
@@ -269,7 +285,7 @@ abstract class Entity implements \Serializable
 	 * @param string $field
 	 * @return mixed
 	 */
-	public function get($field)
+	public function & get($field)
 	{
 		$v = null;
 
@@ -302,6 +318,33 @@ abstract class Entity implements \Serializable
 	}
 
 	/**
+	 * Return datasource
+	 * @return string
+	 */
+	public function getSource()
+	{
+		return static::$datasource;
+	}
+
+	/**
+	 * Return sequence name
+	 * @return string
+	 */
+	public function getSequence()
+	{
+		return '';
+	}
+
+	/**
+	 * Return schema name
+	 * @return string
+	 */
+	public function getSchema()
+	{
+		return static::$schema;
+	}
+
+	/**
 	 * Enable isset() for object properties
 	 * @return bool
 	 */
@@ -315,7 +358,7 @@ abstract class Entity implements \Serializable
 	 * @param string $field
 	 * @return mixed
 	 */
-	public function __get($field)
+	public function & __get($field)
 	{
 		return $this->get($field);
 	}

@@ -70,4 +70,19 @@ class Pgsql extends AbstractAdapter implements AdapterInterface
 	{
 		return $this;
 	}
+
+	/**
+	 * Return insert statement
+	 * @param string $datasource
+	 * @param array $data
+	 * @param array $binds
+	 * @return string
+	 */
+	public function statementInsert($datasource, $data, $binds)
+	{
+		// build the statement
+		return "INSERT INTO " . $datasource .
+			" (" . implode(', ', array_map(array($this, 'escapeField'), array_keys($data))) . ")" .
+			" VALUES (:" . implode(', :', array_keys($binds)) . ")";
+	}
 }
