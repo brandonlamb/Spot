@@ -175,7 +175,11 @@ abstract class AbstractAdapter
 	 */
 	public function prepare($sql)
 	{
-		return $this->connection()->prepare($sql);
+		try {
+			return $this->connection()->prepare($sql);
+		} catch (\PDOException $e) {
+			throw new \Spot\Exception($e->getMessage());
+		}
 	}
 
 	/**
