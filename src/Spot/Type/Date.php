@@ -6,5 +6,5 @@ use Spot\Entity;
 class Date extends Datetime
 {
 	/** @var string */
-	protected $format = 'Y-m-d';
+	protected static $format = 'Y-m-d';
 }
