@@ -412,8 +412,8 @@ class Mapper
 			$pkField = $this->primaryKeyField($entity->toString());
 			$attributes = $this->entityManager()->fields($entity->toString(), $pkField);
 
-			// If the pk value is empty or the pk is set to serial type
-			if (empty($pk) || $attributes['serial'] === true) {
+			// If the pk value is empty and the pk is set to serial type
+			if (empty($pk) && $attributes['serial'] === true) {
 				// Autogenerate sequence if sequence is empty
 				$options['pk'] = $pkField;
 				$options['sequence'] = $entity->getSequence();
