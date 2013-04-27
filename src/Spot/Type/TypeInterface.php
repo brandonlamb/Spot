@@ -1,5 +1,6 @@
 <?php
 namespace Spot\Type;
+
 use Spot\Entity;
 
 interface TypeInterface

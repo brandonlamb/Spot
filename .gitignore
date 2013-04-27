@@ -3,3 +3,5 @@
 composer.phar
 composer.lock
 vendor
+src/Spot/autoload.php
+src/Spot/unified.php

@@ -1,5 +1,6 @@
 <?php
 namespace Spot;
+
 use Spot\Adapter\AdapterInterface;
 
 /**
@@ -169,4 +170,4 @@ class Config implements \Serializable
 /**
  * Register 'spot_load_class' function as an autoloader for files prefixed with 'Spot_'
  */
-spl_autoload_register(array('\\Spot\\Config', 'loadClass'));
+#spl_autoload_register(array('\\Spot\\Config', 'loadClass'));
