@@ -229,3 +229,4 @@ foreach ($posts as $post) {
 	echo "Created: " . $post->date_created . "<br>";
 }
 ```
+

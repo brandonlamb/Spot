@@ -175,7 +175,11 @@ abstract class AbstractAdapter
 	 */
 	public function prepare($sql)
 	{
-		return $this->connection()->prepare($sql);
+		try {
+			return $this->connection()->prepare($sql);
+		} catch (\PDOException $e) {
+			throw new \Spot\Exception($e->getMessage());
+		}
 	}
 
 	/**
@@ -210,11 +214,8 @@ abstract class AbstractAdapter
 	public function create($datasource, array $data, array $options = array())
 	{
 		$binds = $this->statementBinds($data);
-
-		// build the statement
-		$sql = "INSERT INTO " . $datasource .
-			" (" . implode(', ', array_map(array($this, 'escapeField'), array_keys($data))) . ")" .
-			" VALUES (:" . implode(', :', array_keys($binds)) . ")";
+		$sql = $this->statementInsert($datasource, $data, $binds);
+		$sequence = isset($options['sequence']) ? $options['sequence'] : null;
 
 		// Add query to log
 		\Spot\Log::addQuery($this, $sql, $binds);
@@ -227,7 +228,7 @@ abstract class AbstractAdapter
 				// Execute
 				if ($stmt->execute($binds)) {
 					// Use 'id' if PK exists, otherwise returns true
-					$id = $this->connection()->lastInsertId();
+					$id = $this->connection()->lastInsertId($sequence);
 					$result = $id ? $id : true;
 				} else {
 					$result = false;
@@ -522,6 +523,21 @@ abstract class AbstractAdapter
 		\Spot\Log::addQuery($this, $sql);
 
 		return $this->connection()->exec($sql);
+	}
+
+	/**
+	 * Return insert statement
+	 * @param string $datasource
+	 * @param array $data
+	 * @param array $binds
+	 * @return string
+	 */
+	public function statementInsert($datasource, $data, $binds)
+	{
+		// build the statement
+		return "INSERT INTO " . $datasource .
+			" (" . implode(', ', array_map(array($this, 'escapeField'), array_keys($data))) . ")" .
+			" VALUES (:" . implode(', :', array_keys($binds)) . ")";
 	}
 
 	/**

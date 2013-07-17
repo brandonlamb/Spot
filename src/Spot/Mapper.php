@@ -409,11 +409,21 @@ class Mapper
 		// Run validation
 		if ($this->validate($entity)) {
 			$pk = $this->primaryKey($entity);
-			$attributes = $this->entityManager()->fields($entity->toString(), $this->primaryKeyField($entity->toString()));
+			$pkField = $this->primaryKeyField($entity->toString());
+			$attributes = $this->entityManager()->fields($entity->toString(), $pkField);
 
-			if (empty($pk) || $attributes['serial'] === false) {
+			// If the pk value is empty and the pk is set to serial type
+			if (empty($pk) && $attributes['serial'] === true) {
+				// Autogenerate sequence if sequence is empty
+				$options['pk'] = $pkField;
+				$options['sequence'] = $entity->getSequence();
+
+				if (empty($options['sequence'])) {
+					$options['sequence'] = $entity->getSource() . '_' . $pkField . '_seq';
+				}
+
 				// No primary key, insert
-				$result = $this->insert($entity);
+				$result = $this->insert($entity, $options);
 			} else {
 				// Has primary key, update
 				$result = $this->update($entity);
@@ -441,7 +451,7 @@ class Mapper
 	{
 		if (is_object($entity)) {
 			$entityName = $entity->toString();
-			$data = $entity->data();
+			$data = !isset($options['sequence']) ? $entity->data() : $entity->dataExcept(array($options['pk']));
 		} elseif (is_string($entity)) {
 			$entityName = $entity;
 			$entity = $this->get($entityName);
@@ -459,27 +469,27 @@ class Mapper
 		}
 
 		// Ensure there is actually data to update
-		if (count($data) > 0) {
-			// Save only known, defined fields
-			$entityFields = $this->fields($entityName);
-			$data = array_intersect_key($data, $entityFields);
+		if (count($data) <= 0) {
+			return false;
+		}
 
-			// Send to adapter via named connection
-			$result = $this->connection($entityName)->create($this->datasource($entityName), $data);
+		// Save only known, defined fields
+		$entityFields = $this->fields($entityName);
+		$data = array_intersect_key($data, $entityFields);
 
-			// Update primary key on entity object
-			$pkField = $this->primaryKeyField($entityName);
-			$entity->$pkField = $result;
+		// Send to adapter via named connection
+		$result = $this->connection($entityName)->create($this->datasource($entityName), $data, $options);
 
-			// Load relations on new entity
-			$this->loadRelations($entity);
+		// Update primary key on entity object
+		$pkField = $this->primaryKeyField($entityName);
+		$entity->$pkField = $result;
 
-			// Run afterInsert
-			if (is_callable(array($entity, 'afterInsert'))) {
-				$resultAfter = $entity->afterInsert($this, $result);
-			}
-		} else {
-			$result = false;
+		// Load relations on new entity
+		$this->loadRelations($entity);
+
+		// Run afterInsert
+		if (is_callable(array($entity, 'afterInsert'))) {
+			$resultAfter = $entity->afterInsert($this, $result);
 		}
 
 		return (null !== $resultAfter) ? $resultAfter : $result;
@@ -497,6 +507,7 @@ class Mapper
 		if (is_object($entity)) {
 			$entityName = get_class($entity);
 			$data = $entity->dataModified();
+
 			// Save only known, defined fields
 			$entityFields = $this->fields($entityName);
 			$data = array_intersect_key($data, $entityFields);

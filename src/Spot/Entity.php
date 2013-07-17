@@ -9,6 +9,9 @@ namespace Spot;
 abstract class Entity implements \Serializable
 {
 	/** @var string */
+	protected static $schema;
+
+	/** @var string */
 	protected static $datasource;
 
 	/** @var array */
@@ -22,6 +25,12 @@ abstract class Entity implements \Serializable
 
 	/** @var array, Entity modified data storage */
 	protected $dataModified = array();
+
+    // @var array, ignored getter properties
+    protected $getterIgnore = array();
+
+    // @var array ignored setter properties
+    protected $setterIgnore = array();
 
 	/** @var array, Entity error messages (may be present after save attempt) */
 	protected $errors = array();
@@ -39,6 +48,19 @@ abstract class Entity implements \Serializable
 		if ($data) {
 			$this->data($data, false);
 		}
+	}
+
+	/**
+	 * Schema getter/setter
+	 * @param string $schema
+	 * @return string
+	 */
+	public static function schema($schema = null)
+	{
+		if (null !== $schema) {
+			static::$schema = $schema;
+		}
+		return static::$schema;
 	}
 
 	/**
@@ -267,21 +289,36 @@ abstract class Entity implements \Serializable
 	/**
 	 * Getter for field properties
 	 * @param string $field
+	 * @param mixed $default, value to return if field doesnt exist
 	 * @return mixed
 	 */
-	public function get($field)
+	public function & get($field, $default = null)
 	{
-		$v = null;
+        // Check for custom getter method (override)
+        $getMethod = 'get' . $field;
+
+		$value = null;
 
 		// We can't use isset for dataModified because it returns
 		// false for NULL values
 		if (array_key_exists($field, $this->dataModified)) {
-			$v =  $this->dataModified[$field];
+			$value =  $this->dataModified[$field];
 		} elseif (isset($this->data[$field])) {
-			$v = $this->data[$field];
-		}
+			$value = $this->data[$field];
+		} else if (method_exists($this, $getMethod) && !array_key_exists($field, $this->getterIgnore)) {
+            // Tell this function to ignore the overload on further calls for this variable
+            $this->getterIgnore[$field] = 1;
 
-		return $v;
+            // Call custom getter
+            $value = $this->$getMethod();
+
+            // Remove ignore rule
+            unset($this->getterIgnore[$field]);
+        } else {
+        	$value = $default;
+        }
+
+		return $value;
 	}
 
 	/**
@@ -292,13 +329,60 @@ abstract class Entity implements \Serializable
 	 */
 	public function set($field, $value)
 	{
+        // Check for custom setter method (override)
+        $setMethod = 'set' . $field;
+
 		$fields = $this->fields();
-		if (isset($fields[$field])) {
+
+        // Run value through a filter call if set
+        if (isset($fields[$field]['filter'])) {
+            $value = call_user_func($fields[$field]['filter'], $value);
+		} else if (method_exists($this, $setMethod) && !array_key_exists($field, $this->setterIgnore)) {
+            // Tell this function to ignore the overload on further calls for this variable
+            $this->_setterIgnore[$field] = 1;
+
+            // Call custom setter
+            $value = $this->$setMethod($value);
+
+            // Remove ignore rule
+            unset($this->setterIgnore[$field]);
+        } else if (isset($fields[$field])) {
 			// Ensure value is set with type handler
 			$typeHandler = Config::getTypeHandler($fields[$field]['type']);
 			$value = $typeHandler::set($this, $value);
-		}
+        }
+
+		// Set the data value
 		$this->dataModified[$field] = $value;
+
+		return $this;
+	}
+
+	/**
+	 * Return datasource
+	 * @return string
+	 */
+	public function getSource()
+	{
+		return static::$datasource;
+	}
+
+	/**
+	 * Return sequence name
+	 * @return string
+	 */
+	public function getSequence()
+	{
+		return '';
+	}
+
+	/**
+	 * Return schema name
+	 * @return string
+	 */
+	public function getSchema()
+	{
+		return static::$schema;
 	}
 
 	/**
@@ -315,7 +399,7 @@ abstract class Entity implements \Serializable
 	 * @param string $field
 	 * @return mixed
 	 */
-	public function __get($field)
+	public function & __get($field)
 	{
 		return $this->get($field);
 	}
