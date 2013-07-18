@@ -282,7 +282,7 @@ abstract class AbstractAdapter
 		}
 
 		if ($query->having) {
-			$havingConditions = $this->statementConditions($query->having);
+			$having = $this->statementConditions($query->having);
 		}
 
 		$sql = "
@@ -291,7 +291,7 @@ abstract class AbstractAdapter
 			" . ($joins ? $joins : '') . "
 			" . ($conditions ? 'WHERE ' . $conditions : '') . "
 			" . ($query->group ? 'GROUP BY ' . implode(', ', $query->group) : '') . "
-			" . ($query->having ? 'HAVING' . $havingConditions : '') . "
+			" . ($query->having ? 'HAVING' . $having : '') . "
 			" . ($order ? 'ORDER BY ' . implode(', ', $order) : '')  . "
 			" . ($limit ? $limit : '') . "
 			" . ($limit && $offset ? $offset : '');

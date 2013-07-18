@@ -89,7 +89,7 @@ class Db2 extends AbstractAdapter implements AdapterInterface
 	 */
 	public function statementLimit(\Spot\Query $query, array $options = array())
 	{
-		return 'FETCH FIRST ' . $this->limit . 'ROWS ONLY '; 
+		return 'FETCH FIRST ' . $this->limit . 'ROWS ONLY ';
 
 	}
 
@@ -100,5 +100,4 @@ class Db2 extends AbstractAdapter implements AdapterInterface
 	{
 		return '';
 	}
-
 }
