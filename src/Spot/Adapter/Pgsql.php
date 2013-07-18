@@ -85,4 +85,21 @@ class Pgsql extends AbstractAdapter implements AdapterInterface
 			" (" . implode(', ', array_map(array($this, 'escapeField'), array_keys($data))) . ")" .
 			" VALUES (:" . implode(', :', array_keys($binds)) . ")";
 	}
+
+	/**
+	 * Build Limit query from data source using given query object
+	 */
+	public function statementLimit(\Spot\Query $query, array $options = array())
+	{
+		return 'LIMIT ' . $this->limit; 
+
+	}
+
+	/**
+	 *  Build Offset query from data source using given query object
+	 */
+	public function statementOffset(\Spot\Query $query, array $options = array())
+	{
+		return 'OFFSET ' . $this->offset;
+	}
 }

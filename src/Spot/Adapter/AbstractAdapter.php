@@ -279,6 +279,14 @@ abstract class AbstractAdapter
 			$havingConditions = $this->statementConditions($query->having);
 		}
 
+		if ($query->limit) {
+			$limitConditions = $this->statementLimit($query);
+		}
+
+		if ($query->offset) {
+			$offsetConditions = $this->statementOffset($query);
+		}
+
 		$sql = "
 			SELECT " . $this->statementFields($query->fields) . "
 			FROM " . $query->datasource . "
@@ -286,10 +294,9 @@ abstract class AbstractAdapter
 			" . ($conditions ? 'WHERE ' . $conditions : '') . "
 			" . ($query->group ? 'GROUP BY ' . implode(', ', $query->group) : '') . "
 			" . ($query->having ? 'HAVING' . $havingConditions : '') . "
-			" . ($order ? 'ORDER BY ' . implode(', ', $order) : '') . "
-			" . ($query->limit ? 'LIMIT ' . $query->limit : '') . "
-			" . ($query->limit && $query->offset ? 'OFFSET ' . $query->offset: '') . "
-			";
+			" . ($order ? 'ORDER BY ' . implode(', ', $order) : '')  . "
+			" . ($query->limit ? $limitConditions : '') . "
+			" . ($query->limit && $query->offset ? $offsetConditions : '');
 
 		// Unset any NULL values in binds (compared as "IS NULL" and "IS NOT NULL" in SQL instead)
 		if ($binds && count($binds) > 0) {

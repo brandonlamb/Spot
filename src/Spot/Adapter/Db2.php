@@ -80,8 +80,25 @@ class Db2 extends AbstractAdapter implements AdapterInterface
 	 */
 	public function read(\Spot\Query $query, array $options = array())
 	{
-		$this->limit = null;
-		$this->offset = null;
+		//$this->offset = null;
 		return parent::read($query, $options);
 	}
+
+	/**
+	 * Build Limit query from data source using given query object
+	 */
+	public function statementLimit(\Spot\Query $query, array $options = array())
+	{
+		return 'FETCH FIRST ' . $this->limit . 'ROWS ONLY '; 
+
+	}
+
+	/**
+	 *  Build Offset query from data source using given query object
+	 */
+	public function statementOffset(\Spot\Query $query, array $options = array())
+	{
+		return '';
+	}
+
 }

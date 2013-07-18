@@ -561,4 +561,22 @@ class Mysql extends AbstractAdapter implements AdapterInterface
 		null !== $database && $this->database = (string) $database;
 		return $this->database;
 	}
+
+	/**
+	 * Build Limit query from data source using given query object
+	 */
+	public function statementLimit(\Spot\Query $query, array $options = array())
+	{
+		return 'LIMIT ' . $this->limit; 
+
+	}
+
+	/**
+	 *  Build Offset query from data source using given query object
+	 */
+	public function statementOffset(\Spot\Query $query, array $options = array())
+	{
+		return 'OFFSET ' . $this->offset;
+	}
+
 }
