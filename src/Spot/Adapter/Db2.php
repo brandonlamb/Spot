@@ -16,10 +16,12 @@ class Db2 extends AbstractAdapter implements AdapterInterface
 	 * Escape/quote direct user input
 	 *
 	 * @param string $string
+	 * @todo Not quoting the columns essentially by just returning $field
 	 */
 	public function escapeField($field)
 	{
-		return $field === '*' ? $field : '"' . $field . '"';
+		return $field;
+#		return $field === '*' ? $field : '"' . $field . '"';
 	}
 
 	/**
