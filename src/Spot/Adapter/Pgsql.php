@@ -78,28 +78,11 @@ class Pgsql extends AbstractAdapter implements AdapterInterface
 	 * @param array $binds
 	 * @return string
 	 */
-	public function statementInsert($datasource, $data, $binds)
+	protected function statementInsert($datasource, array $data, array $binds)
 	{
 		// build the statement
 		return "INSERT INTO " . $datasource .
 			" (" . implode(', ', array_map(array($this, 'escapeField'), array_keys($data))) . ")" .
 			" VALUES (:" . implode(', :', array_keys($binds)) . ")";
-	}
-
-	/**
-	 * Build Limit query from data source using given query object
-	 */
-	public function statementLimit(\Spot\Query $query, array $options = array())
-	{
-		return 'LIMIT ' . $this->limit; 
-
-	}
-
-	/**
-	 *  Build Offset query from data source using given query object
-	 */
-	public function statementOffset(\Spot\Query $query, array $options = array())
-	{
-		return 'OFFSET ' . $this->offset;
 	}
 }

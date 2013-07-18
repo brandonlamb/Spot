@@ -74,16 +74,6 @@ interface AdapterInterface
 	 */
 	public function read(\Spot\Query $query, array $options = array());
 
-	/**
-	 * Build Limit Query from data source using given query object
-	 */
-	public function statementLimit(\Spot\Query $query, array $options = array());
-
-	/**
-	 * Build Offset Query from data source using given query object
-	 */
-	public function statementOffset(\Spot\Query $query, array $options = array());
-
 	/*
 	 * Count number of rows in source based on conditions
 	 */

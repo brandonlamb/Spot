@@ -10,12 +10,16 @@ use Spot\Query;
  */
 abstract class AbstractAdapter
 {
-	/** @var string, Format for date columns, formatted for PHP's date() function */
+	/**
+	 * @var string, Format for date columns, formatted for PHP's date() function
+	 */
 	protected $formatDate;
 	protected $formatTime;
 	protected $formatDatetime;
 
-	/** @var PDO, database connection */
+	/**
+	 * @var PDO, database connection
+	 */
 	protected $connection;
 
 	/**
@@ -264,9 +268,11 @@ abstract class AbstractAdapter
 			return $query->mapper()->collection($query->entityName(), $data);
 		}
 
-		$conditions = $this->statementConditions($query->conditions);
-		$joins = $this->statementJoins($query->joins);
-		$binds = $this->statementBinds($query->params());
+		$conditions	= $this->statementConditions($query->conditions);
+		$joins		= $this->statementJoins($query->joins);
+		$binds		= $this->statementBinds($query->params());
+		$limit		= $this->statementLimit($query);
+		$offset		= $this->statementOffset($query);
 
 		$order = array();
 		if ($query->order) {
@@ -279,14 +285,6 @@ abstract class AbstractAdapter
 			$havingConditions = $this->statementConditions($query->having);
 		}
 
-		if ($query->limit) {
-			$limitConditions = $this->statementLimit($query);
-		}
-
-		if ($query->offset) {
-			$offsetConditions = $this->statementOffset($query);
-		}
-
 		$sql = "
 			SELECT " . $this->statementFields($query->fields) . "
 			FROM " . $query->datasource . "
@@ -295,8 +293,8 @@ abstract class AbstractAdapter
 			" . ($query->group ? 'GROUP BY ' . implode(', ', $query->group) : '') . "
 			" . ($query->having ? 'HAVING' . $havingConditions : '') . "
 			" . ($order ? 'ORDER BY ' . implode(', ', $order) : '')  . "
-			" . ($query->limit ? $limitConditions : '') . "
-			" . ($query->limit && $query->offset ? $offsetConditions : '');
+			" . ($limit ? $limit : '') . "
+			" . ($limit && $offset ? $offset : '');
 
 		// Unset any NULL values in binds (compared as "IS NULL" and "IS NOT NULL" in SQL instead)
 		if ($binds && count($binds) > 0) {
@@ -539,7 +537,7 @@ abstract class AbstractAdapter
 	 * @param array $binds
 	 * @return string
 	 */
-	public function statementInsert($datasource, $data, $binds)
+	protected function statementInsert($datasource, array $data, array $binds)
 	{
 		// build the statement
 		return "INSERT INTO " . $datasource .
@@ -550,7 +548,7 @@ abstract class AbstractAdapter
 	/**
 	 * Return fields as a string for a query statement
 	 */
-	public function statementFields(array $fields = array())
+	protected function statementFields(array $fields = array())
 	{
 		$preparedFields = array();
 		foreach ($fields as $field) {
@@ -572,7 +570,7 @@ abstract class AbstractAdapter
 	 * @param array $joins
 	 * @return Query
 	 */
-	public function statementJoins(array $joins = array())
+	protected function statementJoins(array $joins = array())
 	{
 		$sqlJoins = array();
 
@@ -588,7 +586,7 @@ abstract class AbstractAdapter
 	 * @param array $conditions
 	 * @param int $ci
 	 */
-	public function statementConditions(array $conditions = array(), $ci = 0)
+	protected function statementConditions(array $conditions = array(), $ci = 0)
 	{
 		if (count($conditions) === 0) { return; }
 
@@ -750,7 +748,7 @@ abstract class AbstractAdapter
 	 * @param array $conditions
 	 * @param bool $ci
 	 */
-	public function statementBinds(array $conditions = array(), $ci = false)
+	protected function statementBinds(array $conditions = array(), $ci = false)
 	{
 		if (count($conditions) === 0) { return; }
 
@@ -813,6 +811,28 @@ abstract class AbstractAdapter
 			}
 		}
 		return $binds;
+	}
+
+	/**
+	 * Build Limit query from data source using given query object
+	 * @param \Spot\Query $query
+	 * @param array $options
+	 * @return string
+	 */
+	protected function statementLimit(\Spot\Query $query, array $options = array())
+	{
+		return 'LIMIT ' . $this->limit;
+	}
+
+	/**
+	 *  Build Offset query from data source using given query object
+	 * @param \Spot\Query $query
+	 * @param array $options
+	 * @return string
+	 */
+	protected function statementOffset(\Spot\Query $query, array $options = array())
+	{
+		return 'OFFSET ' . $this->offset;
 	}
 
 	/**
