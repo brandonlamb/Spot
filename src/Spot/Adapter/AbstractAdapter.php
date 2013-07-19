@@ -271,9 +271,13 @@ abstract class AbstractAdapter
 		$conditions	= $this->statementConditions($query->conditions);
 		$joins		= $this->statementJoins($query->joins);
 		$binds		= $this->statementBinds($query->params());
-		$limit		= $this->statementLimit($query);
-		$offset		= $this->statementOffset($query);
+		
+		if ($query->limit) {
+			$limit	= $this->statementLimit($query);						
+		}
 
+		$offset		= $this->statementOffset($query);
+		
 		$order = array();
 		if ($query->order) {
 			foreach ($query->order as $oField => $oSort) {
@@ -293,8 +297,8 @@ abstract class AbstractAdapter
 			" . ($query->group ? 'GROUP BY ' . implode(', ', $query->group) : '') . "
 			" . ($query->having ? 'HAVING' . $having : '') . "
 			" . ($order ? 'ORDER BY ' . implode(', ', $order) : '')  . "
-			" . ($limit ? $limit : '') . "
-			" . ($limit && $offset ? $offset : '');
+			" . ($query->limit ? $limit : '') . "
+			" . ($query->limit && $query->offset ? $offset : '');
 
 		// Unset any NULL values in binds (compared as "IS NULL" and "IS NOT NULL" in SQL instead)
 		if ($binds && count($binds) > 0) {
