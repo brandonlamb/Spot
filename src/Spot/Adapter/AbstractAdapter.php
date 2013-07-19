@@ -819,9 +819,9 @@ abstract class AbstractAdapter
 	 * @param array $options
 	 * @return string
 	 */
-	protected function statementLimit(\Spot\Query $query, array $options = array())
+	protected function statementLimit($limit, array $options = array())
 	{
-		return 'LIMIT ' . $this->limit;
+		return 'LIMIT ' . $limit;
 	}
 
 	/**
@@ -830,9 +830,9 @@ abstract class AbstractAdapter
 	 * @param array $options
 	 * @return string
 	 */
-	protected function statementOffset(\Spot\Query $query, array $options = array())
+	protected function statementOffset($offset, array $options = array())
 	{
-		return 'OFFSET ' . $this->offset;
+		return 'OFFSET ' . $offset;
 	}
 
 	/**

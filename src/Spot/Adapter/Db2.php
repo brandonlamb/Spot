@@ -87,16 +87,18 @@ class Db2 extends AbstractAdapter implements AdapterInterface
 	/**
 	 * Build Limit query from data source using given query object
 	 */
-	public function statementLimit(\Spot\Query $query, array $options = array())
-	{
-		return 'FETCH FIRST ' . $query->limit . ' ROWS ONLY ';
-
+	public function statementLimit($limit, array $options = array())
+	{		
+		if ($limit > 0) {	
+			return 'FETCH FIRST ' . $limit . ' ROWS ONLY ';
+		} 
+		return '';
 	}
 
 	/**
 	 *  Build Offset query from data source using given query object
 	 */
-	public function statementOffset(\Spot\Query $query, array $options = array())
+	public function statementOffset($offset, array $options = array())
 	{
 		return '';
 	}
