@@ -241,7 +241,7 @@ abstract class AbstractAdapter
 		$conditions	= $this->getConditionsSql($query->conditions);
 		$joins		= $this->getJoinsSql($query->joins);
 		$binds		= $this->getBinds($query->params());
-		$group		= $this->getGroupSql($query-group);
+		$group		= $this->getGroupSql($query->group);
 		$order		= $this->getOrderSql($query->order);
 		$limit		= $this->getLimitSql($query->limit);
 		$offset		= $this->getOffsetSql($query->offset);
