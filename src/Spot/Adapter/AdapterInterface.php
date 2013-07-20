@@ -264,4 +264,11 @@ interface AdapterInterface
 	 * @return string
 	 */
 	public function getOffsetSql($offset);
+
+	/**
+	 * Fetch the last insert id
+	 * @param string $sequence
+	 * @return mixed
+	 */
+	public function lastInsertId($sequence = null);
 }

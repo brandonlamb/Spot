@@ -208,7 +208,7 @@ abstract class AbstractAdapter
 				// Execute
 				if ($stmt->execute($binds)) {
 					// Use 'id' if PK exists, otherwise returns true
-					$id = $this->connection()->lastInsertId($sequence);
+					$id = $this->lastInsertId($sequence);
 					$result = $id ? $id : true;
 				} else {
 					$result = false;
@@ -829,6 +829,14 @@ abstract class AbstractAdapter
 #			$mapper->addError(__METHOD__ . " - Unable to execute query " . implode(' | ', $this->connection()->errorInfo()));
 			return array();
 		}
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function lastInsertId($sequence = null)
+	{
+		return $this->connection()->lastInsertId($sequence);
 	}
 
 	/**

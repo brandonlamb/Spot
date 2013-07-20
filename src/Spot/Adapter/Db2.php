@@ -95,8 +95,25 @@ class Db2 extends AbstractAdapter implements AdapterInterface
 	/**
 	 * {@inheritdoc}
 	 */
-	public function statementOffset($offset, array $options = array())
+	public function getOffsetSql($offset, array $options = array())
 	{
 		return '';
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function lastInsertId($sequence = null)
+	{
+		// If a sequence was passed then pass it through to the PDO method
+		if (null !== $sequence) {
+			return $this->connection()->lastInsertId($sequence);
+		}
+
+		// Get last insert id from the identity_val_local() function
+		$stmt = $this->connection()->query('SELECT IDENTITY_VAL_LOCAL() AS insert_id FROM SYSIBM.SYSDUMMY1 FETCH FIRST ROW ONLY');
+		$row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+		return $row['insert_id'];
 	}
 }
