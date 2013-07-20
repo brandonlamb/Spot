@@ -29,9 +29,7 @@ abstract class AbstractAdapter
 	protected $fieldMapType;
 
 	/**
-	 * @param PDO $connection DSN string or pre-existing Mongo object
-	 * @throws \InvalidArgumentException
-	 * @todo Tighter control of passing connection object. PdoInterface or \PDO?
+	 * {@inheritdoc}
 	 */
 	public function __construct($connection)
 	{
@@ -61,8 +59,7 @@ abstract class AbstractAdapter
 	}
 
 	/**
-	 * Get database format
-	 * @return string Date format for PHP's date() function
+	 * {@inheritdoc}
 	 */
 	public function dateFormat()
 	{
@@ -70,8 +67,7 @@ abstract class AbstractAdapter
 	}
 
 	/**
-	 * Get database time format
-	 * @return string Time format for PHP's date() function
+	 * {@inheritdoc}
 	 */
 	public function timeFormat()
 	{
@@ -79,8 +75,7 @@ abstract class AbstractAdapter
 	}
 
 	/**
-	 * Get database format
-	 * @return string DateTime format for PHP's date() function
+	 * {@inheritdoc}
 	 */
 	public function dateTimeFormat()
 	{
@@ -88,8 +83,7 @@ abstract class AbstractAdapter
 	}
 
 	/**
-	 * Get date
-	 * @return object DateTime
+	 * {@inheritdoc}
 	 */
 	public function date($format = null)
 	{
@@ -100,8 +94,7 @@ abstract class AbstractAdapter
 	}
 
 	/**
-	 * Get database time format
-	 * @return object DateTime
+	 * {@inheritdoc}
 	 */
 	public function time($format = null)
 	{
@@ -112,8 +105,7 @@ abstract class AbstractAdapter
 	}
 
 	/**
-	 * Get datetime
-	 * @return object DateTIme
+	 * {@inheritdoc}
 	 */
 	public function dateTime($format = null)
 	{
@@ -144,8 +136,7 @@ abstract class AbstractAdapter
 	}
 
 	/**
-	 * Get database connection
-	 * @return PDO
+	 * {@inheritodc}
 	 */
 	public function connection()
 	{
@@ -153,9 +144,7 @@ abstract class AbstractAdapter
 	}
 
 	/**
-	 * Escape/quote direct user input
-	 * @param string $string
-	 * @return string
+	 * {@inheritdoc}
 	 */
 	public function escape($string)
 	{
@@ -163,9 +152,7 @@ abstract class AbstractAdapter
 	}
 
 	/**
-	 * Escape/quote direct user input
-	 * @param string $field
-	 * @return string
+	 * {@inheritdoc}
 	 */
 	public function escapeField($field)
 	{
@@ -173,9 +160,7 @@ abstract class AbstractAdapter
 	}
 
 	/**
-	 * Prepare an SQL statement
-	 * @param string $sql
-	 * @return \PDOStatement
+	 * {@inheritdoc}
 	 */
 	public function prepare($sql)
 	{
@@ -187,11 +172,7 @@ abstract class AbstractAdapter
 	}
 
 	/**
-	 * Find records with custom SQL query
-	 * @param string $sql SQL query to execute
-	 * @param array $binds Array of bound parameters to use as values for query
-	 * @return \PDOStatement|bool
-	 * @throws \Spot\Exception
+	 * {@inheritdoc}
 	 */
 	public function query($sql, array $binds = array())
 	{
@@ -208,12 +189,7 @@ abstract class AbstractAdapter
 	}
 
 	/**
-	 * Create new row object with set properties
-	 * @param string $datasource
-	 * @param array $data
-	 * @param array $options
-	 * @return mixed
-	 * @throws \Spot\Exception
+	 * {@inheritdoc}
 	 */
 	public function create($datasource, array $data, array $options = array())
 	{
@@ -254,13 +230,7 @@ abstract class AbstractAdapter
 	}
 
 	/**
-	 * Build a select statement in SQL
-	 * Can be overridden by adapters for custom syntax
-	 *
-	 * @param \Spot\Entity $entity
-	 * @param array $options
-	 * @throws \Spot\Exception
-	 * @todo Add support for JOINs
+	 * {@inheritdoc}
 	 */
 	public function read(Query $query, array $options = array())
 	{
@@ -268,31 +238,26 @@ abstract class AbstractAdapter
 			return $query->mapper()->collection($query->entityName(), $data);
 		}
 
-		$conditions	= $this->statementConditions($query->conditions);
-		$joins		= $this->statementJoins($query->joins);
-		$binds		= $this->statementBinds($query->params());
-		$limit		= $this->statementLimit($query->limit);
-		$offset		= $this->statementOffset($query->offset);
-
-		$order = array();
-		if ($query->order) {
-			foreach ($query->order as $oField => $oSort) {
-				$order[] = $this->escapeField($oField) . " " . $oSort;
-			}
-		}
+		$conditions	= $this->getConditionsSql($query->conditions);
+		$joins		= $this->getJoinsSql($query->joins);
+		$binds		= $this->getBinds($query->params());
+		$group		= $this->getGroupSql($query-group);
+		$order		= $this->getOrderSql($query->order);
+		$limit		= $this->getLimitSql($query->limit);
+		$offset		= $this->getOffsetSql($query->offset);
 
 		if ($query->having) {
-			$having = $this->statementConditions($query->having);
+			$having = $this->getConditionsSql($query->having);
 		}
 
 		$sql = "
-			SELECT " . $this->statementFields($query->fields) . "
+			SELECT " . $this->getFieldsSql($query->fields) . "
 			FROM " . $query->datasource . "
 			" . ($joins ? $joins : '') . "
 			" . ($conditions ? 'WHERE ' . $conditions : '') . "
-			" . ($query->group ? 'GROUP BY ' . implode(', ', $query->group) : '') . "
+			" . ($group ? $group : '') . "
 			" . ($query->having ? 'HAVING' . $having : '') . "
-			" . ($order ? 'ORDER BY ' . implode(', ', $order) : '')  . "
+			" . ($order ? $order : '') . "
 			" . ($limit ? $limit : '') . "
 			" . ($limit && $offset ? $offset : '');
 
@@ -333,10 +298,7 @@ abstract class AbstractAdapter
 	}
 
 	/**
-	 * Count number of rows in source based on conditions
-	 * @param \Spot\Query $query
-	 * @param array $options
-	 * @throws \Spot\Exception
+	 * {@inheritdoc}
 	 */
 	public function count(Query $query, array $options = array())
 	{
@@ -344,7 +306,7 @@ abstract class AbstractAdapter
 		$binds = $this->statementBinds($query->params());
 
 		$sql = "
-			SELECT COUNT(*) as count
+			SELECT COUNT(*) AS count
 			FROM " . $query->datasource . "
 			" . ($conditions ? 'WHERE ' . $conditions : '') . "
 			" . ($query->group ? 'GROUP BY ' . implode(', ', $query->group) : '');
@@ -387,12 +349,7 @@ abstract class AbstractAdapter
 	}
 
 	/**
-	 * Update entity
-	 * @param string $datasource
-	 * @param array $data
-	 * @param data $where
-	 * @param array $options
-	 * @throws \Spot\Exception
+	 * {@inheritdoc}
 	 */
 	public function update($datasource, array $data, array $where = array(), array $options = array())
 	{
@@ -450,12 +407,7 @@ abstract class AbstractAdapter
 	}
 
 	/**
-	 * Delete entities matching given conditions
-	 *
-	 * @param string $datasource Name of data source
-	 * @param array $data
-	 * @param array $options
-	 * @throws \Spot\Exception
+	 * {@inheritdoc}
 	 */
 	public function delete($datasource, array $data, array $options = array())
 	{
@@ -492,7 +444,7 @@ abstract class AbstractAdapter
 	}
 
 	/**
-	 * Begin transaction
+	 * {@inheritdoc}
 	 */
 	public function beginTransaction()
 	{
@@ -505,7 +457,7 @@ abstract class AbstractAdapter
 	}
 
 	/**
-	 * Commit transaction
+	 * {@inheritdoc}
 	 */
 	public function commit()
 	{
@@ -518,7 +470,7 @@ abstract class AbstractAdapter
 	}
 
 	/**
-	 * Rollback transaction
+	 * {@inheritdoc}
 	 */
 	public function rollback()
 	{
@@ -531,13 +483,9 @@ abstract class AbstractAdapter
 	}
 
 	/**
-	 * Return insert statement
-	 * @param string $datasource
-	 * @param array $data
-	 * @param array $binds
-	 * @return string
+	 * {@inheritdoc}
 	 */
-	protected function statementInsert($datasource, array $data, array $binds)
+	public function getInsertSql($datasource, array $data, array $binds)
 	{
 		// build the statement
 		return "INSERT INTO " . $datasource .
@@ -546,9 +494,9 @@ abstract class AbstractAdapter
 	}
 
 	/**
-	 * Return fields as a string for a query statement
+	 * {@inheritdoc}
 	 */
-	protected function statementFields(array $fields = array())
+	public function getFieldsSql(array $fields = array())
 	{
 		$preparedFields = array();
 		foreach ($fields as $field) {
@@ -564,13 +512,9 @@ abstract class AbstractAdapter
 	}
 
 	/**
-	 * Add a table join (INNER, LEFT OUTER, RIGHT OUTER, FULL OUTER, CROSS)
-	 * array('user.id', '=', 'profile.user_id') will compile to ON `user`.`id` = `profile`.`user_id`
-	 *
-	 * @param array $joins
-	 * @return Query
+	 * {@inheritdoc}
 	 */
-	protected function statementJoins(array $joins = array())
+	public function getJoinsSql(array $joins = array())
 	{
 		$sqlJoins = array();
 
@@ -582,11 +526,10 @@ abstract class AbstractAdapter
 	}
 
 	/**
-	 * Builds an SQL string given conditions
-	 * @param array $conditions
-	 * @param int $ci
+	 * {@inheritdoc}
+	 * @todo BETWEEN condition not filled in
 	 */
-	protected function statementConditions(array $conditions = array(), $ci = 0)
+	public function getConditionsSql(array $conditions = array(), $ci = 0)
 	{
 		if (count($conditions) === 0) { return; }
 
@@ -744,11 +687,9 @@ abstract class AbstractAdapter
 	}
 
 	/**
-	 * Returns array of binds to pass to query function
-	 * @param array $conditions
-	 * @param bool $ci
+	 * {@inheritdoc}
 	 */
-	protected function statementBinds(array $conditions = array(), $ci = false)
+	public function getBinds(array $conditions = array(), $ci = false)
 	{
 		if (count($conditions) === 0) { return; }
 
@@ -814,25 +755,51 @@ abstract class AbstractAdapter
 	}
 
 	/**
-	 * Build Limit query from data source using given query object
-	 * @param \Spot\Query $query
-	 * @param array $options
-	 * @return string
+	 * {@inheritdoc}
 	 */
-	protected function statementLimit($limit, array $options = array())
+	public function getGroupSql(array $group)
 	{
-		return 'LIMIT ' . $limit;
+		return $group ? 'GROUP BY ' . implode(', ', $group) : '';
 	}
 
 	/**
-	 *  Build Offset query from data source using given query object
-	 * @param \Spot\Query $query
-	 * @param array $options
-	 * @return string
+	 * {@inheritdoc}
 	 */
-	protected function statementOffset($offset, array $options = array())
+	public function getOrderSql(array $order)
 	{
-		return 'OFFSET ' . $offset;
+		$columns = array();
+
+		if ($order) {
+			foreach ($order as $column => $sort) {
+				$columns[] = $this->escapeField($column) . ' ' . $sort;
+			}
+		}
+
+		return 'ORDER BY ' . implode(', ', $columns) : ''
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function getLimitSql($limit)
+	{
+		// If we were passed "10, 20" parse into offset and limit
+		if (false !== strpos($limit, ',')) {
+			list($limit, $offset) = explode(',', $limit)
+			return 'LIMIT ' . $limit . ' ' . $offset;
+		}
+
+		$limit = (int) $limit;
+		return $limit ? 'LIMIT ' . $this->limit : '';
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function getOffsetSql($offset)
+	{
+		$offset = (int) $offset;
+		return $offset ? 'OFFSET ' . $this->offset : '';
 	}
 
 	/**

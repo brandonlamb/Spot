@@ -12,9 +12,7 @@ class Pgsql extends AbstractAdapter implements AdapterInterface
 	protected $formatDatetime = 'Y-m-d H:i:s';
 
 	/**
-	 * Escape/quote direct user input
-	 *
-	 * @param string $string
+	 * {@inheritdoc}
 	 */
 	public function escapeField($field)
 	{
@@ -72,13 +70,9 @@ class Pgsql extends AbstractAdapter implements AdapterInterface
 	}
 
 	/**
-	 * Return insert statement
-	 * @param string $datasource
-	 * @param array $data
-	 * @param array $binds
-	 * @return string
+	 * {@inheritdoc}
 	 */
-	protected function statementInsert($datasource, array $data, array $binds)
+	public function getInsertSql($datasource, array $data, array $binds)
 	{
 		// build the statement
 		return "INSERT INTO " . $datasource .

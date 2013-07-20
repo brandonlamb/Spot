@@ -75,7 +75,6 @@ class Db2 extends AbstractAdapter implements AdapterInterface
 	}
 
 	/**
-	 * DB2 doesnt support LIMIT or OFFSET
 	 * @{inherit}
 	 */
 	public function read(\Spot\Query $query, array $options = array())
@@ -85,18 +84,16 @@ class Db2 extends AbstractAdapter implements AdapterInterface
 	}
 
 	/**
-	 * Build Limit query from data source using given query object
+	 * {@inheritdoc}
 	 */
-	public function statementLimit($limit, array $options = array())
-	{		
-		if ($limit > 0) {	
-			return 'FETCH FIRST ' . $limit . ' ROWS ONLY ';
-		} 
-		return '';
+	public function getLimitSql($limit, array $options = array())
+	{
+		$limit = (int) $limit;
+		return $limit ? 'FETCH FIRST ' . $this->limit . ' ROWS ONLY' : '';
 	}
 
 	/**
-	 *  Build Offset query from data source using given query object
+	 * {@inheritdoc}
 	 */
 	public function statementOffset($offset, array $options = array())
 	{

@@ -11,15 +11,10 @@ namespace Spot\Adapter;
 interface AdapterInterface
 {
 	/**
-	 * @param PDO|AdapterInterface $connection pre-existing raw connection object to be used
+	 * Pass a pre-existing PDO connection
+	 * @param \PDO $connection
 	 */
 	public function __construct($connection);
-
-	/**
-	 * Get database connection
-	 * @return \PDO
-	 */
-	public function connection();
 
 	/**
 	 * Get database DATE format for PHP date() function
@@ -58,6 +53,12 @@ interface AdapterInterface
 	public function dateTime($format = null);
 
 	/**
+	 * Get database connection
+	 * @return \PDO
+	 */
+	public function connection();
+
+	/**
 	 * Escape/quote direct user input
 	 * @param string $string
 	 * @return string
@@ -65,42 +66,90 @@ interface AdapterInterface
 	public function escape($string);
 
 	/**
-	 * Insert entity
+	 * Escape/quote direct user input
+	 * @param string $field
+	 * @return string
 	 */
-	public function create($source, array $data, array $options = array());
+	public function escapeField($field);
 
 	/**
-	 * Read from data source using given query object
+	 * Prepare an SQL statement
+	 * @param string $sql
+	 * @return \PDOStatement
+	 */
+	public function prepare($sql);
+
+	/**
+	 * Find records with custom SQL query
+	 * @param string $sql SQL query to execute
+	 * @param array $binds Array of bound parameters to use as values for query
+	 * @return \PDOStatement|bool
+	 * @throws \Spot\Exception
+	 */
+	public function query($sql, array $binds = array());
+
+	/**
+	 * Create new row object with set properties
+	 * @param string $datasource
+	 * @param array $data
+	 * @param array $options
+	 * @return mixed
+	 * @throws \Spot\Exception
+	 */
+	public function create($datasource, array $data, array $options = array());
+
+	/**
+	 * Build a select statement in SQL
+	 * Can be overridden by adapters for custom syntax
+	 *
+	 * @param \Spot\Query $query
+	 * @param array $options
+	 * @throws \Spot\Exception
 	 */
 	public function read(\Spot\Query $query, array $options = array());
 
-	/*
+	/**
 	 * Count number of rows in source based on conditions
+	 * @param \Spot\Query $query
+	 * @param array $options
+	 * @throws \Spot\Exception
 	 */
 	public function count(\Spot\Query $query, array $options = array());
 
 	/**
 	 * Update entity
+	 * @param string $datasource
+	 * @param array $data
+	 * @param data $where
+	 * @param array $options
+	 * @throws \Spot\Exception
 	 */
-	public function update($source, array $data, array $where = array(), array $options = array());
+	public function update($datasource, array $data, array $where = array(), array $options = array());
 
 	/**
-	 * Delete entity
+	 * Delete entities matching given conditions
+	 * @param string $datasource Name of data source
+	 * @param array $data
+	 * @param array $options
+	 * @throws \Spot\Exception
 	 */
-	public function delete($source, array $where, array $options = array());
+	public function delete($datasource, array $data, array $options = array());
 
 	/**
 	 * Begin transaction
+	 * @return bool
 	 */
 	public function beginTransaction();
 
 	/**
 	 * Commit transaction
+	 * @return bool
 	 */
 	public function commit();
 
 	/**
 	 * Rollback transaction
+	 * @return bool
 	 */
 	public function rollback();
 
@@ -141,4 +190,78 @@ interface AdapterInterface
 	 * @return \Spot\Adapter\AdapterInterface
 	 */
 	public function dropDatasource($source);
+
+	/**
+	 * Return insert statement
+	 * @param string $datasource
+	 * @param array $data
+	 * @param array $binds
+	 * @return string
+	 */
+	public function getInsertSql($datasource, array $data, array $binds);
+
+	/**
+	 * Return fields as a string for a query statement
+	 * @param array $fields
+	 * @return string
+	 */
+	public function getFieldsSql(array $fields = array());
+
+	/**
+	 * Add a table join (INNER, LEFT OUTER, RIGHT OUTER, FULL OUTER, CROSS)
+	 * array('user.id', '=', 'profile.user_id') will compile to ON `user`.`id` = `profile`.`user_id`
+	 *
+	 * @param array $joins
+	 * @return string
+	 */
+	public function getJoinsSql(array $joins = array());
+
+	/**
+	 * Builds an SQL string given conditions
+	 * @param array $conditions
+	 * @param int $ci
+	 * @return string
+	 */
+	public function getConditionsSql(array $conditions = array(), $ci = 0);
+
+	/**
+	 * Returns array of binds to pass to query function
+	 * @param array $conditions
+	 * @param bool $ci
+	 */
+	public function getBinds(array $conditions = array(), $ci = false);
+
+	/**
+	 * Return sql statement for GROUP BY
+	 * @param array $group
+	 * @return string
+	 */
+	public function getGroupSql(array $group);
+
+	/**
+	 * @param array $order
+	 */
+	public function getOrderSql($order);
+
+	/**
+	 * Build Limit query from data source using given query object
+	 * @param \Spot\Query $query
+	 * @param array $options
+	 * @return string
+	 */
+	public function getLimitSql($limit, array $options = array());
+
+	/**
+	 * Build Limit query from data source using integer passed
+	 * @param int $limit
+	 * @return string
+	 */
+	public function getLimitSql($limit);
+
+	/**
+	 *  Build Offset query from data source using integer passed
+	 * @param int $offset
+	 * @return string
+	 */
+	public function getOffsetSql($offset);
 }
