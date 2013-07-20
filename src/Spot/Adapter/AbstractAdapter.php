@@ -775,7 +775,7 @@ abstract class AbstractAdapter
 			}
 		}
 
-		return 'ORDER BY ' . implode(', ', $columns) : ''
+		return count($columns) > 0 ? 'ORDER BY ' . implode(', ', $columns) : '';
 	}
 
 	/**
@@ -785,7 +785,7 @@ abstract class AbstractAdapter
 	{
 		// If we were passed "10, 20" parse into offset and limit
 		if (false !== strpos($limit, ',')) {
-			list($limit, $offset) = explode(',', $limit)
+			list($limit, $offset) = explode(',', $limit);
 			return 'LIMIT ' . $limit . ' ' . $offset;
 		}
 

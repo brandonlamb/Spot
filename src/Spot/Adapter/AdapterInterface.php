@@ -239,9 +239,10 @@ interface AdapterInterface
 	public function getGroupSql(array $group);
 
 	/**
+	 * Build ORDER BY string
 	 * @param array $order
 	 */
-	public function getOrderSql($order);
+	public function getOrderSql(array $order);
 
 	/**
 	 * Build Limit query from data source using given query object
@@ -250,13 +251,6 @@ interface AdapterInterface
 	 * @return string
 	 */
 	public function getLimitSql($limit, array $options = array());
-
-	/**
-	 * Build Limit query from data source using integer passed
-	 * @param int $limit
-	 * @return string
-	 */
-	public function getLimitSql($limit);
 
 	/**
 	 *  Build Offset query from data source using integer passed
