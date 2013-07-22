@@ -31,7 +31,7 @@ class Datetime implements TypeInterface
 	 */
 	public static function get(Entity $entity, $value)
 	{
-		return self::cast($value);
+		return static::cast($value);
 	}
 
 	/**
@@ -39,6 +39,6 @@ class Datetime implements TypeInterface
 	 */
 	public static function set(Entity $entity, $value)
 	{
-		return self::cast($value);
+		return static::cast($value);
 	}
 }

@@ -75,21 +75,12 @@ class Db2 extends AbstractAdapter implements AdapterInterface
 	}
 
 	/**
-	 * @{inherit}
-	 */
-	public function read(\Spot\Query $query, array $options = array())
-	{
-		//$this->offset = null;
-		return parent::read($query, $options);
-	}
-
-	/**
 	 * {@inheritdoc}
 	 */
 	public function getLimitSql($limit, array $options = array())
 	{
 		$limit = (int) $limit;
-		return $limit ? 'FETCH FIRST ' . $this->limit . ' ROWS ONLY' : '';
+		return $limit ? 'FETCH FIRST ' . $limit . ' ROWS ONLY' : '';
 	}
 
 	/**
@@ -112,6 +103,7 @@ class Db2 extends AbstractAdapter implements AdapterInterface
 
 		// Get last insert id from the identity_val_local() function
 		$stmt = $this->connection()->query('SELECT IDENTITY_VAL_LOCAL() AS insert_id FROM SYSIBM.SYSDUMMY1 FETCH FIRST ROW ONLY');
+#		$stmt = $this->connection()->query('SELECT SYSIBM.IDENTITY_VAL_LOCAL() FROM SYSIBM.DUAL FETCH FIRST ROW ONLY');
 		$row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
 		return $row['insert_id'];

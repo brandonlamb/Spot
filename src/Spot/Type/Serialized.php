@@ -11,12 +11,7 @@ class Serialized extends Type
 	 */
 	public static function load($value)
 	{
-		if(is_string($value)) {
-			$value = @unserialize($value);
-		} else {
-			$value = null;
-		}
-		return $value;
+		return is_string($value) ? @unserialize($value) : null;
 	}
 
 	public static function dump($value)
