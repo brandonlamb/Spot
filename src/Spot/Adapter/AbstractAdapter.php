@@ -193,8 +193,8 @@ abstract class AbstractAdapter
 	 */
 	public function create($datasource, array $data, array $options = array())
 	{
-		$binds = $this->statementBinds($data);
-		$sql = $this->statementInsert($datasource, $data, $binds);
+		$binds = $this->getBinds($data);
+		$sql = $this->getInsertSql($datasource, $data, $binds);
 		$sequence = isset($options['sequence']) ? $options['sequence'] : null;
 
 		// Add query to log
@@ -302,8 +302,8 @@ abstract class AbstractAdapter
 	 */
 	public function count(Query $query, array $options = array())
 	{
-		$conditions = $this->statementConditions($query->conditions);
-		$binds = $this->statementBinds($query->params());
+		$conditions = $this->getConditionsSql($query->conditions);
+		$binds = $this->getBinds($query->params());
 
 		$sql = "
 			SELECT COUNT(*) AS count
@@ -353,8 +353,8 @@ abstract class AbstractAdapter
 	 */
 	public function update($datasource, array $data, array $where = array(), array $options = array())
 	{
-		$dataBinds = $this->statementBinds($data, 0);
-		$whereBinds = $this->statementBinds($where, count($dataBinds));
+		$dataBinds = $this->getBinds($data, 0);
+		$whereBinds = $this->getBinds($where, count($dataBinds));
 		$binds = array_merge($dataBinds, $whereBinds);
 		$placeholders = array();
 		$dataFields = array_combine(array_keys($data), array_keys($dataBinds));
@@ -364,7 +364,7 @@ abstract class AbstractAdapter
 			$placeholders[] = $this->escapeField($field) . " = :" . $bindField . "";
 		}
 
-		$conditions = $this->statementConditions($where, count($dataBinds));
+		$conditions = $this->getConditionsSql($where, count($dataBinds));
 
 		// Ensure there are actually updated values on THIS table
 		if (count($binds) > 0) {
@@ -411,8 +411,8 @@ abstract class AbstractAdapter
 	 */
 	public function delete($datasource, array $data, array $options = array())
 	{
-		$binds = $this->statementBinds($data, 0);
-		$conditions = $this->statementConditions($data);
+		$binds = $this->getBinds($data, 0);
+		$conditions = $this->getConditionsSql($data);
 
 		$sql = "DELETE FROM " . $datasource . "";
 		$sql .= ($conditions ? ' WHERE ' . $conditions : '');
@@ -667,7 +667,7 @@ abstract class AbstractAdapter
 
 				// Increment ensures column name distinction
 				// We need to do this whether it was used or not
-				// to maintain compatibility with statementConditions()
+				// to maintain compatibility with getConditionsSql()
 				$ci++;
 			}
 			if ($sqlStatement != '(') {
@@ -743,7 +743,7 @@ abstract class AbstractAdapter
 				}
 				// Increment ensures column name distinction
 				// We need to do this whether it was used or not
-				// to maintain compatibility with statementConditions()
+				// to maintain compatibility with getConditionsSql()
 				$ci++;
 			}
 
