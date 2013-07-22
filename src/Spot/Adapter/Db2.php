@@ -102,10 +102,9 @@ class Db2 extends AbstractAdapter implements AdapterInterface
 		}
 
 		// Get last insert id from the identity_val_local() function
-		$stmt = $this->connection()->query('SELECT IDENTITY_VAL_LOCAL() AS insert_id FROM SYSIBM.SYSDUMMY1 FETCH FIRST ROW ONLY');
-#		$stmt = $this->connection()->query('SELECT SYSIBM.IDENTITY_VAL_LOCAL() FROM SYSIBM.DUAL FETCH FIRST ROW ONLY');
-		$row = $stmt->fetch(\PDO::FETCH_ASSOC);
+		$stmt = $this->connection()->query('VALUES IDENTITY_VAL_LOCAL()');
+		$row = $stmt->fetch(\PDO::FETCH_NUM);
 
-		return $row['insert_id'];
+		return isset($row[0]) ? $row[0] : 0;
 	}
 }
