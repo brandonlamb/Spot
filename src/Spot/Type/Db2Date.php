@@ -2,12 +2,12 @@
 
 namespace Spot\Type;
 
-class Datetime extends AbstractType implements TypeInterface
+class Db2Date extends Datetime
 {
     /**
      * @var string
      */
-    protected static $format = 'Y-m-d h:i:s';
+    protected static $format = 'Y-m-d';
 
     /**
      * @{inherit}
@@ -37,13 +37,5 @@ class Datetime extends AbstractType implements TypeInterface
             $value = new \DateTime();
             return $value->format(static::$format);
         }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public static function dump($value)
-    {
-        return static::cast($value);
     }
 }

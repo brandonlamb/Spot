@@ -1,10 +1,10 @@
 <?php
 namespace Spot\Type;
 
-use Spot\Entity;
-
-class Time extends Datetime
+class Time extends Type\Datetime
 {
-	/** @var string */
-	public static $format = 'H:i:s';
+    /**
+     * @var string
+     */
+    public static $format = 'H:i:s';
 }
