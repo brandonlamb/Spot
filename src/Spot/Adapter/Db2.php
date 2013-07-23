@@ -1,4 +1,5 @@
 <?php
+
 namespace Spot\Adapter;
 
 /**
@@ -15,20 +16,95 @@ class Db2 extends AbstractAdapter implements AdapterInterface
 	 * Escape/quote direct user input
 	 *
 	 * @param string $string
+	 * @todo Not quoting the columns essentially by just returning $field
 	 */
 	public function escapeField($field)
 	{
-		return $field === '*' ? $field : '"' . $field . '"';
+		return $field;
+#		return $field === '*' ? $field : '"' . $field . '"';
 	}
 
 	/**
-	 * DB2 doesnt support LIMIT or OFFSET
+	 * {@inherit}
+	 */
+	public function migrate($table, array $fields, array $options = array())
+	{
+		return $this;
+	}
+
+	/**
 	 * @{inherit}
 	 */
-	public function read(\Spot\Query $query, array $options = array())
+	public function createDatabase($database)
 	{
-		$this->limit = null;
-		$this->offset = null;
-		return parent::read($query, $options);
+		$sql = 'CREATE DATABASE ' . $database;
+
+		// Add query to log
+		\Spot\Log::addQuery($this, $sql);
+
+		return $this->connection()->exec($sql);
+	}
+
+	/**
+	 * @{inherit}
+	 */
+	public function dropDatabase($database)
+	{
+		$sql = 'DROP DATABASE ' . $database;
+
+		// Add query to log
+		\Spot\Log::addQuery($this, $sql);
+
+		return $this->connection()->exec($sql);
+	}
+
+	/**
+	 * {@inherit}
+	 */
+	public function truncateDatasource($datasource)
+	{
+		return $this;
+	}
+
+	/**
+	 * {@inherit}
+	 */
+	public function dropDatasource($datasource)
+	{
+		return $this;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function getLimitSql($limit, array $options = array())
+	{
+		$limit = (int) $limit;
+		return $limit ? 'FETCH FIRST ' . $limit . ' ROWS ONLY' : '';
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function getOffsetSql($offset, array $options = array())
+	{
+		return '';
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function lastInsertId($sequence = null)
+	{
+		// If a sequence was passed then pass it through to the PDO method
+		if (null !== $sequence) {
+			return $this->connection()->lastInsertId($sequence);
+		}
+
+		// Get last insert id from the identity_val_local() function
+		$stmt = $this->connection()->query('VALUES IDENTITY_VAL_LOCAL()');
+		$row = $stmt->fetch(\PDO::FETCH_NUM);
+
+		return isset($row[0]) ? $row[0] : 0;
 	}
 }

@@ -12,6 +12,9 @@ abstract class Entity implements \Serializable
 	protected static $schema;
 
 	/** @var string */
+	protected static $sequence;
+
+	/** @var string */
 	protected static $datasource;
 
 	/** @var array */
@@ -43,11 +46,7 @@ abstract class Entity implements \Serializable
 	public function __construct(array $data = array())
 	{
 		$this->initFields();
-
-		// Set given data
-		if ($data) {
-			$this->data($data, false);
-		}
+		$data && $this->data($data, false);
 	}
 
 	/**
@@ -57,9 +56,7 @@ abstract class Entity implements \Serializable
 	 */
 	public static function schema($schema = null)
 	{
-		if (null !== $schema) {
-			static::$schema = $schema;
-		}
+		null !== $schema && static::$schema = $schema;
 		return static::$schema;
 	}
 
@@ -70,9 +67,7 @@ abstract class Entity implements \Serializable
 	 */
 	public static function datasource($datasource = null)
 	{
-		if (null !== $datasource) {
-			static::$datasource = $datasource;
-		}
+		null !== $datasource && static::$datasource = $datasource;
 		return static::$datasource;
 	}
 
@@ -83,9 +78,7 @@ abstract class Entity implements \Serializable
 	 */
 	public static function datasourceOptions(array $dsOpts = null)
 	{
-		if (null !== $dsOpts) {
-			static::$datasourceOptions = $dsOpts;
-		}
+		null !== $dsOpts && static::$datasourceOptions = $dsOpts;
 		return static::$datasourceOptions;
 	}
 
@@ -96,9 +89,7 @@ abstract class Entity implements \Serializable
 	 */
 	public static function connection($connection = null)
 	{
-		if (null !== $connection) {
-			static::$connection = $connection;
-		}
+		null !== $connection && static::$connection = $connection;
 		return static::$connection;
 	}
 
@@ -299,8 +290,7 @@ abstract class Entity implements \Serializable
 
 		$value = null;
 
-		// We can't use isset for dataModified because it returns
-		// false for NULL values
+		// We can't use isset for dataModified because it returns false for NULL values
 		if (array_key_exists($field, $this->dataModified)) {
 			$value =  $this->dataModified[$field];
 		} elseif (isset($this->data[$field])) {
@@ -362,7 +352,7 @@ abstract class Entity implements \Serializable
 	 * Return datasource
 	 * @return string
 	 */
-	public function getSource()
+	public function getDatasource()
 	{
 		return static::$datasource;
 	}
@@ -373,7 +363,7 @@ abstract class Entity implements \Serializable
 	 */
 	public function getSequence()
 	{
-		return '';
+		return static::$sequence;
 	}
 
 	/**

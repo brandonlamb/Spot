@@ -136,6 +136,9 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 	 */
 	public function select($fields = '*', $datasource = null)
 	{
+		// If calling this method, and the first fields index is * then we should clear this out
+		count($this->fields) === 1 && $this->fields[0] === '*' && $this->fields = array();
+
 		if (null === $fields) {
 			$this->fields = array();
 		} elseif (is_string($fields)) {

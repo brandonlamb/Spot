@@ -419,7 +419,7 @@ class Mapper
 				$options['sequence'] = $entity->getSequence();
 
 				if (empty($options['sequence'])) {
-					$options['sequence'] = $entity->getSource() . '_' . $pkField . '_seq';
+					$options['sequence'] = $entity->getDatasource() . '_' . $pkField . '_seq';
 				}
 
 				// No primary key, insert

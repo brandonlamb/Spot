@@ -31,9 +31,7 @@ class Mysql extends AbstractAdapter implements AdapterInterface
 	}
 
 	/**
-	 * Escape/quote direct user input
-	 *
-	 * @param string $string
+	 * {@inheritdoc}
 	 */
 	public function escapeField($field)
 	{
