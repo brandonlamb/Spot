@@ -1,4 +1,5 @@
 <?php
+
 namespace Spot;
 
 use Spot\Adapter\AdapterInterface;

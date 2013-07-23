@@ -1,5 +1,7 @@
 <?php
+
 namespace Spot\Adapter;
+
 use Spot\Query;
 
 /**
