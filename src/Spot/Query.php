@@ -545,6 +545,16 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 	}
 
 	/**
+	 * return query as a string
+	 *
+	 * @return string
+	 */
+	public function toString()
+	{
+		return $this->mapper()->connection($this->entityName())->toString($this);
+	}
+
+	/**
 	 * Return the first entity matched by the query
 	 *
 	 * @return mixed Spotentity on success, boolean false on failure
