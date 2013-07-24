@@ -232,6 +232,40 @@ abstract class AbstractAdapter
 	/**
 	 * {@inheritdoc}
 	 */
+	public function toString(Query $query, array $options = array())
+	{
+		if (($cache = $query->mapper()->getCache()) && $data = $cache->get($query->cacheKey())) {
+			return $query->mapper()->collection($query->entityName(), $data);
+		}
+
+		$conditions	= $this->getConditionsSql($query->conditions);
+		$joins		= $this->getJoinsSql($query->joins);
+		$binds		= $this->getBinds($query->params());
+		$group		= $this->getGroupSql($query->group);
+		$order		= $this->getOrderSql($query->order);
+		$limit		= $this->getLimitSql($query->limit);
+		$offset		= $this->getOffsetSql($query->offset);
+
+		if ($query->having) {
+			$having = $this->getConditionsSql($query->having);
+		}
+
+		$sql = "
+			SELECT " . $this->getFieldsSql($query->fields) . "
+			FROM " . $query->datasource . "
+			" . ($joins ? $joins : '') . "
+			" . ($conditions ? 'WHERE ' . $conditions : '') . "
+			" . ($group ? $group : '') . "
+			" . ($query->having ? 'HAVING' . $having : '') . "
+			" . ($order ? $order : '') . "
+			" . ($limit ? $limit : '') . "
+			" . ($limit && $offset ? $offset : '');
+		return $sql;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
 	public function read(Query $query, array $options = array())
 	{
 		if (($cache = $query->mapper()->getCache()) && $data = $cache->get($query->cacheKey())) {
