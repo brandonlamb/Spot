@@ -284,7 +284,9 @@ class Mapper
 
         foreach ($with as $relationName) {
             $return = $this->triggerStaticHook($entityName, 'loadWith', array($collection, $relationName, $this));
-            false === $return && continue;
+            if (false === $return) {
+                continue;
+            }
 
             $relationObj = $this->loadRelation($collection, $relationName);
 
