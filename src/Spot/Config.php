@@ -2,8 +2,6 @@
 
 namespace Spot;
 
-use Spot\Adapter\AdapterInterface;
-
 class Config implements \Serializable
 {
     /**
@@ -108,7 +106,7 @@ class Config implements \Serializable
      * @return \Spot\Adapter\AdapterInterface
      * @throws \Spot\Exception
      */
-    public function addConnection($name, AdapterInterface $adapter, $default = false)
+    public function addConnection($name, \Spot\Adapter\AdapterInterface $adapter, $default = false)
     {
         // Connection name must be unique
         if (isset($this->connections[$name])) {
@@ -179,8 +177,3 @@ class Config implements \Serializable
         return $loaded;
     }
 }
-
-/**
- * Register 'spot_load_class' function as an autoloader for files prefixed with 'Spot_'
- */
-#spl_autoload_register(array('\\Spot\\Config', 'loadClass'));

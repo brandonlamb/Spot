@@ -1,6 +1,9 @@
 <?php
+
 namespace Spot\Relation;
-use Spot\Entity;
+
+use Spot\Mapper,
+	Spot\Entity;
 
 /**
  * Abstract class for relations
@@ -8,7 +11,7 @@ use Spot\Entity;
  * @package Spot
  * @link http://spot.os.ly
  */
-abstract class RelationAbstract
+abstract class AbstractRelation
 {
 	protected $mapper;
 	protected $sourceEntity;
@@ -27,7 +30,7 @@ abstract class RelationAbstract
 	 * @param array $resultsIdentities Array of key values for given result set primary key
 	 * @throws \InvalidArgumentException
 	 */
-	public function __construct(\Spot\Mapper $mapper, \Spot\Entity $entity, array $relationData = array())
+	public function __construct(Mapper $mapper, Entity $entity, array $relationData = array())
 	{
 		$entityName = get_class($entity);
 
