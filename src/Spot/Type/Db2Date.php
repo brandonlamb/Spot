@@ -21,9 +21,15 @@ class Db2Date extends Datetime
             } else if ($value) {
                 $value = new \DateTime($value);
             } else {
-                $value = null;
+                $value = new \DateTime();
             }
         }
-        return $value instanceof \DateTime ? $value->format(static::$format) : $value;
+
+        if ($value instanceof \DateTime) {
+            return $value->format(static::$format);
+        } else {
+            $value = new \DateTime();
+            return $value->format(static::$format);
+        }
     }
 }

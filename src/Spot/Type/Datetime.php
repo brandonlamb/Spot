@@ -21,10 +21,16 @@ class Datetime extends AbstractType implements TypeInterface
             } else if ($value) {
                 $value = new \DateTime($value);
             } else {
-                $value = null;
+                $value = new \DateTime();
             }
         }
-        return $value instanceof \DateTime ? $value->format(static::$format) : $value;
+
+        if ($value instanceof \DateTime) {
+            return $value->format(static::$format);
+        } else {
+            $value = new \DateTime();
+            return $value->format(static::$format);
+        }
     }
 
     /**
@@ -32,7 +38,6 @@ class Datetime extends AbstractType implements TypeInterface
      */
     public static function dump($value)
     {
-        $value = static::cast($value);
-        return ($value) ? $value->format(static::$format) : $value;
+        return static::cast($value);
     }
 }

@@ -19,9 +19,15 @@ class Db2Timestamp extends Datetime
                 preg_match('/(\d{4}-\d{1,2}-\d{1,2})-(\d{1,2}\.\d{1,2}\.\d{1,2}).*/', $value, $matches);
                 count($matches) === 3 && $value = new \DateTime($matches[1] . ' ' . $matches[2]);
             } else {
-                $value = null;
+                $value = new \DateTime();
             }
         }
-        return $value instanceof \DateTime ? $value->format(static::$format) : $value;
+
+        if ($value instanceof \DateTime) {
+            return $value->format(static::$format);
+        } else {
+            $value = new \DateTime();
+            return $value->format(static::$format);
+        }
     }
 }
