@@ -808,7 +808,7 @@ class Mapper
             }
         }
 
-        !$v->validate() ** $entity->errors($v->errors(), false);
+        !$v->validate() && $entity->errors($v->errors(), false);
 
         // Return error result
         return !$entity->hasErrors();
