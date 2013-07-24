@@ -54,9 +54,8 @@ class Mapper
         $this->config = $config;
 
         // Ensure at least the exception class is loaded
-        $config::loadClass($this->exceptionClass);
         if (!class_exists($this->exceptionClass)) {
-            throw new Exception("The exception class of '".$this->exceptionClass."' defined in '".get_class($this)."' does not exist.");
+            throw new Exception("The exception class of '" . $this->exceptionClass . "' defined in '" . get_class($this) . "' does not exist.");
         }
     }
 
@@ -514,11 +513,9 @@ class Mapper
     {
         if (is_object($entity)) {
             $entityName = $entity->toString();
-            $data = !isset($options['sequence']) ? $entity->data() : $entity->dataExcept(array($options['pk']));
         } elseif (is_string($entity)) {
             $entityName = $entity;
-            $entity = $this->get($entityName);
-            $data = $options;
+            $entity = $this->get($entityName)->data($options);
         } else {
             throw new $this->exceptionClass(__METHOD__ . " Accepts either an entity object or entity name + data array");
         }
@@ -530,6 +527,7 @@ class Mapper
         }
 
         // Ensure there is actually data to update
+        $data = !isset($options['sequence']) ? $entity->data() : $entity->dataExcept(array($options['pk']));
         if (count($data) <= 0) {
             return false;
         }
@@ -566,11 +564,6 @@ class Mapper
     {
         if (is_object($entity)) {
             $entityName = $entity->toString();
-            $data = $entity->dataModified();
-
-            // Save only known, defined fields
-            $entityFields = $this->fields($entityName);
-            $data = array_intersect_key($data, $entityFields);
         } else {
             throw new $this->exceptionClass(__METHOD__ . " Requires an entity object as the first parameter");
         }
@@ -581,8 +574,16 @@ class Mapper
             return false;
         }
 
+        // Prepare data
+        $data = $entity->dataModified();
+
+        // Save only known, defined fields
+        $entityFields = $this->fields($entityName);
+        $data = array_intersect_key($data, $entityFields);
+
         // Handle with adapter
         if (count($data) > 0) {
+            $data = $this->dumpEntity($entityName, $data);
             $result = $this->connection($entityName)->update($this->datasource($entityName), $data, array($this->primaryKeyField($entityName) => $this->primaryKey($entity)));
 
             // Run afterUpdate

@@ -157,23 +157,4 @@ class Config implements \Serializable
      * {@inherit}
      */
     public function unserialize($serialized) {}
-
-    /**
-     * Class loader
-     *
-     * @param string $className Name of class to load
-     * @return bool
-     */
-    public static function loadClass($className)
-    {
-        $loaded = false;
-
-        // Require Spot namespaced files by assumed folder structure (naming convention)
-        if (false !== strpos($className, 'Spot\\')) {
-            $classFile = trim(str_replace('\\', '/', str_replace('_', '/', str_replace('Spot\\', '', $className))), '\\');
-            $loaded = require_once(__DIR__ . '/' . $classFile . '.php');
-        }
-
-        return $loaded;
-    }
 }
