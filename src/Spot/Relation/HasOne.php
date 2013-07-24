@@ -12,12 +12,29 @@ class HasOne extends AbstractRelation
 {
     /**
      * Load query object with current relation data
+     * @var Spot_Query
+     */
+    public $entity = null;
+
+    /**
+     * Load query object with current relation data
      *
      * @return \Spot\Query
      */
     protected function toQuery()
     {
-        return $this->mapper()->all($this->entityName(), $this->conditions())->order($this->relationOrder())->first();
+        return $this->mapper()->all($this->entityName(), $this->conditions())->order($this->relationOrder())->limit(1);
+    }
+
+    public function entity()
+    {
+        if (!$this->entity) {
+            $this->entity = $this->execute();
+            if ($this->entity instanceof \Spot\Query) {
+                $this->entity = $this->entity->first();
+            }
+        }
+        return $this->entity;
     }
 
     /**

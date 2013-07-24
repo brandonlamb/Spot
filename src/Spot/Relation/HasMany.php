@@ -29,7 +29,7 @@ class HasMany extends AbstractRelation implements \Countable, \IteratorAggregate
      */
     public function first()
     {
-        return $this->toQuery()->first();
+        return $this->execute()->first();
     }
 
     /**
