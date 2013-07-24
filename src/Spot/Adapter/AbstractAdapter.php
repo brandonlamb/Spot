@@ -273,6 +273,7 @@ abstract class AbstractAdapter
 		// Add query to log
 		\Spot\Log::addQuery($this, $sql, $binds);
 
+		// @todo - move this part to a separate method so that self::read() could return the sql statement
 		$result = false;
 		try {
 			// Prepare update query

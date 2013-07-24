@@ -2,13 +2,8 @@
 
 namespace Spot\Type;
 
-class Datetime extends AbstractType implements TypeInterface
+class Timestamp extends Type\Datetime
 {
-    /**
-     * @var string
-     */
-    protected static $format = 'Y-m-d h:i:s';
-
     /**
      * @{inherit}
      */
@@ -19,20 +14,14 @@ class Datetime extends AbstractType implements TypeInterface
             if (is_numeric($value)) {
                 $value = new \DateTime('@' . $value);
             } else if ($value) {
-                $value = new \DateTime($value);
+                // 2013-07-10-15.16.22.684600 - Capture date and time, pass to DateTime
+                $matches = array();
+                preg_match('/(\d{4}-\d{1,2}-\d{1,2})-(\d{1,2}\.\d{1,2}\.\d{1,2}).*/', $value, $matches);
+                count($matches) === 3 && $value = new \DateTime($matches[1] . ' ' . $matches[2]);
             } else {
                 $value = null;
             }
         }
         return $value instanceof \DateTime ? $value->format(static::$format) : $value;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public static function dump($value)
-    {
-        $value = static::cast($value);
-        return ($value) ? $value->format(static::$format) : $value;
     }
 }
