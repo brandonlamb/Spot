@@ -2,6 +2,8 @@
 
 namespace Spot\Adapter;
 
+use Spot\QueryInterface;
+
 /**
  * Adapter Interface
  *
@@ -107,7 +109,7 @@ interface AdapterInterface
      * @param array $options
      * @throws \Spot\Exception
      */
-    public function read(\Spot\QueryInterface $query, array $options = array());
+    public function read(QueryInterface $query, array $options = array());
 
     /**
      * Count number of rows in source based on conditions
@@ -115,7 +117,7 @@ interface AdapterInterface
      * @param array $options
      * @throws \Spot\Exception
      */
-    public function count(\Spot\QueryInterface $query, array $options = array());
+    public function count(QueryInterface $query, array $options = array());
 
     /**
      * Update entity
@@ -199,7 +201,7 @@ interface AdapterInterface
      * @param \Sbux\QueryInterface $query
      * @return string
      */
-    public function getQuerySql(\Spot\QueryInterface $query);
+    public function getQuerySql(QueryInterface $query);
 
     /**
      * Return insert statement

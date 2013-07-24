@@ -2,7 +2,8 @@
 
 namespace Spot\Adapter;
 
-use Spot\Query;
+use Spot\Query,
+    Spot\QueryInterface;
 
 /**
  * Abstract Adapter
@@ -466,7 +467,7 @@ abstract class AbstractAdapter
     /**
      * {@inheritdoc}
      */
-    public function getQuerySq(QueryInterface $query)
+    public function getQuerySql(QueryInterface $query)
     {
         $conditions = $this->getConditionsSql($query->conditions);
         $joins      = $this->getJoinsSql($query->joins);

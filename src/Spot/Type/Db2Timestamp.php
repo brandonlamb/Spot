@@ -2,7 +2,7 @@
 
 namespace Spot\Type;
 
-class Timestamp extends Type\Datetime
+class Db2Timestamp extends Datetime
 {
     /**
      * @{inherit}

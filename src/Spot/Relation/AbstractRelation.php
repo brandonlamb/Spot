@@ -34,7 +34,7 @@ abstract class AbstractRelation
     {
         $entityType = null;
         if ($entity instanceof \Spot\Entity) {
-            $entityType = get_class($entity_or_collection);
+            $entityType = get_class($entity);
         } elseif ($entity instanceof \Spot\Entity\CollectionInterface) {
             $entityType = $entity->entityName();
         } else {

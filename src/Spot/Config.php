@@ -52,7 +52,7 @@ class Config implements \Serializable
             'day'       => '\\Spot\\Type\\Integer',
 
             'db2.date'  => '\\Spot\\Type\\Db2Date',
-            'db2.timestmap' => '\\Spot\\Type\\Db2Timestamp',
+            'db2.timestamp' => '\\Spot\\Type\\Db2Timestamp',
         );
     }
 

@@ -8,7 +8,7 @@ namespace Spot\Entity;
  * @package Spot
  * @link http://spot.os.ly
  */
-class Collection implements CollectionInterface, \Iterator, \Countable, \ArrayAccess
+class Collection implements CollectionInterface
 {
     /**
      * @var array

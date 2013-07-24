@@ -2,7 +2,7 @@
 
 namespace Spot\Type;
 
-class Db2Date extends Type\Datetime
+class Db2Date extends Datetime
 {
     /**
      * @var string
