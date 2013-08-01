@@ -15,7 +15,7 @@ class Db2Date extends Datetime
     public static function cast($value)
     {
         // Ensure nulls or empty dates are preserved as null
-        if ($value === null || $value === '') {
+        if (empty(trim($value))) {
             return null;
         }
 
