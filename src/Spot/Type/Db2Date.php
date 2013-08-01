@@ -14,6 +14,11 @@ class Db2Date extends Datetime
      */
     public static function cast($value)
     {
+        // Ensure nulls or empty dates are preserved as null
+        if ($value === null || $value === '') {
+            return null;
+        }
+
         if (is_string($value) || is_numeric($value)) {
             // Create new \DateTime instance from string value
             if (is_numeric($value)) {
