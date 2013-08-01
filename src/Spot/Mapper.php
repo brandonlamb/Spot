@@ -244,8 +244,6 @@ class Mapper
         $entityFields = $this->fields($entityName);
         foreach ($stmt as $data) {
             // Entity with data set
-            $data = array_intersect_key($data, $entityFields);
-
             $data = $this->loadEntity($entityName, $data);
 
             // Entity with data set
@@ -682,8 +680,13 @@ class Mapper
         $fields = $entityName::fields();
 
         foreach ($data as $field => $value) {
-            $typeHandler = \Spot\Config::getTypeHandler($fields[$field]['type']);
-            $loadedData[$field] = $typeHandler::loadInternal($value);
+            // Skip type checking if dynamic field
+            if (isset($fields[$field])) {
+                $typeHandler = \Spot\Config::getTypeHandler($fields[$field]['type']);
+                $loadedData[$field] = $typeHandler::loadInternal($value);
+            } else {
+                $loadedData[$field] = $value;
+            }
         }
 
         return $loadedData;
@@ -704,10 +707,8 @@ class Mapper
 
         $relations = array();
         $rels = $this->relations($entityName);
-        if (count($rels) > 0) {
-            foreach ($rels as $field => $relation) {
-                $relations[$field] = $this->loadRelation($entity, $field, $reload);
-            }
+        foreach ($rels as $field => $relation) {
+            $relations[$field] = $this->loadRelation($entity, $field, $reload);
         }
 
         return $relations;
