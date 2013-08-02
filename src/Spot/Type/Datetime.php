@@ -14,11 +14,17 @@ class Datetime extends AbstractType implements TypeInterface
      */
     public static function cast($value)
     {
+        // Ensure nulls or empty dates are preserved as null
+        $value = trim($value);
+        if (empty($value)) {
+            return null;
+        }
+
         if (is_string($value) || is_numeric($value)) {
             // Create new \DateTime instance from string value
             if (is_numeric($value)) {
                 $value = new \DateTime('@' . $value);
-            } else if ($value) {
+            } elseif ($value) {
                 $value = new \DateTime($value);
             } else {
                 $value = new \DateTime();
