@@ -200,6 +200,7 @@ abstract class AbstractAdapter
         $sql = $this->getInsertSql($datasource, $data, $binds);
         $sequence = isset($options['sequence']) ? $options['sequence'] : null;
 
+
         // Add query to log
         \Spot\Log::addQuery($this, $sql, $binds);
 

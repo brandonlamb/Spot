@@ -9,6 +9,7 @@ class String extends AbstractType implements TypeInterface
      */
     public static function cast($value)
     {
-        return (null !== $value) ? (string) $value : $value;
+    	$value = (string) trim($value);
+        return ($value === '') ? null : $value;
     }
 }

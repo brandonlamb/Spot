@@ -361,7 +361,7 @@ class Mapper
             // No parameter passed, create a new empty entity object
             $entity = new $entityClass();
             $entity->data(array($this->primaryKeyField($entityClass) => null));
-        } else if (is_array($identifier)) {
+        } elseif (is_array($identifier)) {
             // An array was passed, create a new entity with that data
             $entity = new $entityClass($identifier);
             $entity->data(array($this->primaryKeyField($entityClass) => null));
@@ -393,7 +393,9 @@ class Mapper
      */
     public function create($entityClass, array $data)
     {
-        return $this->save($this->get($entityClass)->data($data));
+        $entity = $this->get($entityClass)->data($data);
+        $this->save($entity);
+        return $entity;
     }
 
     /**
