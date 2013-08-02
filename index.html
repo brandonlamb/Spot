@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Spot : DataMapper ORM for PHP with adapters for MySQL, PosgreSQL and DB2" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Spot</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/brandonlamb/Spot">View on GitHub</a>
+
+          <h1 id="project_title">Spot</h1>
+          <h2 id="project_tagline">DataMapper ORM for PHP with adapters for MySQL, PosgreSQL and DB2</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/brandonlamb/Spot/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/brandonlamb/Spot/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h2>
+<a name="spot-php-ormodm" class="anchor" href="#spot-php-ormodm"><span class="octicon octicon-link"></span></a>Spot PHP ORM+ODM</h2>
+
+<p>For Relational Databases and MongoDB</p>
+
+<p><a href="https://www.travis-ci.org/brandonlamb/Spot"><img src="https://www.travis-ci.org/brandonlamb/Spot.png?branch=master" alt="Build Status"></a></p>
+
+<h1>
+<a name="connecting-to-a-database" class="anchor" href="#connecting-to-a-database"><span class="octicon octicon-link"></span></a>Connecting to a Database</h1>
+
+<p>The <code>Spot\Config</code> object stores and references database connections by name.
+Create a new instance of <code>Spot\Config</code> and add database connections created outside
+of Spot. This was a change to allow your app to create the raw PDO connection and
+just reuse this. A big complaint I have always had is pretty much every ORM/Model
+class always wants to create this for you instead of being passed this connection.</p>
+
+<pre><code>// PostgreSQL
+$db = new Pdo('pgsql:host=localhost;dbname=jdoe', 'jdoe', 'mypass');
+
+$cfg = \Spot\Config::getInstance();
+$adapter = $cfg-&gt;addConnection('db', new \Spot\Adapter\Pgsql($db));
+
+$adapter = $cfg-&gt;connection('db');
+</code></pre>
+
+<h1>
+<a name="accessing-the-mapper" class="anchor" href="#accessing-the-mapper"><span class="octicon octicon-link"></span></a>Accessing the Mapper</h1>
+
+<p>Since Spot follows the DataMapper design pattern, you will need a mapper
+instance for working with object Entities and database tables.</p>
+
+<pre><code>$mapper = new \Spot\Mapper($cfg);
+</code></pre>
+
+<p>Since you have to have access to your mapper anywhere you use the
+database, most people create a helper method to create a mapper instance
+once and then return the same instance when required again. Such a
+helper method might look something like this:</p>
+
+<pre><code>function get_mapper() {
+    static $mapper;
+    if($mapper === null) {
+        $mapper = new \Spot\Mapper($cfg);
+    }
+    return $mapper;
+}
+</code></pre>
+
+<p>Or if you have a Registry class in your framework:</p>
+
+<pre><code>$registry = Registry::getInstance();
+$registry-&gt;set('mapper', $mapper);
+
+$mapper = Register::get('mapper');
+</code></pre>
+
+<p>Or using a Dependency Injection Container</p>
+
+<pre><code>$di-&gt;setShared('mapper', $mapper);
+
+$mapper = $di-&gt;getShared('mapper');
+</code></pre>
+
+<h1>
+<a name="creating-entities" class="anchor" href="#creating-entities"><span class="octicon octicon-link"></span></a>Creating Entities</h1>
+
+<p>Entity classes can be named and namespaced however you want to set them
+up within your project structure. For the following examples, the
+Entities will just be prefixed with an <code>Entity</code> namespace for easy psr-0
+compliant autoloading.</p>
+
+<pre><code>namespace Entity;
+
+class Post extends \Spot\Entity
+{
+    protected static $datasource = 'posts';
+
+    public static function fields()
+    {
+        return array(
+            'id' =&gt; array('type' =&gt; 'int', 'primary' =&gt; true, 'serial' =&gt; true),
+            'title' =&gt; array('type' =&gt; 'string', 'required' =&gt; true),
+            'body' =&gt; array('type' =&gt; 'text', 'required' =&gt; true),
+            'status' =&gt; array('type' =&gt; 'int', 'default' =&gt; 0, 'index' =&gt; true),
+            'date_created' =&gt; array('type' =&gt; 'datetime')
+        );
+    }
+
+    public static function relations()
+    {
+        return array(
+            // Each post entity 'hasMany' comment entites
+            'comments' =&gt; array(
+                'type' =&gt; 'HasMany',
+                'entity' =&gt; 'Entity_Post_Comment',
+                'where' =&gt; array('post_id' =&gt; ':entity.id'),
+                'order' =&gt; array('date_created' =&gt; 'ASC')
+            )
+        );
+    }
+}
+</code></pre>
+
+<p>Another entity example of a model class inside an application's Model namespace.
+This is the simplest definition, only defining the model's fields.</p>
+
+<pre><code>&lt;?php
+namespace Blog\Model;
+use \Spot\Entity;
+
+class Game extends Entity
+{
+    protected static $datasource = 'game';
+
+    public static function fields()
+    {
+        return array(
+            'id' =&gt; array('type' =&gt; 'int', 'primary' =&gt; true, 'serial' =&gt; true),
+            'status_id' =&gt; array('type' =&gt; 'int', 'default' =&gt; 0, 'index' =&gt; true),
+            'date_created' =&gt; array('type' =&gt; 'datetime', 'default' =&gt; date('Y-m-d h:m:i'), 'required' =&gt; true),
+            'image_count' =&gt; array('type' =&gt; 'int', 'default' =&gt; 0, 'index' =&gt; true),
+            'name' =&gt; array('type' =&gt; 'string', 'required' =&gt; true),
+            'slug' =&gt; array('type' =&gt; 'string', 'required' =&gt; true),
+        );
+    }
+}
+
+</code></pre>
+
+<h3>
+<a name="built-in-field-types" class="anchor" href="#built-in-field-types"><span class="octicon octicon-link"></span></a>Built-in Field Types</h3>
+
+<p>All the basic field types are built-in with all the default
+functionality provided for you:</p>
+
+<ul>
+<li><code>string</code></li>
+<li><code>int</code></li>
+<li><code>float/double/decimal</code></li>
+<li><code>boolean</code></li>
+<li><code>text</code></li>
+<li><code>date</code></li>
+<li><code>datetime</code></li>
+<li><code>timestamp</code></li>
+<li><code>year</code></li>
+<li><code>month</code></li>
+<li><code>day</code></li>
+</ul><h4>
+<a name="registering-custom-field-types" class="anchor" href="#registering-custom-field-types"><span class="octicon octicon-link"></span></a>Registering Custom Field Types</h4>
+
+<p>If you want to register your own custom field type with custom
+functionality on get/set, have a look at the clases in the <code>Spot\Type</code>
+namespace, make your own, and register it in <code>Spot\Config</code>:</p>
+
+<pre><code>$this-&gt;setTypeHandler('string', '\Spot\Type\String');
+</code></pre>
+
+<h3>
+<a name="relation-types" class="anchor" href="#relation-types"><span class="octicon octicon-link"></span></a>Relation Types</h3>
+
+<p>Entity relation types are:</p>
+
+<ul>
+<li><code>HasOne</code></li>
+<li><code>HasMany</code></li>
+<li><code>HasManyThrough</code></li>
+</ul><h1>
+<a name="finders-mapper" class="anchor" href="#finders-mapper"><span class="octicon octicon-link"></span></a>Finders (Mapper)</h1>
+
+<p>The main finders used most are <code>all</code> to return a collection of entities,
+and <code>first</code> or <code>get</code> to return a single entity matching the conditions.</p>
+
+<h3>
+<a name="allentityname-conditions" class="anchor" href="#allentityname-conditions"><span class="octicon octicon-link"></span></a>all(entityName, [conditions])</h3>
+
+<p>Find all <code>entityName</code> that matches the given conditions and return a
+<code>Spot\Entity\Collection</code> of loaded <code>Spot\Entity</code> objects.</p>
+
+<pre><code>// Conditions can be the second argument
+$posts = $mapper-&gt;all('Entity\Post', array('status' =&gt; 1));
+
+// Or chained using the returned `Spot\Query` object - results identical to above
+$posts = $mapper-&gt;all('Entity\Post')-&gt;where(array('status' =&gt; 1));
+
+// Or building up a query programmatically
+$posts = $mapper-&gt;all('Entity\Post');
+$posts-&gt;where(array('date_created :gt', date('Y-m-d'));
+
+... // Do some checks
+
+$posts-&gt;limit(10);
+</code></pre>
+
+<p>Since a <code>Spot\Query</code> object is returned, conditions and other statements
+can be chained in any way or order you want. The query will be
+lazy-executed on interation or <code>count</code>, or manually by ending the chain with a
+call to <code>execute()</code>.</p>
+
+<h3>
+<a name="firstentityname-conditions" class="anchor" href="#firstentityname-conditions"><span class="octicon octicon-link"></span></a>first(entityName, [conditions])</h3>
+
+<p>Find and return a single <code>Spot\Entity</code> object that matches the criteria.</p>
+
+<pre><code>$post = $mapper-&gt;first('Entity\Post', array('title' =&gt; "Test Post"));
+</code></pre>
+
+<h1>
+<a name="iterating-over-results" class="anchor" href="#iterating-over-results"><span class="octicon octicon-link"></span></a>Iterating Over Results</h1>
+
+<pre><code>// Fetch mapper from DI container
+$mapper = $di-&gt;getShared('mapper');
+
+// Get Query object to add constraints
+$posts = $mapper-&gt;all('Entity\Posts');
+
+// Find posts where the commenter's user_id is 123
+$posts-&gt;where(array('user_id :eq', 123));
+
+// Only get 10 results
+$limit = (int) $_POST['limit'];
+$posts-&gt;limit($limit);
+
+// Loop over results
+foreach ($posts as $post) {
+    echo "Title: " . $post-&gt;title . "&lt;br&gt;";
+    echo "Created: " . $post-&gt;date_created . "&lt;br&gt;";
+}
+</code></pre>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Spot maintained by <a href="https://github.com/brandonlamb">brandonlamb</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
