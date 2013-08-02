@@ -79,7 +79,9 @@ class Manager
                 'index' => false,
                 'unique' => false,
                 'serial' => false,
-                'relation' => false
+                'identity' => false,
+                'sequence' => false,
+                'relation' => false,
             );
 
             // Type default overrides for specific field types

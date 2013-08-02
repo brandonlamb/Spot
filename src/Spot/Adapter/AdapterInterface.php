@@ -210,7 +210,7 @@ interface AdapterInterface
      * @param array $binds
      * @return string
      */
-    public function getInsertSql($datasource, array $data, array $binds);
+    public function getInsertSql($datasource, array $data, array $binds, array $options);
 
     /**
      * Return update statement

@@ -480,14 +480,20 @@ class Mapper
             $pkField = $this->primaryKeyField($entity->toString());
             $attributes = $this->entityManager()->fields($entity->toString(), $pkField);
 
-            // If the pk value is empty and the pk is set to serial type
-            if (empty($pk) && $attributes['serial'] === true) {
+            // If the pk value is empty and the pk is set to an autoincremented type (identity, sequence, serial)
+            if (empty($pk) && ($attributes['identity'] | $attributes['serial'] | $attributes['sequence'])) {
                 // Autogenerate sequence if sequence is empty
                 $options['pk'] = $pkField;
-                $options['sequence'] = $entity->getSequence();
 
-                if (empty($options['sequence'])) {
-                    $options['sequence'] = $entity->getDatasource() . '_' . $pkField . '_seq';
+                // Check if PK is using a sequence
+                if ($options['sequence'] === true) {
+                    // Try fetching sequence from the Entity defined getSequence() method
+                    $options['sequence'] = $entity->getSequence();
+
+                    // If the Entity did not define a sequence, automatically generate an assumed sequence name
+                    if (empty($options['sequence'])) {
+                        $options['sequence'] = $entity->getDatasource() . '_' . $pkField . '_seq';
+                    }
                 }
 
                 // No primary key, insert
@@ -529,7 +535,7 @@ class Mapper
         }
 
         // Ensure there is actually data to update
-        $data = !isset($options['sequence']) ? $entity->data() : $entity->dataExcept(array($options['pk']));
+        $data = ($options['sequence'] !== false) ? $entity->data() : $entity->dataExcept(array($options['pk']));
         if (count($data) <= 0) {
             return false;
         }

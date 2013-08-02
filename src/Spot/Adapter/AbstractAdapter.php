@@ -197,9 +197,7 @@ abstract class AbstractAdapter
     public function create($datasource, array $data, array $options = array())
     {
         $binds = $this->getBinds($data);
-        $sql = $this->getInsertSql($datasource, $data, $binds);
-        $sequence = isset($options['sequence']) ? $options['sequence'] : null;
-
+        $sql = $this->getInsertSql($datasource, $data, $binds, $options);
 
         // Add query to log
         \Spot\Log::addQuery($this, $sql, $binds);
@@ -212,7 +210,7 @@ abstract class AbstractAdapter
                 // Execute
                 if ($stmt->execute($binds)) {
                     // Use 'id' if PK exists, otherwise returns true
-                    $id = $this->lastInsertId($sequence);
+                    $id = $this->lastInsertId($options['sequence']);
                     $result = $id ? $id : true;
                 } else {
                     $result = false;
@@ -496,7 +494,7 @@ abstract class AbstractAdapter
     /**
      * {@inheritdoc}
      */
-    public function getInsertSql($datasource, array $data, array $binds)
+    public function getInsertSql($datasource, array $data, array $binds, array $options)
     {
         // build the statement
         return "INSERT INTO " . $datasource .
