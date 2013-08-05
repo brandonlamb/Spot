@@ -521,6 +521,11 @@ class Mapper
     {
         if (is_object($entity)) {
             $entityName = $entity->toString();
+
+            // If calling insert directly, we probably were not passed pk or sequence
+            !isset($options['sequence']) && $options['sequence'] = false;
+            !isset($options['identity']) && $options['identity'] = false;
+            !isset($options['serial']) && $options['serial'] = false;
         } elseif (is_string($entity)) {
             $entityName = $entity;
             $entity = $this->get($entityName)->data($options);
@@ -534,8 +539,9 @@ class Mapper
             return false;
         }
 
+
         // Ensure there is actually data to update
-        $data = ($options['sequence'] !== false) ? $entity->data() : $entity->dataExcept(array($options['pk']));
+        $data = ($options['sequence'] | $options['serial'] | $options['identity'] === false) ? $entity->data() : $entity->dataExcept(array($options['pk']));
         if (count($data) <= 0) {
             return false;
         }
