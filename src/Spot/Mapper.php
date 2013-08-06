@@ -469,6 +469,11 @@ class Mapper
             throw new $this->exceptionClass(__METHOD__ . " Requires an entity object as the first parameter");
         }
 
+        // Guarantee default PK options
+        !isset($options['sequence']) && $options['sequence'] = false;
+        !isset($options['identity']) && $options['identity'] = false;
+        !isset($options['serial']) && $options['serial'] = false;
+
         // Run beforeSave to know whether or not we can continue
         if (false === $this->triggerInstanceHook($entity, 'beforeSave', $this)) {
             return false;
