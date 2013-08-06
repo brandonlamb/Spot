@@ -544,9 +544,8 @@ class Mapper
             return false;
         }
 
-
         // Ensure there is actually data to update
-        $data = ($options['sequence'] | $options['serial'] | $options['identity'] === false) ? $entity->data() : $entity->dataExcept(array($options['pk']));
+        $data = ($options['sequence'] | $options['serial'] | $options['identity'] !== false) ? $entity->data() : $entity->dataExcept(array($options['pk']));
         if (count($data) <= 0) {
             return false;
         }
