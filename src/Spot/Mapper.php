@@ -531,6 +531,8 @@ class Mapper
             !isset($options['sequence']) && $options['sequence'] = false;
             !isset($options['identity']) && $options['identity'] = false;
             !isset($options['serial']) && $options['serial'] = false;
+            !isset($options['pk']) && $options['pk'] = $this->primaryKeyField($entityName);
+
         } elseif (is_string($entity)) {
             $entityName = $entity;
             $entity = $this->get($entityName)->data($options);
