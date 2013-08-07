@@ -149,14 +149,23 @@ class Collection implements CollectionInterface
     }
 
     /**
-    * Provides a string representation of the class
-    * Brackets contain the number of elements contained
-    * in the collection
-    * @return string
-    */
+     * String representation of the class
+     * @return string
+     */
     public function __toString()
     {
-        return __CLASS__ . '[' . $this->count() . ']';
+        return $this->toString();
+    }
+
+    /**
+     * Provides a string representation of the class
+     * Brackets contain the number of elements contained
+     * in the collection
+     * @return string
+     */
+    public function toString()
+    {
+        return get_called_class() . '[' . $this->count() . ']';
     }
 
     /**
