@@ -182,12 +182,16 @@ abstract class AbstractAdapter
         // Add query to log
         \Spot\Log::addQuery($this, $sql, $binds);
 
-        // Prepare and execute query
-        if ($stmt = $this->connection()->prepare($sql)) {
-            $results = $stmt->execute($binds);
-            return ($results === true) ? $stmt : false;
-        } else {
-            throw new \Spot\Exception(__METHOD__ . " Error: Unable to execute SQL query - failed to create prepared statement from given SQL");
+        try {
+            // Prepare and execute query
+            if ($stmt = $this->connection()->prepare($sql)) {
+                $results = $stmt->execute($binds);
+                return ($results === true) ? $stmt : false;
+            } else {
+                throw new \Spot\Exception(__METHOD__ . " Error: Unable to execute SQL query - failed to create prepared statement from given SQL");
+            }
+        } catch (\PDOException $e) {
+            throw new \Spot\Exception(__METHOD__ . ': ' . $e->getMessage());
         }
     }
 
@@ -224,8 +228,8 @@ abstract class AbstractAdapter
                 throw new \Spot\Exception("Table or datasource '" . $datasource . "' does not exist");
             }
 
-            // Re-throw exception
-            throw $e;
+            // Throw new Spot exception
+            throw new \Spot\Exception(__METHOD__ . ': ' . $e->getMessage());
         }
 
         return $result;
@@ -273,8 +277,8 @@ abstract class AbstractAdapter
                 throw new \Spot\Exception("Table or datasource '" . $query->datasource . "' does not exist");
             }
 
-            // Re-throw exception
-            throw $e;
+            // Throw new Spot exception
+            throw new \Spot\Exception(__METHOD__ . ': ' . $e->getMessage());
         }
 
         return $result;
@@ -324,8 +328,8 @@ abstract class AbstractAdapter
                 throw new \Spot\Exception("Table or datasource '" . $query->datasource . "' does not exist");
             }
 
-            // Re-throw exception
-            throw $e;
+            // Throw new Spot exception
+            throw new \Spot\Exception(__METHOD__ . ': ' . $e->getMessage());
         }
 
         return $result;
@@ -377,8 +381,8 @@ abstract class AbstractAdapter
                     throw new \Spot\Exception("Table or datasource '" . $datasource . "' does not exist");
                 }
 
-                // Re-throw exception
-                throw $e;
+                // Throw new Spot exception
+                throw new \Spot\Exception(__METHOD__ . ': ' . $e->getMessage());
             }
         } else {
             $result = false;
@@ -419,8 +423,8 @@ abstract class AbstractAdapter
                 throw new \Spot\Exception("Table or datasource '" . $datasource . "' does not exist");
             }
 
-            // Re-throw exception
-            throw $e;
+            // Throw new Spot exception
+            throw new \Spot\Exception(__METHOD__ . ': ' . $e->getMessage());
         }
     }
 
