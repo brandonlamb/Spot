@@ -583,19 +583,22 @@ abstract class AbstractAdapter
                 $col = $colData[0];
 
                 // Determine which operator to use based on custom and standard syntax
-                switch ($operator) {
+                switch (strtolower($operator)) {
                     case '<':
                     case ':lt':
                         $operator = '<';
                         break;
+
                     case '<=':
                     case ':lte':
                         $operator = '<=';
                         break;
+
                     case '>':
                     case ':gt':
                         $operator = '>';
                         break;
+
                     case '>=':
                     case ':gte':
                         $operator = '>=';
@@ -614,9 +617,16 @@ abstract class AbstractAdapter
                         break;
 
                     // column IN ()
-                    case 'IN':
-                        $whereClause = $this->escapeField($col) . ' IN (' . join(', ', array_fill(0, count($value), '?')) . ')';
-                        break;
+#                    case ':in':
+#                    case 'in':
+#                        $whereClause = $this->escapeField($col) . ' IN (' . join(', ', array_fill(0, count($value), '?')) . ')';
+#                        break;
+
+                    // column NOT IN ()
+#                    case ':notin':
+#                    case 'notin':
+#                        $whereClause = $this->escapeField($col) . ' NOT IN (' . join(', ', array_fill(0, count($value), '?')) . ')';
+#                        break;
 
                     // column BETWEEN x AND y
 #                   case 'BETWEEN':
@@ -628,30 +638,34 @@ abstract class AbstractAdapter
                     case ':fulltext':
                         $colParam = preg_replace('/\W+/', '_', $col) . $ci;
                         $whereClause = 'MATCH(' . $this->escapeField($col) . ') AGAINST(:' . $colParam . ')';
-                    break;
+                        break;
 
                     // ALL - Find ALL values in a set - Kind of like IN(), but seeking *all* the values
                     case ':all':
                         throw new \Spot\Exception("SQL adapters do not currently support the ':all' operator");
-                    break;
+                        break;
 
                     // Not equal
                     case '<>':
                     case '!=':
                     case ':ne':
                     case ':not':
+                    case ':notin':
+                    case ':isnot':
                         $operator = '!=';
                         if (is_array($value)) {
                             $operator = 'NOT IN';
                         } elseif (is_null($value)) {
                             $operator = 'IS NOT NULL';
                         }
-                    break;
+                        break;
 
                     // Equals
                     case '=':
                     case ':is':
                     case ':eq':
+                    case ':in':
+                    case ':is':
                     default:
                         $operator = '=';
                         if (is_array($value)) {
@@ -659,11 +673,11 @@ abstract class AbstractAdapter
                         } elseif (is_null($value)) {
                             $operator = 'IS NULL';
                         }
-                    break;
                 }
 
                 // If WHERE clause not already set by the code above...
                 if (is_array($value)) {
+#                    $value = '(' . join(', ', array_fill(0, count($value), '?')) . ')'
                     $valueIn = '';
                     foreach ($value as $val) {
                         $valueIn .= $this->escape($val) . ',';
