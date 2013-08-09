@@ -650,6 +650,7 @@ abstract class AbstractAdapter
 
                     // Equals
                     case '=':
+                    case ':is':
                     case ':eq':
                     default:
                         $operator = '=';
