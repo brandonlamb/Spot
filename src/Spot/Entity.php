@@ -211,8 +211,10 @@ abstract class Entity implements \Serializable
     }
 
     /**
-     * Return array of field data with data from the field names listed removed
-     *
+     * Return array of field data with data from the field names listed removed.
+     * Essentially if your entity has fields id, first_name, last_name and you call
+     * this method passing array('first_name'), you will be returned an array WITHOUT
+     * the first_name field returned.
      * @param array $except, List of field names to exclude in data list returned
      * @return array
      */
@@ -275,7 +277,6 @@ abstract class Entity implements \Serializable
 
     /**
      * Check if any errors exist
-     *
      * @param string $field OPTIONAL field name
      * @return bool
      */
@@ -289,7 +290,6 @@ abstract class Entity implements \Serializable
 
     /**
      * Error message getter/setter
-     *
      * @param $field string|array String return errors with field key, array sets errors
      * @return self|array|boolean Setter return self, getter returns array or boolean if key given and not found
      */
@@ -298,17 +298,16 @@ abstract class Entity implements \Serializable
         // Return errors for given field
         if (is_string($msgs)) {
             return isset($this->errors[$msgs]) ? $this->errors[$msgs] : array();
-
-        // Set error messages from given array
         } elseif (is_array($msgs)) {
+            // Set error messages from given array
             $this->errors = $msgs;
         }
+
         return $this->errors;
     }
 
     /**
      * Add an error to error messages array
-     *
      * @param string $field Field name that error message relates to
      * @param mixed $msg Error message text - String or array of messages
      * @return $this
@@ -328,7 +327,9 @@ abstract class Entity implements \Serializable
     }
 
     /**
-     * Getter for field properties
+     * Getter for field properties. This method will attempt to call a
+     * get$field() method if it exists, otherwise the field from the entity's
+     * data storage array.
      * @param string $field
      * @param mixed $default, value to return if field doesnt exist
      * @return mixed
@@ -362,7 +363,9 @@ abstract class Entity implements \Serializable
     }
 
     /**
-     * Setter for field properties
+     * Setter for field properties. If the entity class has defined a
+     * set$field() method, the value returned from this method will be
+     * used when setting the field's value.
      * @param string $field
      * @param mixed $value
      * @return $this

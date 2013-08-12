@@ -17,17 +17,17 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     protected $mapper;
 
     /**
-     * @var string
+     * @var string, The entity's class name
      */
     protected $entityName;
 
     /**
-     * @var array
+     * @var array, cached data
      */
     protected $cache = array();
 
     /**
-     * @var string
+     * @var string, cache key name
      */
     protected $cacheKey;
 
@@ -37,26 +37,58 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     protected $cacheTtl = 30;
 
     /**
-     * @var array, Storage for query properties
+     * @var array, Select fields
      */
     public $fields = array();
+
+    /**
+     * @var array, Table joins with clauses
+     */
     public $joins = array();
+
+    /**
+     * @var array, where conditions
+     */
     public $conditions = array();
+
+    /**
+     * @var array, fulltext search conditions
+     */
     public $search = array();
+
+    /**
+     * @var array, order by fields
+     */
     public $order = array();
+
+    /**
+     * @var array, group by fields
+     */
     public $group = array();
+
+    /**
+     * @var array, having conditions
+     */
     public $having = array();
+
+    /**
+     * @var array, with conditions
+     */
     public $with = array();
 
     /**
-     * @var string
+     * @var string, name of the table
      */
     public $datasource;
 
     /**
-     * @var int
+     * @var int, limit number
      */
     public $limit;
+
+    /**
+     * @var int, offset number
+     */
     public $offset;
 
     /**
@@ -65,20 +97,19 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     protected static $customMethods = array();
 
     /**
-     * @var array
+     * @var array, which arrays can be reset when query object is reset
      */
     protected static $resettable = array(
         'conditions', 'search', 'order', 'group', 'having', 'limit', 'offset', 'with'
     );
 
     /**
-     * @var array
+     * @var array, when doing a reset, a snapshot copy is stored here
      */
     protected $snapshot = array();
 
     /**
      *  Constructor Method
-     *
      *  @param Spot\Mapper
      *  @param string $entityName Name of the entity to query on/for
      */
@@ -94,7 +125,6 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 
     /**
      * Add a custom user method via closure or PHP callback
-     *
      * @param string $method Method name to add
      * @param callback $callback Callback or closure that will be executed when missing method call matching $method is made
      * @throws InvalidArgumentException
@@ -112,7 +142,6 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 
     /**
      * Run user-added callback
-     *
      * @param string $method Method name called
      * @param array $args Array of arguments used in missing method call
      * @throws BadMethodCallException
@@ -134,7 +163,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     }
 
     /**
-     * Get current adapter object
+     * Get current mapper
      * @return \Spot\Mapper
      */
     public function mapper()
@@ -143,7 +172,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     }
 
     /**
-     * Get current entity name query is to be performed on
+     * Get current entity class name that the query is to be performed on
      * @return string
      */
     public function entityName()
@@ -152,11 +181,11 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     }
 
     /**
-     * Called from mapper's select() function
-     *
+     * The mapper's select() method chains to this method. Used to select
+     * fields during the query.
      * @param mixed $fields (optional)
-     * @param string $source Data source name
-     * @return $this
+     * @param string $source Data source name (table)
+     * @return self
      */
     public function select($fields = '*', $datasource = null)
     {
@@ -182,10 +211,9 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     }
 
     /**
-     * From
-     *
+     * Specify the FROM table/datasource
      * @param string $datasource Name of the data source to perform a query on
-     * @return $this
+     * @return self
      */
     public function from($datasource = null)
     {
@@ -196,9 +224,8 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     /**
      * Find records with given conditions
      * If all parameters are empty, find all records
-     *
      * @param array $conditions Array of conditions in column => value pairs
-     * @return $this
+     * @return self
      */
     public function all(array $conditions = array())
     {
@@ -215,7 +242,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
      * recommended way to supply the constraint is as an array with three elements:
      * array(column1, operator, column2)
      * @param string $type, will be prepended to JOIN
-     * @return $this
+     * @return self
      */
     public function join($table, $constraint = null, $type = 'INNER')
     {
@@ -242,21 +269,16 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
         }
 
         // Add join array
-        $this->joins[] = array(
-            trim($table),
-            $constraint,
-            $type,
-        );
+        $this->joins[] = array(trim($table), $constraint, $type);
 
         return $this;
     }
 
     /**
      * Add an INNER JOIN
-     *
-     * @param  string $table
-     * @param  string $constraint
-     * @return $this
+     * @param string $table
+     * @param string $constraint
+     * @return self
      */
     public function innerJoin($table, $constraint)
     {
@@ -265,10 +287,9 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 
     /**
      * Add a LEFT OUTER JOIN
-     *
-     * @param  string $table
-     * @param  string $constraint
-     * @return $this
+     * @param string $table
+     * @param string $constraint
+     * @return self
      */
     public function leftOuterJoin($table, $constraint)
     {
@@ -277,10 +298,9 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 
     /**
      * Add an RIGHT OUTER JOIN
-     *
-     * @param  string $table
-     * @param  string $constraint
-     * @return $this
+     * @param string $table
+     * @param string $constraint
+     * @return self
      */
     public function rightOuterJoin($table, $constraint)
     {
@@ -289,10 +309,9 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 
     /**
      * Add an FULL OUTER JOIN
-     *
-     * @param  string $table
-     * @param  string $constraint
-     * @return $this
+     * @param string $table
+     * @param string $constraint
+     * @return self
      */
     public function fullOuterJoin($table, $constraint)
     {
@@ -301,10 +320,9 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 
     /**
      * Add an CROSS JOIN
-     *
-     * @param  string $table
-     * @param  string $constraint
-     * @return $this
+     * @param string $table
+     * @param string $constraint
+     * @return self
      */
     public function crossJoin($table, $constraint)
     {
@@ -313,11 +331,10 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 
     /**
      * WHERE conditions
-     *
      * @param array $conditions Array of conditions for this clause
      * @param string $type Keyword that will separate each condition - 'AND', 'OR'
      * @param string $setType Keyword that will separate the whole set of conditions - 'AND', 'OR'
-     * @return $this
+     * @return self
      */
     public function where(array $conditions = array(), $type = 'AND', $setType = 'AND')
     {
@@ -337,7 +354,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
      * Convenience method for WHERE ... OR ...
      * @param array $conditions
      * @param string $type
-     * @return $this
+     * @return self
      */
     public function orWhere(array $conditions = array(), $type = 'AND')
     {
@@ -348,7 +365,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
      * Convenience method for WHERE ... AND ...
      * @param array $conditions
      * @param string $type
-     * @return $this
+     * @return self
      */
     public function andWhere(array $conditions = array(), $type = 'AND')
     {
@@ -392,9 +409,8 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 
     /**
      * ORDER BY columns
-     *
      * @param array $fields Array of field names to use for sorting
-     * @return $this
+     * @return self
      */
     public function order($fields = array())
     {
@@ -419,9 +435,8 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 
     /**
      * GROUP BY clause
-     *
      * @param array $fields Array of field names to use for grouping
-     * @return $this
+     * @return self
      */
     public function group(array $fields = array())
     {
@@ -433,9 +448,8 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 
     /**
      * Having clause to filter results by a calculated value
-     *
      * @param array $having Array (like where) for HAVING statement for filter records by
-     * @return $this
+     * @return self
      */
     public function having(array $having = array())
     {
@@ -446,10 +460,9 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     /**
      * Limit executed query to specified amount of records
      * Implemented at adapter-level for databases that support it
-     *
      * @param int $limit Number of records to return
      * @param int $offset Record to start at for limited result set
-     * @return $this
+     * @return self
      */
     public function limit($limit = 20, $offset = null)
     {
@@ -461,9 +474,8 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     /**
      * Offset executed query to skip specified amount of records
      * Implemented at adapter-level for databases that support it
-     *
      * @param int $offset Record to start at for limited result set
-     * @return $this
+     * @return self
      */
     public function offset($offset = 0)
     {
@@ -473,7 +485,6 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
 
     /**
      * Return array of parameters in key => value format
-     *
      * @return array Parameters in key => value format
      */
     public function params()

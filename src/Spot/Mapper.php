@@ -2,7 +2,8 @@
 
 namespace Spot;
 
-use CacheCache\Cache,
+use Entity\Manager as EntityManager,
+    CacheCache\Cache,
     CacheCache\BackendInterface;
 
 /**
@@ -19,11 +20,14 @@ class Mapper
     protected $config;
 
     /**
-     * @var string, Class Names for required classes - Here so they can be easily overridden
+     * @var string, Class name to use for collections
      */
     protected $collectionClass = '\\Spot\\Entity\\Collection';
+
+    /**
+     * @var string, Class name to use for Query objects
+     */
     protected $queryClass = '\\Spot\\Query';
-    protected $exceptionClass = '\\Spot\\Exception';
 
     /**
      * @var \CacheCache\BackendInterface
@@ -52,16 +56,10 @@ class Mapper
     public function __construct(Config $config)
     {
         $this->config = $config;
-
-        // Ensure at least the exception class is loaded
-        if (!class_exists($this->exceptionClass)) {
-            throw new Exception("The exception class of '" . $this->exceptionClass . "' defined in '" . get_class($this) . "' does not exist.");
-        }
     }
 
     /**
      * Get config class mapper was instantiated with. Optionally set config
-     *
      * @param \Spot\Config $config
      * @return \Spot\Config
      */
@@ -73,7 +71,6 @@ class Mapper
 
     /**
      * Get query class name to use. Optionally set the class name
-     *
      * @param string $queryClass
      * @return string
      */
@@ -85,7 +82,6 @@ class Mapper
 
     /**
      * Get collection class name to use. Optionally set the class name
-     *
      * @param string $collectionClass
      * @return string
      */
@@ -96,23 +92,22 @@ class Mapper
     }
 
     /**
-     * Entity manager class for storing information and meta-data about entities
-     *
+     * Entity manager class for storing information and meta-data about entities.
+     * This is static across all mappers.
      * @return \Spot\Entity\Manager
      */
     public function entityManager()
     {
         if (null === static::$entityManager) {
-            static::$entityManager = new Entity\Manager();
+            static::$entityManager = new EntityManager();
         }
         return static::$entityManager;
     }
 
     /**
-     * Get datasource name
-     *
-     * @param string $entityName Name of the entity class
-     * @return string Name of datasource defined on entity class
+     * Get datasource name (table name) for given entity.
+     * @param string $entityName, Name of the entity class
+     * @return string, Name of datasource defined on entity class
      */
     public function datasource($entityName)
     {
@@ -122,9 +117,8 @@ class Mapper
     /**
      * Get formatted fields with all neccesary array keys and values.
      * Merges defaults with defined field values to ensure all options exist for each field.
-     *
-     * @param string $entityName Name of the entity class
-     * @return array Defined fields plus all defaults for full array of all possible options
+     * @param string, $entityName Name of the entity class
+     * @return array, Defined fields plus all defaults for full array of all possible options
      */
     public function fields($entityName)
     {
@@ -133,9 +127,8 @@ class Mapper
 
     /**
      * Get field information exactly how it is defined in the class
-     *
-     * @param string $entityName Name of the entity class
-     * @return array Defined fields plus all defaults for full array of all possible options
+     * @param string, $entityName Name of the entity class
+     * @return array, Defined fields plus all defaults for full array of all possible options
      */
     public function fieldsDefined($entityName)
     {
@@ -144,8 +137,8 @@ class Mapper
 
     /**
      * Get defined relations
-     *
-     * @param string $entityName Name of the entity class
+     * @param string, $entityName Name of the entity class
+     * @return array
      */
     public function relations($entityName)
     {
@@ -154,19 +147,19 @@ class Mapper
 
     /**
      * Get value of primary key for given row result
-     *
-     * @param object $entity Instance of an entity to find the primary key of
+     * @param \Spot\Entity $entity Instance of an entity to find the primary key of
+     * @return mixed
      */
-    public function primaryKey($entity)
+    public function primaryKey(Entity $entity)
     {
         $pkField = $this->entityManager()->primaryKeyField($entity->toString());
         return $entity->$pkField;
     }
 
     /**
-     * Get value of primary key for given row result
-     *
+     * Get the field name of the primary key for given entity
      * @param string $entityName Name of the entity class
+     * @return string
      */
     public function primaryKeyField($entityName)
     {
@@ -175,7 +168,6 @@ class Mapper
 
     /**
      * Check if field exists in defined fields
-     *
      * @param string $entityName Name of the entity class
      * @param string $field Field name to check for existence
      */
@@ -185,8 +177,7 @@ class Mapper
     }
 
     /**
-     * Return field type
-     *
+     * Return field type for given entity's field
      * @param string $entityName Name of the entity class
      * @param string $field Field name
      * @return mixed Field type string or boolean false
@@ -198,8 +189,7 @@ class Mapper
     }
 
     /**
-     * Get connection to use
-     *
+     * Return the named connection, or the default if no name specified
      * @param string $connectionName Named connection or entity class name
      * @return Spot\Adapter\AdapterInterrace
      * @throws Spot\Exception
@@ -221,8 +211,7 @@ class Mapper
     }
 
     /**
-     * Create collection
-     *
+     * Create collection of entities.
      * @param string $entityName
      * @param \PDOStatement|array $stmt
      * @param array $with
@@ -328,18 +317,13 @@ class Mapper
     }
 
     /**
-     * Get array of entity data
-     *
-     * @param \Spot\Entity @entity
+     * Get or set array of entity data
+     * @param \Spot\Entity $entity
      * @param array $data
      * @return array
      */
     public function data(Entity $entity, array $data = array())
     {
-        if (!is_object($entity)) {
-            throw new $this->exceptionClass("Entity must be an object, type '" . gettype($entity) . "' given");
-        }
-
         // SET data
         if (count($data) > 0) {
             return $entity->data($data);
@@ -399,7 +383,7 @@ class Mapper
     }
 
     /**
-     * Find records with custom query
+     * Find records with custom query. Essentially a raw sql method
      * @param string $entityName Name of the entity class
      * @param string $sql Raw query or SQL to run against the datastore
      * @param array Optional $conditions Array of binds in column => value pairs to use for prepared statement
@@ -451,7 +435,8 @@ class Mapper
      */
     public function select($entityName, $fields = '*')
     {
-        $query = new $this->queryClass($this, $entityName);
+        $queryClass = $this->queryClass();
+        $query = new $queryClass($this, $entityName);
         $query->select($fields, $this->datasource($entityName));
         return $query;
     }

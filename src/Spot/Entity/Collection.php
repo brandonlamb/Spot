@@ -21,13 +21,12 @@ class Collection implements CollectionInterface
     protected $resultsIdentities = array();
 
     /**
-     * @var string
+     * @var string, class name of the entity to create instances for
      */
     protected $entityName;
 
     /**
      * Constructor function
-     *
      * @param array $results Array of pre-loaded Spot_Entity objects or Iterator that will fetch them lazily
      * @param array $resultsIdentities Array of key values for given result set primary key
      * @param string $entityName
@@ -41,7 +40,6 @@ class Collection implements CollectionInterface
 
     /**
      * Returns first result in set
-     *
      * @return The first result in the set
      */
     public function first()
@@ -77,14 +75,13 @@ class Collection implements CollectionInterface
      * Return an array representation of the Collection.
      *
      * {@inherit}
-     * @return array    If $keyColumn and $valueColumn are not set, or are both null
-     *                      then this will return the array of entity objects
-     * @return array    If $keyColumn is not null, and the value column is null or undefined
-     *                      then this will return an array of the values of the entities in the column defined
-     * @return array   If $keyColumn and $valueColumn are both defined and not null
-     *                      then this will return an array where the key is defined by each entities value in $keyColumn
-     *                      and the value will be the value of the each entity in $valueColumn
-     *
+     * @return array If $keyColumn and $valueColumn are not set, or are both null
+     * then this will return the array of entity objects
+     * @return array If $keyColumn is not null, and the value column is null or undefined
+     * then this will return an array of the values of the entities in the column defined
+     * @return array If $keyColumn and $valueColumn are both defined and not null
+     * then this will return an array where the key is defined by each entities value in $keyColumn
+     * and the value will be the value of the each entity in $valueColumn
      * @todo Write unit tests for this function
      */
     public function toArray($keyColumn = null, $valueColumn = null)

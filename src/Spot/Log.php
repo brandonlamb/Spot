@@ -11,18 +11,17 @@ namespace Spot;
 class Log
 {
     /**
-     * @var int
+     * @var int, only store up to this many queries in the log
      */
     protected static $queryLimit = 200;
 
     /**
-     * @var array
+     * @var array, the array of stored queries that have ran
      */
     protected static $queries = array();
 
     /**
      * Add query to log
-     *
      * @param \Spot\Adpater\AdapterInterface Instance of adapter used to generate the query
      * @param mixed $query \Spot\QueryInterface run
      * @param mixed $data Data used in query - usually array, but can be scalar or null
@@ -43,7 +42,6 @@ class Log
 
     /**
      * Get full query log
-     *
      * @return array Queries that have been executed and all data that has been passed with them
      */
     public static function queries()
@@ -53,7 +51,6 @@ class Log
 
     /**
      * Get last query run from log
-     *
      * @return array Queries that have been executed and all data that has been passed with them
      */
     public static function lastQuery()
@@ -63,7 +60,6 @@ class Log
 
     /**
      * Get a count of how many queries have been run
-     *
      * @return int Total number of queries that have been run
      */
     public static function queryCount()
@@ -74,14 +70,11 @@ class Log
     /**
      * Get/set query limit
      * A limit should be set by default to prevent query log from consuming and exhausing available memory
-     *
      * @return int Query limit
      */
     public static function queryLimit($limit = null)
     {
-        if (null !== $limit) {
-            static::$queryLimit = $limit;
-        }
+        null !== $limit && static::$queryLimit = $limit;
         return static::$queryLimit;
     }
 }

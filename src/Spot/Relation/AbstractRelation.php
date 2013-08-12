@@ -13,13 +13,44 @@ use Spot\Mapper,
  */
 abstract class AbstractRelation
 {
+    /**
+     * @var \Spot\Mapper
+     */
     protected $mapper;
+
+    /**
+     * @var \Spot\Entity, the source entity to find relation(s) for
+     */
     protected $sourceEntity;
+
+    /**
+     * @var string, class name of relation entity
+     */
     protected $entityName;
+
+    /**
+     * @var array, the foreign keys
+     */
     protected $foreignKeys;
+
+    /**
+     * @var array, conditions to find relations
+     */
     protected $conditions;
+
+    /**
+     * @var array
+     */
     protected $relationData;
+
+    /**
+     * @var \Spot\Entity\CollectionInterface
+     */
     protected $collection;
+
+    /**
+     * @var int
+     */
     protected $relationRowCount;
 
     /**
@@ -127,7 +158,6 @@ abstract class AbstractRelation
 
     /**
      * Get sorting for relations
-     *
      * @return array
      */
     public function relationOrder()
@@ -153,9 +183,7 @@ abstract class AbstractRelation
      */
     public function execute()
     {
-        if (!$this->collection) {
-            $this->collection = $this->toQuery();
-        }
+        !$this->collection && $this->collection = $this->toQuery();
         return $this->collection;
     }
 
@@ -167,16 +195,11 @@ abstract class AbstractRelation
     public function __call($func, $args)
     {
         $obj = $this->execute();
-        if (is_object($obj)) {
-            return call_user_func_array(array($obj, $func), $args);
-        } else {
-            return $obj;
-        }
+        return (is_object($obj)) ? call_user_func_array(array($obj, $func), $args) : $obj;
     }
 
     /**
      * Load query object with current relation data
-     *
      * @return \Spot\Query
      */
     abstract protected function toQuery();

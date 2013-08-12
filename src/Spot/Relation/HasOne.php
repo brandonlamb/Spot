@@ -64,8 +64,6 @@ class HasOne extends AbstractRelation
      */
     public function __set($key, $value)
     {
-        if ($this->entity()) {
-            $this->entity()->$key = $value;
-        }
+        $this->entity() && $this->entity()->$key = $value;
     }
 }

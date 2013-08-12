@@ -5,12 +5,12 @@ namespace Spot;
 class Config implements \Serializable
 {
     /**
-     * @var string
+     * @var string, The name of the named connection to use by default
      */
     protected $defaultConnection;
 
     /**
-     * @var array
+     * @var array, Named connections, indexed by name
      */
     protected $connections = array();
 
@@ -20,7 +20,8 @@ class Config implements \Serializable
     protected static $instance;
 
     /**
-     * @var array
+     * @var array, Maps type to a type class to be used when filtering
+     * entity column data
      */
     protected static $typeHandlers;
 
@@ -98,7 +99,8 @@ class Config implements \Serializable
     }
 
     /**
-     * Add database connection
+     * Add database connection. If passing $default = true, Spot will
+     * use the passed connection as the default connection.
      * @param string $name Unique name for the connection
      * @param PDO $conn PDO connection, managed outside
      * @param array $options Array of key => value options for adapter
@@ -124,7 +126,7 @@ class Config implements \Serializable
     }
 
     /**
-     * Get connection by name
+     * Get connection by name. Passing null will return default connection
      * @param string $name Unique name of the connection to be returned
      * @return \Spot\Adapter\AdapterInterface
      * @throws \Spot\Exception
