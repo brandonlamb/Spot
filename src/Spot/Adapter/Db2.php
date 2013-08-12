@@ -96,6 +96,9 @@ class Db2 extends AbstractAdapter implements AdapterInterface
      */
     public function getInsertSql($datasource, array $data, array $binds, array $options)
     {
+        // If calling insert directly, we probably were not passed pk or sequence
+        !isset($options['sequence']) && $options['sequence'] = false;
+
         // build the statement
         $sql = 'INSERT INTO ' . $datasource . ' (';
 

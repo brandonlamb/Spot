@@ -3,24 +3,24 @@
 namespace Spot;
 
 /**
-* Entity object
-*
-* @package Spot
-*/
+ * Entity object
+ *
+ * @package Spot
+ */
 abstract class Entity implements \Serializable
 {
     /**
-     * @var string
+     * @var string, the name of the entity's schema
      */
     protected static $schema;
 
     /**
-     * @var string
+     * @var string, the name of the sequence to use when insert new entitys
      */
     protected static $sequence;
 
     /**
-     * @var string
+     * @var string, the table name for the entity
      */
     protected static $datasource;
 
@@ -30,7 +30,7 @@ abstract class Entity implements \Serializable
     protected static $datasourceOptions = array();
 
     /**
-     * @var \Spot\Adapter\AdapterInterface
+     * @var string, specific named connection to use for this entity
      */
     protected static $connection;
 
@@ -45,12 +45,19 @@ abstract class Entity implements \Serializable
     protected $dataModified = array();
 
     /**
-     * @var array, ignored getter properties
+     * @var array, ignored getter properties. Add a field/column here to not
+     * attempt calling its getter method. For example, given an entity with a
+     * "name" property and a "getName()" method, where you do *not want to call
+     * "getName()" when accessing entity->name, add "name" to this array
      */
     protected $getterIgnore = array();
 
     /**
-     * @var array, ignored setter properties
+     * @var array, ignored setter properties. Add a field/column here to not
+     * attempt calling its setter method. For example, given an entity with a
+     * "name" property and a "setName()" method, where you do *not want to call
+     * "setName()" when performing a entity->name = 'value' operation,
+     * add "name" to this array
      */
     protected $setterIgnore = array();
 
@@ -60,8 +67,7 @@ abstract class Entity implements \Serializable
     protected $errors = array();
 
     /**
-     * Constructor - allows setting of object properties with array on construct
-     *
+     * Constructor. Allows setting object properties with array on construct
      * @param array $data
      */
     public function __construct(array $data = array())
@@ -71,8 +77,8 @@ abstract class Entity implements \Serializable
     }
 
     /**
-     * Schema getter/setter
-     * @param string $schema
+     * Get/set the schema name for the entity.
+     * @param string $schema, The name of the schema
      * @return string
      */
     public static function schema($schema = null)
@@ -82,8 +88,19 @@ abstract class Entity implements \Serializable
     }
 
     /**
-     * Datasource getter/setter
-     * @param string $datasource
+     * Get/set the sequence name for the entity.
+     * @param string $sequence, The name of the sequence, (ie posts_id_seq)
+     * @return string
+     */
+    public static function sequence($sequence = null)
+    {
+        null !== $sequence && static::$sequence = $sequence;
+        return static::$sequence;
+    }
+
+    /**
+     * Get/set the datasource for the entity (table name)
+     * @param string $datasource, The table name
      * @return string
      */
     public static function datasource($datasource = null)
@@ -104,7 +121,10 @@ abstract class Entity implements \Serializable
     }
 
     /**
-     * Named connection getter/setter
+     * Named connection getter/setter. This allows defining a specific connection
+     * name to use (when using multiple DB connections) for this entity. For example,
+     * if you have two connections "read" and "readwrite" and you want this entity
+     * to always use the "readwrite" connection, you can set it here.
      * @param string $connection
      * @return string
      */
@@ -376,33 +396,6 @@ abstract class Entity implements \Serializable
         $this->dataModified[$field] = $value;
 
         return $this;
-    }
-
-    /**
-     * Return datasource
-     * @return string
-     */
-    public function getDatasource()
-    {
-        return static::$datasource;
-    }
-
-    /**
-     * Return sequence name
-     * @return string
-     */
-    public function getSequence()
-    {
-        return static::$sequence;
-    }
-
-    /**
-     * Return schema name
-     * @return string
-     */
-    public function getSchema()
-    {
-        return static::$schema;
     }
 
     /**

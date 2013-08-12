@@ -465,9 +465,14 @@ class Mapper
      */
     public function save(Entity $entity, array $options = array())
     {
-        if (!is_object($entity)) {
-            throw new $this->exceptionClass(__METHOD__ . " Requires an entity object as the first parameter");
-        }
+        // Get the entity class name
+        $entityName = $entity->toString();
+
+        // Get the primary key field for the entity class
+        $pkField = $this->primaryKeyField($entityName);
+
+        // Get field options for primary key, merge with overrides (if any) passed
+        $options = array_merge($this->entityManager()->fields($entityName, $pkField), $options);
 
         // Run beforeSave to know whether or not we can continue
         if (false === $this->triggerInstanceHook($entity, 'beforeSave', $this)) {
@@ -488,11 +493,11 @@ class Mapper
                 // Check if PK is using a sequence
                 if ($options['sequence'] === true) {
                     // Try fetching sequence from the Entity defined getSequence() method
-                    $options['sequence'] = $entity->getSequence();
+                    $options['sequence'] = $entityName::sequence();
 
                     // If the Entity did not define a sequence, automatically generate an assumed sequence name
                     if (empty($options['sequence'])) {
-                        $options['sequence'] = $entity->getDatasource() . '_' . $pkField . '_seq';
+                        $options['sequence'] = $entityName::datasource() . '_' . $pkField . '_seq';
                     }
                 }
 
@@ -512,21 +517,23 @@ class Mapper
     }
 
     /**
-     * Insert record
-     * @param mixed $entity Entity object or array of field => value pairs
-     * @param array $options Array of adapter-specific options
+     * Insert record using entity object
+     * You can override the entity's primary key options by passing the respective
+     * option in the options array (second parameter)
+     * @param \Spot\Entity $entity, Entity object already populated to be inserted
+     * @param array $options, override default PK field options
      * @return bool
      */
-    public function insert($entity, array $options = array())
+    public function insert(Entity $entity, array $options = array())
     {
-        if (is_object($entity)) {
-            $entityName = $entity->toString();
-        } elseif (is_string($entity)) {
-            $entityName = $entity;
-            $entity = $this->get($entityName)->data($options);
-        } else {
-            throw new $this->exceptionClass(__METHOD__ . " Accepts either an entity object or entity name + data array");
-        }
+        // Get the entity class name
+        $entityName = $entity->toString();
+
+        // Get the primary key field for the entity class
+        $pkField = $this->primaryKeyField($entityName);
+
+        // Get field options for primary key, merge with overrides (if any) passed
+        $options = array_merge($this->entityManager()->fields($entityName, $pkField), $options);
 
         // Run beforeInsert to know whether or not we can continue
         $resultAfter = null;
@@ -534,8 +541,8 @@ class Mapper
             return false;
         }
 
-        // Ensure there is actually data to update
-        $data = ($options['sequence'] !== false) ? $entity->data() : $entity->dataExcept(array($options['pk']));
+        // If the primary key is a sequence, serial or identity column, exclude the PK from the array of columns to insert
+        $data = ($options['sequence'] | $options['serial'] | $options['identity'] === true) ? $entity->dataExcept(array($pkField)) : $entity->data();
         if (count($data) <= 0) {
             return false;
         }
@@ -563,18 +570,16 @@ class Mapper
     }
 
     /**
-     * Update given entity object
-     * @param object $entity Entity object
-     * @param array $options Array of adapter-specific options
+     * Update record using entity object
+     * You can override the entity's primary key options by passing the respective
+     * option in the options array (second parameter)
+     * @param \Spot\Entity $entity, Entity object already populated to be updated
+     * @param array $options, override default PK field options
      * @return bool
      */
-    public function update($entity, array $options = array())
+    public function update(Entity $entity, array $options = array())
     {
-        if (is_object($entity)) {
-            $entityName = $entity->toString();
-        } else {
-            throw new $this->exceptionClass(__METHOD__ . " Requires an entity object as the first parameter");
-        }
+        $entityName = $entity->toString();
 
         // Run beforeUpdate to know whether or not we can continue
         $resultAfter = null;
@@ -605,21 +610,21 @@ class Mapper
 
     /**
      * Upsert save entity - insert or update on duplicate key
-     * @param string $entityClass Name of the entity class
-     * @param array $data array of key/values to set on new Entity instance
-     * @return object Instance of $entityClass with $data set on it
+     * @param string $entityClass, Name of the entity class
+     * @param array $data, array of key/values to set on new Entity instance
+     * @return \Spot\Entity, Instance of $entityClass with $data set on it
      */
     public function upsert($entityClass, array $data)
     {
         $entity = new $entityClass($data);
 
         try {
-            $result = $this->insert($entity);
+            $this->insert($entity);
         } catch(\Exception $e) {
-            $result = $this->update($entity);
+            $this->update($entity);
         }
 
-        return $result;
+        return $entity;
     }
 
     /**
@@ -627,6 +632,7 @@ class Mapper
      * @param mixed $entityName Name of the entity class or entity object
      * @param array $conditions Optional array of conditions in column => value pairs
      * @param array $options Optional array of adapter-specific options
+     * @todo Clear entity from identity map on delete, when implemented
      * @return bool
      */
     public function delete($entityName, array $conditions = array(), array $options = array())
@@ -635,7 +641,6 @@ class Mapper
             $entity = $entityName;
             $entityName = get_class($entityName);
             $conditions = array($this->primaryKeyField($entityName) => $this->primaryKey($entity));
-            // @todo Clear entity from identity map on delete, when implemented
 
             // Run beforeUpdate to know whether or not we can continue
             $resultAfter = null;
