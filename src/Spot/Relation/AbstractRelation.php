@@ -203,4 +203,35 @@ abstract class AbstractRelation
      * @return \Spot\Query
      */
     abstract protected function toQuery();
+
+    // SPL - ArrayAccess functions
+
+    public function offsetExists($key)
+    {
+        $this->execute();
+        return isset($this->collection[$key]);
+    }
+
+    public function offsetGet($key)
+    {
+        $this->execute();
+        return $this->collection[$key];
+    }
+
+    public function offsetSet($key, $value)
+    {
+        $this->execute();
+
+        if ($key === null) {
+            return $this->collection[] = $value;
+        } else {
+            return $this->collection[$key] = $value;
+        }
+    }
+
+    public function offsetUnset($key)
+    {
+        $this->execute();
+        unset($this->collection[$key]);
+    }
 }

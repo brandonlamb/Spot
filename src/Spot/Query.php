@@ -414,7 +414,6 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
      */
     public function order($fields = array())
     {
-        $orderBy = array();
         $defaultSort = "ASC";
 
         if (is_array($fields)) {

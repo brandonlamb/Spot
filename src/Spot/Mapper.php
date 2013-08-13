@@ -230,7 +230,6 @@ class Mapper
 
         // Fetch all results into new entity class
         // @todo Move this to collection class so entities will be lazy-loaded by Collection iteration
-        $entityFields = $this->fields($entityName);
         foreach ($stmt as $data) {
             // Entity with data set
             $data = $this->loadEntity($entityName, $data);
@@ -311,7 +310,7 @@ class Mapper
             }
         }
 
-        $resultAfter = $this->triggerStaticHook($entityName, 'afterWith', array($collection, $with, $this));
+        $this->triggerStaticHook($entityName, 'afterWith', array($collection, $with, $this));
 
         return $collection;
     }
@@ -559,10 +558,9 @@ class Mapper
      * You can override the entity's primary key options by passing the respective
      * option in the options array (second parameter)
      * @param \Spot\Entity $entity, Entity object already populated to be updated
-     * @param array $options, override default PK field options
      * @return bool
      */
-    public function update(Entity $entity, array $options = array())
+    public function update(Entity $entity)
     {
         $entityName = $entity->toString();
 
