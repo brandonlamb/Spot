@@ -270,10 +270,9 @@ interface AdapterInterface
     /**
      * Build Limit query from data source using given query object
      * @param int $limit
-     * @param array $options
      * @return string
      */
-    public function getLimitSql($limit, array $options = array());
+    public function getLimitSql($limit);
 
     /**
      *  Build Offset query from data source using integer passed
