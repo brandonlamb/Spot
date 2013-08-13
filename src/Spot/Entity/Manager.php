@@ -33,15 +33,16 @@ class Manager
      * @param string $entityName Name of the entity class
      * @param string $field Name of the field to return attributes for
      * @return array Defined fields plus all defaults for full array of all possible options
+     * @throws \Spot\Exception\Manager|\InvalidArgumentException
      */
     public function fields($entityName, $field = null)
     {
         if (!is_string($entityName)) {
-            throw new \Spot\Exception(__METHOD__ . " only accepts a string. Given (" . gettype($entityName) . ")");
+            throw new \Spot\Exception\Manager(__METHOD__ . " only accepts a string. Given (" . gettype($entityName) . ")");
         }
 
         if (!is_subclass_of($entityName, '\Spot\Entity')) {
-            throw new \Spot\Exception($entityName . " must be subclass of '\Spot\Entity'.");
+            throw new \Spot\Exception\Manager($entityName . " must be subclass of '\Spot\Entity'.");
         }
 
         if (isset(static::$fields[$entityName])) {

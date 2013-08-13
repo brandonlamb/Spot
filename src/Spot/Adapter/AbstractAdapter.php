@@ -170,7 +170,7 @@ abstract class AbstractAdapter
         try {
             return $this->connection()->prepare($sql);
         } catch (\PDOException $e) {
-            throw new \Spot\Exception($e->getMessage());
+            throw new \Spot\Exception\Adapter($e->getMessage());
         }
     }
 
@@ -188,10 +188,10 @@ abstract class AbstractAdapter
                 $results = $stmt->execute($binds);
                 return ($results === true) ? $stmt : false;
             } else {
-                throw new \Spot\Exception(__METHOD__ . " Error: Unable to execute SQL query - failed to create prepared statement from given SQL");
+                throw new \Spot\Exception\Adapter(__METHOD__ . " Error: Unable to execute SQL query - failed to create prepared statement from given SQL");
             }
         } catch (\PDOException $e) {
-            throw new \Spot\Exception(__METHOD__ . ': ' . $e->getMessage());
+            throw new \Spot\Exception\Adapter(__METHOD__ . ': ' . $e->getMessage());
         }
     }
 
@@ -225,11 +225,11 @@ abstract class AbstractAdapter
         } catch(\PDOException $e) {
             // Table does not exist
             if ($e->getCode() == '42S02') {
-                throw new \Spot\Exception("Table or datasource '" . $datasource . "' does not exist");
+                throw new \Spot\Exception\Datasource\Missing("Table or datasource '" . $datasource . "' does not exist");
             }
 
             // Throw new Spot exception
-            throw new \Spot\Exception(__METHOD__ . ': ' . $e->getMessage());
+            throw new \Spot\Exception\Adapter(__METHOD__ . ': ' . $e->getMessage());
         }
 
         return $result;
@@ -274,11 +274,11 @@ abstract class AbstractAdapter
         } catch (\PDOException $e) {
             // Table does not exist
             if ($e->getCode() == '42S02') {
-                throw new \Spot\Exception("Table or datasource '" . $query->datasource . "' does not exist");
+                throw new \Spot\Exception\Adapter("Table or datasource '" . $query->datasource . "' does not exist");
             }
 
             // Throw new Spot exception
-            throw new \Spot\Exception(__METHOD__ . ': ' . $e->getMessage());
+            throw new \Spot\Exception\Adapter(__METHOD__ . ': ' . $e->getMessage());
         }
 
         return $result;
@@ -325,11 +325,11 @@ abstract class AbstractAdapter
         } catch(\PDOException $e) {
             // Table does not exist
             if ($e->getCode() == '42S02') {
-                throw new \Spot\Exception("Table or datasource '" . $query->datasource . "' does not exist");
+                throw new \Spot\Exception\Adapter("Table or datasource '" . $query->datasource . "' does not exist");
             }
 
             // Throw new Spot exception
-            throw new \Spot\Exception(__METHOD__ . ': ' . $e->getMessage());
+            throw new \Spot\Exception\Adapter(__METHOD__ . ': ' . $e->getMessage());
         }
 
         return $result;
@@ -378,11 +378,11 @@ abstract class AbstractAdapter
             } catch(\PDOException $e) {
                 // Table does not exist
                 if ($e->getCode() == '42S02') {
-                    throw new \Spot\Exception("Table or datasource '" . $datasource . "' does not exist");
+                    throw new \Spot\Exception\Adapter("Table or datasource '" . $datasource . "' does not exist");
                 }
 
                 // Throw new Spot exception
-                throw new \Spot\Exception(__METHOD__ . ': ' . $e->getMessage());
+                throw new \Spot\Exception\Adapter(__METHOD__ . ': ' . $e->getMessage());
             }
         } else {
             $result = false;
@@ -420,11 +420,11 @@ abstract class AbstractAdapter
         } catch(\PDOException $e) {
             // Table does not exist
             if ($e->getCode() == '42S02') {
-                throw new \Spot\Exception("Table or datasource '" . $datasource . "' does not exist");
+                throw new \Spot\Exception\Adapter("Table or datasource '" . $datasource . "' does not exist");
             }
 
             // Throw new Spot exception
-            throw new \Spot\Exception(__METHOD__ . ': ' . $e->getMessage());
+            throw new \Spot\Exception\Adapter(__METHOD__ . ': ' . $e->getMessage());
         }
     }
 
@@ -642,7 +642,7 @@ abstract class AbstractAdapter
 
                     // ALL - Find ALL values in a set - Kind of like IN(), but seeking *all* the values
                     case ':all':
-                        throw new \Spot\Exception("SQL adapters do not currently support the ':all' operator");
+                        throw new \Spot\Exception\Adapter("SQL adapters do not currently support the ':all' operator");
                         break;
 
                     // Not equal

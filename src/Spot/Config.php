@@ -89,6 +89,7 @@ class Config implements \Serializable
      * Get type handler class by type
      * @param string $type
      * @return string
+     * @throws \InvalidArgumentException
      */
     public static function getTypeHandler($type)
     {
@@ -106,13 +107,13 @@ class Config implements \Serializable
      * @param array $options Array of key => value options for adapter
      * @param boolean $defaut Use this connection as the default? The first connection added is automatically set as the default, even if this flag is false.
      * @return \Spot\Adapter\AdapterInterface
-     * @throws \Spot\Exception
+     * @throws \Spot\Exception\Config
      */
     public function addConnection($name, \Spot\Adapter\AdapterInterface $adapter, $default = false)
     {
         // Connection name must be unique
         if (isset($this->connections[$name])) {
-            throw new Exception("Connection for '" . $name . "' already exists. Connection name must be unique.");
+            throw new Exception\Config("Connection for '" . $name . "' already exists. Connection name must be unique.");
         }
 
         // Set as default connection?
@@ -129,7 +130,6 @@ class Config implements \Serializable
      * Get connection by name. Passing null will return default connection
      * @param string $name Unique name of the connection to be returned
      * @return \Spot\Adapter\AdapterInterface
-     * @throws \Spot\Exception
      */
     public function connection($name = null)
     {

@@ -79,6 +79,7 @@ interface AdapterInterface
      * Prepare an SQL statement
      * @param string $sql
      * @return \PDOStatement
+     * @throws \Spot\Exception\Adapter
      */
     public function prepare($sql);
 
@@ -87,7 +88,7 @@ interface AdapterInterface
      * @param string $sql SQL query to execute
      * @param array $binds Array of bound parameters to use as values for query
      * @return \PDOStatement|bool
-     * @throws \Spot\Exception
+     * @throws \Spot\Exception\Adapter
      */
     public function query($sql, array $binds = array());
 
@@ -97,7 +98,7 @@ interface AdapterInterface
      * @param array $data
      * @param array $options
      * @return mixed
-     * @throws \Spot\Exception
+     * @throws \Spot\Exception\Datasource\Missing|\Spot\Exception\Adapter
      */
     public function create($datasource, array $data, array $options = array());
 
@@ -107,7 +108,7 @@ interface AdapterInterface
      *
      * @param \Sbux\QueryInterface $query
      * @param array $options
-     * @throws \Spot\Exception
+     * @throws \Spot\Exception\Adapter
      */
     public function read(QueryInterface $query, array $options = array());
 
@@ -115,7 +116,7 @@ interface AdapterInterface
      * Count number of rows in source based on conditions
      * @param \Spot\QueryInterface $query
      * @param array $options
-     * @throws \Spot\Exception
+     * @throws \Spot\Exception\Adapter
      */
     public function count(QueryInterface $query, array $options = array());
 
@@ -125,7 +126,7 @@ interface AdapterInterface
      * @param array $data
      * @param data $where
      * @param array $options
-     * @throws \Spot\Exception
+     * @throws \Spot\Exception\Adapter
      */
     public function update($datasource, array $data, array $where = array(), array $options = array());
 
@@ -134,7 +135,7 @@ interface AdapterInterface
      * @param string $datasource Name of data source
      * @param array $data
      * @param array $options
-     * @throws \Spot\Exception
+     * @throws \Spot\Exception\Adapter
      */
     public function delete($datasource, array $data, array $options = array());
 
@@ -242,6 +243,7 @@ interface AdapterInterface
      * @param array $conditions
      * @param int $ci
      * @return string
+     * @throws \Spot\Exception\Adapter
      */
     public function getConditionsSql(array $conditions = array(), $ci = 0);
 

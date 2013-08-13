@@ -180,6 +180,7 @@ abstract class Entity implements \Serializable
      * Gets and sets data on the current entity
      * @param array $data
      * @param bool $modified
+     * @throws \InvalidArgumentException
      */
     public function data(array $data = null, $modified = true)
     {

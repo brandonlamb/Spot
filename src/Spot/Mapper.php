@@ -192,7 +192,7 @@ class Mapper
      * Return the named connection, or the default if no name specified
      * @param string $connectionName Named connection or entity class name
      * @return Spot\Adapter\AdapterInterrace
-     * @throws Spot\Exception
+     * @throws Spot\Exception\Mapper
      */
     public function connection($connectionName = null)
     {
@@ -207,7 +207,7 @@ class Mapper
             return $connection;
         }
 
-        throw new Exception("Connection '" . $connectionName . "' does not exist. Please setup connection using Spot\\Config::addConnection().");
+        throw new Exception\Mapper("Connection '" . $connectionName . "' does not exist. Please setup connection using Spot\\Config::addConnection().");
     }
 
     /**
@@ -695,6 +695,7 @@ class Mapper
      * @param \Spot\Entity|\Spot\Entity\CollectionInterface
      * @param bool $reload
      * @return array
+     * @throws \InvalidArgumentException
      */
     public function loadRelations($entity, $reload = false)
     {
@@ -718,6 +719,7 @@ class Mapper
      * @param string $name
      * @param bool $reload
      * @return \Spot\Relation\AbstractRelation
+     * @throws \InvalidArgumentException
      */
     public function loadRelation($entity, $name, $reload = false)
     {
@@ -738,6 +740,7 @@ class Mapper
      * @param \Spot\Relation\AbstractRelation
      * @param bool $reload
      * @return \Spot\Relation\AbstractRelation
+     * @throws \InvalidArgumentException
      */
     protected function getRelationObject($entity, $field, $relation, $reload = false)
     {
@@ -819,6 +822,7 @@ class Mapper
      * @param string $hook
      * @param \Closure $callable
      * @return self
+     * @throws \InvalidArgumentException
      */
     public function on($entityName, $hook, $callable)
     {

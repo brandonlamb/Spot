@@ -215,12 +215,13 @@ class Mysql extends AbstractAdapter implements AdapterInterface
 	 * @param string $fieldName Field name
 	 * @param array $fieldInfo Array of field settings
 	 * @return string SQL syntax
+	 * @throws \Spot\Exception\Adapter
 	 */
 	public function migrateSyntaxFieldCreate($fieldName, array $fieldInfo)
 	{
 		// Ensure field type exists
 		if (!isset($this->fieldTypeMap[$fieldInfo['type']])) {
-			throw new \Spot\Exception("Field type '" . $fieldInfo['type'] . "' not supported");
+			throw new \Spot\Exception\Adapter("Field type '" . $fieldInfo['type'] . "' not supported");
 		}
 
 		//Ensure this class will choose adapter type
