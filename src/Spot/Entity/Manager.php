@@ -47,90 +47,91 @@ class Manager
 
         if (isset(static::$fields[$entityName])) {
             $returnFields = static::$fields[$entityName];
-        } else {
-            // Datasource info
-            $entityDatasource = null;
-            $entityDatasource = $entityName::datasource();
-            if (null === $entityDatasource || !is_string($entityDatasource)) {
-                echo "\n\n" . $entityName . "::datasource() = " . var_export($entityName::datasource(), true) . "\n\n";
-                throw new \InvalidArgumentException("Entity must have a datasource defined. Please define a protected property named 'datasource' on your '" . $entityName . "' entity class.");
+            return null === $field ? $returnFields : $returnFields[$field];
+        }
+
+        // Datasource info
+        $entityDatasource = null;
+        $entityDatasource = $entityName::datasource();
+        if (null === $entityDatasource || !is_string($entityDatasource)) {
+            echo "\n\n" . $entityName . "::datasource() = " . var_export($entityName::datasource(), true) . "\n\n";
+            throw new \InvalidArgumentException("Entity must have a datasource defined. Please define a protected property named 'datasource' on your '" . $entityName . "' entity class.");
+        }
+        static::$datasource[$entityName] = $entityDatasource;
+
+        // Datasource Options
+        $entityDatasourceOptions = $entityName::datasourceOptions();
+        static::$datasourceOptions[$entityName] = $entityDatasourceOptions;
+
+        // Connection info
+        $entityConnection = $entityName::connection();
+
+        // If no adapter specified, Spot will use default one from config object (or first one set if default is not explicitly set)
+        static::$connection[$entityName] = ($entityConnection) ? $entityConnection : false;
+
+        // Default settings for all fields
+        $fieldDefaults = array(
+            'type' => 'string',
+            'default' => null,
+            'length' => null,
+            'required' => false,
+            'null' => true,
+            'unsigned' => false,
+            'fulltext' => false,
+            'primary' => false,
+            'index' => false,
+            'unique' => false,
+            'serial' => false,
+            'identity' => false,
+            'sequence' => false,
+            'relation' => false,
+        );
+
+        // Type default overrides for specific field types
+        $fieldTypeDefaults = array(
+            'string' => array('length' => 255),
+            'float' => array('length' => array(10, 2)),
+            'int' => array('length' => 10, 'unsigned' => true)
+        );
+
+        // Get entity fields from entity class
+        $entityFields = $entityName::fields();
+
+        if (!is_array($entityFields) || count($entityFields) < 1) {
+            throw new \InvalidArgumentException($entityName . " Must have at least one field defined.");
+        }
+
+        $returnFields = array();
+        static::$fieldDefaultValues[$entityName] = array();
+
+        foreach ($entityFields as $fieldName => $fieldOpts) {
+            // Store field definition exactly how it is defined before modifying it below
+            if ($fieldOpts['type'] != 'relation') {
+                static::$fieldsDefined[$entityName][$fieldName] = $fieldOpts;
             }
-            static::$datasource[$entityName] = $entityDatasource;
 
-            // Datasource Options
-            $entityDatasourceOptions = $entityName::datasourceOptions();
-            static::$datasourceOptions[$entityName] = $entityDatasourceOptions;
-
-            // Connection info
-            $entityConnection = $entityName::connection();
-
-            // If no adapter specified, Spot will use default one from config object (or first one set if default is not explicitly set)
-            static::$connection[$entityName] = ($entityConnection) ? $entityConnection : false;
-
-            // Default settings for all fields
-            $fieldDefaults = array(
-                'type' => 'string',
-                'default' => null,
-                'length' => null,
-                'required' => false,
-                'null' => true,
-                'unsigned' => false,
-                'fulltext' => false,
-                'primary' => false,
-                'index' => false,
-                'unique' => false,
-                'serial' => false,
-                'identity' => false,
-                'sequence' => false,
-                'relation' => false,
-            );
-
-            // Type default overrides for specific field types
-            $fieldTypeDefaults = array(
-                'string' => array('length' => 255),
-                'float' => array('length' => array(10, 2)),
-                'int' => array('length' => 10, 'unsigned' => true)
-            );
-
-            // Get entity fields from entity class
-            $entityFields = $entityName::fields();
-
-            if (!is_array($entityFields) || count($entityFields) < 1) {
-                throw new \InvalidArgumentException($entityName . " Must have at least one field defined.");
+            // Format field will full set of default options
+            if (isset($fieldOpts['type']) && isset($fieldTypeDefaults[$fieldOpts['type']])) {
+                // Include type defaults
+                $fieldOpts = array_merge($fieldDefaults, $fieldTypeDefaults[$fieldOpts['type']], $fieldOpts);
+            } else {
+                // Merge with defaults
+                $fieldOpts = array_merge($fieldDefaults, $fieldOpts);
             }
 
-            $returnFields = array();
-            static::$fieldDefaultValues[$entityName] = array();
-
-            foreach ($entityFields as $fieldName => $fieldOpts) {
-                // Store field definition exactly how it is defined before modifying it below
-                if ($fieldOpts['type'] != 'relation') {
-                    static::$fieldsDefined[$entityName][$fieldName] = $fieldOpts;
-                }
-
-                // Format field will full set of default options
-                if (isset($fieldOpts['type']) && isset($fieldTypeDefaults[$fieldOpts['type']])) {
-                    // Include type defaults
-                    $fieldOpts = array_merge($fieldDefaults, $fieldTypeDefaults[$fieldOpts['type']], $fieldOpts);
-                } else {
-                    // Merge with defaults
-                    $fieldOpts = array_merge($fieldDefaults, $fieldOpts);
-                }
-
-                // Store primary key
-                if (true === $fieldOpts['primary']) {
-                    static::$primaryKeyField[$entityName] = $fieldName;
-                }
-
-                // Store default value
-                if (null !== $fieldOpts['default']) {
-                    static::$fieldDefaultValues[$entityName][$fieldName] = $fieldOpts['default'];
-                } else {
-                    static::$fieldDefaultValues[$entityName][$fieldName] = null;
-                }
-
-                $returnFields[$fieldName] = $fieldOpts;
+            // Store primary key
+            if (true === $fieldOpts['primary']) {
+                static::$primaryKeyField[$entityName] = $fieldName;
             }
+
+            // Store default value
+            if (null !== $fieldOpts['default']) {
+                static::$fieldDefaultValues[$entityName][$fieldName] = $fieldOpts['default'];
+            } else {
+                static::$fieldDefaultValues[$entityName][$fieldName] = null;
+            }
+
+            $returnFields[$fieldName] = $fieldOpts;
             static::$fields[$entityName] = $returnFields;
 
             // Relations

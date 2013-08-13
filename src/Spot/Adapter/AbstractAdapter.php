@@ -558,9 +558,6 @@ abstract class AbstractAdapter
         $sqlStatement = '(';
         $loopOnce = false;
 
-        // @todo - what is this
-        $defaultColOperators = array(0 => '', 1 => '=');
-
         foreach ($conditions as $condition) {
             if (is_array($condition) && isset($condition['conditions'])) {
                 $subConditions = $condition['conditions'];
