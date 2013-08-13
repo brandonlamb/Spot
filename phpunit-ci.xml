@@ -12,9 +12,8 @@
 	<formatter todir="reports" type="xml" outfile="build/coverage/coverage.xml" />
 
 	<testsuites>
-		<testsuite name="reporting">
-			<directory suffix="Test.php">tests/unit</directory>
-			<!--<directory suffix="Test.php">tests/system</directory>-->
+		<testsuite name="Spot Test Suite">
+			<directory suffix=".php">./tests/Spot/Tests</directory>
 		</testsuite>
 	</testsuites>
 
