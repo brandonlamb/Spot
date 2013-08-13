@@ -1,14 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <phpunit backupGlobals="false"
 	backupStaticAttributes="false"
+	bootstrap="./tests/bootstrap.php"
+	codecoverage="true"
 	colors="true"
 	convertErrorsToExceptions="true"
 	convertNoticesToExceptions="true"
 	convertWarningsToExceptions="true"
+	printsummary="true"
 	processIsolation="false"
 	stopOnFailure="false"
+	strict="true"
 	syntaxCheck="false"
-	bootstrap="./tests/bootstrap.php">
+	timeoutForSmallTests="5"
+	verbose="true"
+	>
 
 	<testsuites>
 		<testsuite name="Spot Test Suite">
