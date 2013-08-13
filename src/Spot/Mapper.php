@@ -2,7 +2,7 @@
 
 namespace Spot;
 
-use Entity\Manager as EntityManager,
+use Spot\Entity\Manager as EntityManager,
     CacheCache\Cache,
     CacheCache\BackendInterface;
 
