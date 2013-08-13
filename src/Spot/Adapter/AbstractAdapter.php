@@ -16,9 +16,9 @@ abstract class AbstractAdapter
     /**
      * @var string, Format for date columns, formatted for PHP's date() function
      */
-    protected $formatDate;
-    protected $formatTime;
-    protected $formatDatetime;
+    protected $formatDate = 'Y-m-d';
+    protected $formatTime = ' H:i:s';
+    protected $formatDatetime = 'Y-m-d H:i:s';
 
     /**
      * @var PDO, database connection
