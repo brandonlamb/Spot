@@ -129,11 +129,9 @@
 
 	<target name="phpab" description="Generate autoloader scripts">
 		<exec executable="phpab">
-			<arg value="--basedir" />
-			<arg value="${basedir}/src" />
 			<arg value="--output" />
 			<arg path="${basedir}/src/autoload.php" />
-			<arg path="${basedir}/src/application/modules/kpiscorecard" />
+			<arg value="${basedir}/src" />
 		</exec>
 
 		<exec executable="phpab">
