@@ -823,7 +823,7 @@ abstract class AbstractAdapter
         }
 
         $limit = (int) $limit;
-        return $limit ? 'LIMIT ' . $this->limit : '';
+        return $limit ? 'LIMIT ' . $limit : '';
     }
 
     /**
