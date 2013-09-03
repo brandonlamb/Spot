@@ -12,6 +12,7 @@ class Pgsql extends AbstractAdapter implements AdapterInterface
      */
     public function escapeField($field)
     {
+		return $field;
         return $field === '*' ? $field : '"' . $field . '"';
     }
 
