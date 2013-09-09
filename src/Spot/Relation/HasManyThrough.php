@@ -18,13 +18,13 @@ class HasManyThrough extends AbstractRelation implements \Countable, \IteratorAg
     protected function toQuery()
     {
         // "Through" Entity
-        $throughEntity = isset($this->_relationData['throughEntity']) ? $this->_relationData['throughEntity'] : null;
+        $throughEntity = isset($this->relationData['throughEntity']) ? $this->relationData['throughEntity'] : null;
         if (null === $throughEntity) {
             throw new \InvalidArgumentException("Relation description key 'throughEntity' not set.");
         }
 
         // "Through" WHERE conditions
-        $throughWhere = isset($this->_relationData['throughWhere']) ? $this->_relationData['throughWhere'] : array();
+        $throughWhere = isset($this->relationData['throughWhere']) ? $this->relationData['throughWhere'] : array();
         if (!$throughWhere || !is_array($throughWhere)) {
             throw new \InvalidArgumentException("Relation description key 'throughWhere' not set or is not a valid array.");
         }
