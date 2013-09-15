@@ -465,12 +465,15 @@ class Mapper
 
         // Run validation
         if ($this->validate($entity)) {
-            $pk = $this->primaryKey($entity);
             $pkField = $this->primaryKeyField($entity->toString());
+            $pk = $this->primaryKey($entity);
             $attributes = $this->entityManager()->fields($entity->toString(), $pkField);
 
+            // Do an update if pk is specified
+            $isNew = empty($pkField) || (empty($pk) && ($attributes['identity'] | $attributes['serial'] | $attributes['sequence']));
+
             // If the pk value is empty and the pk is set to an autoincremented type (identity, sequence, serial)
-            if (empty($pk) && ($attributes['identity'] | $attributes['serial'] | $attributes['sequence'])) {
+            if ($isNew) {
                 // Autogenerate sequence if sequence is empty
                 $options['pk'] = $pkField;
 

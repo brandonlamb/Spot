@@ -54,7 +54,6 @@ class Manager
         $entityDatasource = null;
         $entityDatasource = $entityName::datasource();
         if (null === $entityDatasource || !is_string($entityDatasource)) {
-            echo "\n\n" . $entityName . "::datasource() = " . var_export($entityName::datasource(), true) . "\n\n";
             throw new \InvalidArgumentException("Entity must have a datasource defined. Please define a protected property named 'datasource' on your '" . $entityName . "' entity class.");
         }
         static::$datasource[$entityName] = $entityDatasource;

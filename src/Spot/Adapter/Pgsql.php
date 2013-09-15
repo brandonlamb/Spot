@@ -68,4 +68,15 @@ class Pgsql extends AbstractAdapter implements AdapterInterface
     {
         return $this;
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function create($datasource, array $data, array $options = array())
+    {
+        if ($options['serial'] === true && empty($options['sequence'])) {
+            $options['sequence'] = $datasource . '_id_seq';
+        }
+        return parent::create($datasource, $data, $options);
+    }
 }
