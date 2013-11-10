@@ -1,10 +1,15 @@
 <?php
 
-namespace Spot\Adapter;
-
 /**
  * Postgresql Database Adapter
+ * @package \Spot\Adapter
+ * @author Brandon Lamb <brandon@brandonlamb.com>
  */
+
+namespace Spot\Adapter;
+
+use \Spot\Log;
+
 class Pgsql extends AbstractAdapter implements AdapterInterface
 {
     /**
@@ -35,7 +40,7 @@ class Pgsql extends AbstractAdapter implements AdapterInterface
         $sql = 'CREATE DATABASE ' . $database;
 
         // Add query to log
-        \Spot\Log::addQuery($this, $sql);
+        Log::addQuery($this, $sql);
 
         return $this->connection()->exec($sql);
     }
@@ -48,7 +53,7 @@ class Pgsql extends AbstractAdapter implements AdapterInterface
         $sql = 'DROP DATABASE ' . $database;
 
         // Add query to log
-        \Spot\Log::addQuery($this, $sql);
+        Log::addQuery($this, $sql);
 
         return $this->connection()->exec($sql);
     }

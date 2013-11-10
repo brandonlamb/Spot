@@ -1,23 +1,32 @@
 <?php
 
+/**
+ * Base Data Mapper
+ * @package Spot
+ */
+
 namespace Spot;
 
 use Spot\Entity\Manager as EntityManager,
-    CacheCache\Cache,
-    CacheCache\BackendInterface;
+    Spot\Config,
+    Spot\Adapter\AdapterInterface;
 
-/**
- * Base DataMapper
- *
- * @package Spot
- * @link http://spot.os.ly
- */
 class Mapper
 {
     /**
      * @var \Spot\Config
      */
     protected $config;
+
+    /**
+     * @var \Spot\Adapter\AdapterInterface
+     */
+    protected $adapter;
+
+    /**
+     * @var \Spot\Entity\Manager
+     */
+    protected $entityManager;
 
     /**
      * @var string, Class name to use for collections
@@ -30,32 +39,24 @@ class Mapper
     protected $queryClass = '\\Spot\\Query';
 
     /**
-     * @var \CacheCache\BackendInterface
-     */
-    protected $cache;
-
-    /**
      * @var array, Array of error messages and types
      */
-    protected $errors = array();
+    protected $errors = [];
 
     /**
      * @var array, event hooks
      */
-    protected $hooks = array();
-
-    /**
-     * @var \Spot\Entity\Manager
-     */
-    protected static $entityManager;
+    protected $hooks = [];
 
     /**
      * Constructor Method
-     * @param Config $config
+     * @param \Spot\Config $config
+     * @param \Spot\Entity\Manager $manager
      */
-    public function __construct(Config $config)
+    public function __construct(AdapterInterface $adapter, EntityManager $manager)
     {
-        $this->config = $config;
+        $this->adapter = $adapter;
+        $this->manager = $manager;
     }
 
     /**
@@ -65,6 +66,7 @@ class Mapper
      */
     public function config(Config $config = null)
     {
+d($config);
         $config instanceof Config && $this->config = $config;
         return $this->config;
     }
@@ -98,10 +100,10 @@ class Mapper
      */
     public function entityManager()
     {
-        if (null === static::$entityManager) {
-            static::$entityManager = new EntityManager();
+        if (null === $this->entityManager) {
+            $this->entityManager = new EntityManager();
         }
-        return static::$entityManager;
+        return $this->entityManager;
     }
 
     /**
@@ -217,10 +219,10 @@ class Mapper
      * @param array $with
      * @return \Spot\Entity\CollectionInterface
      */
-    public function collection($entityName, $stmt, $with = array())
+    public function collection($entityName, $stmt, $with = [])
     {
-        $results = array();
-        $resultsIdentities = array();
+        $results = [];
+        $resultsIdentities = [];
 
         // Ensure PDO only gives key => value pairs, not index-based fields as well
         // Raw PDOStatement objects generally only come from running raw SQL queries or other custom stuff
@@ -262,7 +264,7 @@ class Mapper
      * @param array $with
      * @return \Spot\Entity\CollectionInterface
      */
-    public function with($collection, $entityName, $with = array()) {
+    public function with($collection, $entityName, $with = []) {
         $return = $this->triggerStaticHook($entityName, 'beforeWith', array($collection, $with, $this));
         if (false === $return) {
             return $collection;
@@ -281,8 +283,8 @@ class Mapper
 
             // Load all entities related to the collection
             foreach ($collection as $entity) {
-                $collectedEntities = array();
-                $collectedIdentities = array();
+                $collectedEntities = [];
+                $collectedIdentities = [];
                 foreach ($relatedEntities as $relatedEntity) {
                     $resolvedConditions = $relationObj->resolveEntityConditions($entity, $relationObj->unresolvedConditions());
 
@@ -321,7 +323,7 @@ class Mapper
      * @param array $data
      * @return array
      */
-    public function data(Entity $entity, array $data = array())
+    public function data(Entity $entity, array $data = [])
     {
         // SET data
         if (count($data) > 0) {
@@ -388,7 +390,7 @@ class Mapper
      * @param array Optional $conditions Array of binds in column => value pairs to use for prepared statement
      * @return \Spot\Entity\CollectionInterface|bool
      */
-    public function query($entityName, $sql, array $params = array())
+    public function query($entityName, $sql, array $params = [])
     {
         $result = $this->connection($entityName)->query($sql, $params);
         if ($result) {
@@ -403,7 +405,7 @@ class Mapper
      * @param array $conditions Array of conditions in column => value pairs
      * @return \Spot\Query
      */
-    public function all($entityName, array $conditions = array())
+    public function all($entityName, array $conditions = [])
     {
         return $this->select($entityName)->where($conditions);
     }
@@ -414,7 +416,7 @@ class Mapper
      * @param array $conditions Array of conditions in column => value pairs
      * @return \Spot\Entity|bool
      */
-    public function first($entityName, array $conditions = array())
+    public function first($entityName, array $conditions = [])
     {
         $query = $this->select($entityName)->where($conditions)->limit(1);
         $collection = $query->execute();
@@ -447,7 +449,7 @@ class Mapper
      * @param array $options Array of adapter-specific options
      * @return bool
      */
-    public function save(Entity $entity, array $options = array())
+    public function save(Entity $entity, array $options = [])
     {
         // Get the entity class name
         $entityName = $entity->toString();
@@ -511,7 +513,7 @@ class Mapper
      * @param array $options, override default PK field options
      * @return bool
      */
-    public function insert(Entity $entity, array $options = array())
+    public function insert(Entity $entity, array $options = [])
     {
         // Get the entity class name
         $entityName = $entity->toString();
@@ -621,7 +623,7 @@ class Mapper
      * @todo Clear entity from identity map on delete, when implemented
      * @return bool
      */
-    public function delete($entityName, array $conditions = array(), array $options = array())
+    public function delete($entityName, array $conditions = [], array $options = [])
     {
         if (is_object($entityName)) {
             $entity = $entityName;
@@ -657,7 +659,7 @@ class Mapper
      */
     public function dumpEntity($entityName, array $data)
     {
-        $dumpedData = array();
+        $dumpedData = [];
         $fields = $entityName::fields();
 
         foreach ($data as $field => $value) {
@@ -675,7 +677,7 @@ class Mapper
      */
     public function loadEntity($entityName, $data)
     {
-        $loadedData = array();
+        $loadedData = [];
         $fields = $entityName::fields();
 
         foreach ($data as $field => $value) {
@@ -705,7 +707,7 @@ class Mapper
             throw new \InvalidArgumentException("Cannot load relation with a null \$entityName");
         }
 
-        $relations = array();
+        $relations = [];
         $rels = $this->relations($entityName);
         foreach ($rels as $field => $relation) {
             $relations[$field] = $this->loadRelation($entity, $field, $reload);
@@ -799,7 +801,7 @@ class Mapper
             // Valitron validation rules
             if (isset($fieldAttrs['validation']) && is_array($fieldAttrs['validation'])) {
                 foreach ($fieldAttrs['validation'] as $rule => $ruleName) {
-                    $params = array();
+                    $params = [];
                     if (is_string($rule)) {
                         $params = $ruleName;
                         $ruleName = $rule;
@@ -871,7 +873,7 @@ class Mapper
      */
     public function getHooks($entityName, $hook)
     {
-        $hooks = array();
+        $hooks = [];
         if (isset($this->hooks[$entityName]) && isset($this->hooks[$entityName][$hook])) {
             $hooks = $this->hooks[$entityName][$hook];
         }
@@ -898,7 +900,7 @@ class Mapper
      * @param mixed $arguments
      * @return bool
      */
-    protected function triggerInstanceHook($object, $hook, $arguments = array())
+    protected function triggerInstanceHook($object, $hook, $arguments = [])
     {
         if (is_object($arguments) || !is_array($arguments)) {
             $arguments = array($arguments);
@@ -986,65 +988,5 @@ class Mapper
             throw $e;
         }
         return $this;
-    }
-
-    /**
-     * Truncate data source
-     * Should delete all rows and reset serial/auto_increment keys to 0
-     *
-     * @param string $entityName Name of the entity class
-     */
-    public function truncateDatasource($entityName)
-    {
-        return $this->connection($entityName)->truncateDatasource($this->datasource($entityName));
-    }
-
-    /**
-     * Drop/delete data source
-     * Destructive and dangerous - drops entire data source and all data
-     *
-     * @param string $entityName Name of the entity class
-     */
-    public function dropDatasource($entityName)
-    {
-        return $this->connection($entityName)->dropDatasource($this->datasource($entityName));
-    }
-
-    /**
-     * Migrate table structure changes from model to database
-     *
-     * @param string $entityName Name of the entity class
-     */
-    public function migrate($entityName)
-    {
-        return $this->connection($entityName)
-            ->migrate(
-                $this->datasource($entityName),
-                $this->fields($entityName),
-                $this->entityManager()->datasourceOptions($entityName)
-            );
-    }
-
-    /**
-     * Set the mapper's cache object
-     * @param \CacheCache\BackendInterface $cache
-     * @return $this
-     */
-    public function setCache(Cache $cache)
-    {
-        $this->cache = $cache;
-        return $this;
-    }
-
-    /**
-     * Retrieve the cache object, or false if none is set
-     * @return \CacheCache\BackendInterface|bool
-     */
-    public function getCache()
-    {
-        if (null === $this->cache) {
-            return false;
-        }
-        return $this->cache;
     }
 }

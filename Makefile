@@ -1,4 +1,4 @@
-files := $(shell find . -name \*.php)
+files := $(shell find ./src/Spot -name \*.php)
  
 .PHONY: ${files}
 ${files}:

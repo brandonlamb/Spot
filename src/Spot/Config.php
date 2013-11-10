@@ -22,7 +22,7 @@ class Config
      */
     protected $typeHandlers;
 
-    protected function __construct()
+    public function __construct()
     {
         $this->connections = [];
 

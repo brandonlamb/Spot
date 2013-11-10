@@ -41,8 +41,8 @@ class Manager
             throw new \Spot\Exception\Manager(__METHOD__ . " only accepts a string. Given (" . gettype($entityName) . ")");
         }
 
-        if (!is_subclass_of($entityName, '\Spot\Entity')) {
-            throw new \Spot\Exception\Manager($entityName . " must be subclass of '\Spot\Entity'.");
+        if (!is_subclass_of($entityName, '\\Spot\\Entity\\EntityInterface')) {
+            throw new \Spot\Exception\Manager($entityName . " must be subclass of '\Spot\Entity\EntityInterface'.");
         }
 
         if (isset(static::$fields[$entityName])) {
@@ -52,7 +52,7 @@ class Manager
 
         // Datasource info
         $entityDatasource = null;
-        $entityDatasource = $entityName::datasource();
+        $entityDatasource = $entityName->getTable();
         if (null === $entityDatasource || !is_string($entityDatasource)) {
             throw new \InvalidArgumentException("Entity must have a datasource defined. Please define a protected property named 'datasource' on your '" . $entityName . "' entity class.");
         }

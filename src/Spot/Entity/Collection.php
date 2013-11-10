@@ -1,13 +1,16 @@
 <?php
 
-namespace Spot\Entity;
-
 /**
  * Collection of Spot_Entity objects
  *
  * @package Spot
  * @link http://spot.os.ly
  */
+
+namespace Spot\Entity;
+
+use Spot\Entity\CollectionInterface;
+
 class Collection implements CollectionInterface
 {
     /**
@@ -60,7 +63,7 @@ class Collection implements CollectionInterface
      * {@inherit}
      * @todo Implement faster uniqueness checking by hash, entity manager, primary key field, etc.
      */
-    public function merge(\Spot\Entity\CollectionInterface $collection, $onlyUnique = true)
+    public function merge(CollectionInterface $collection, $onlyUnique = true)
     {
         foreach ($collection as $entity) {
             if ($onlyUnique && in_array($entity, $this->results)) {
