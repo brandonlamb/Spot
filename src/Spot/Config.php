@@ -2,7 +2,9 @@
 
 namespace Spot;
 
-class Config implements \Serializable
+use Spot\Adapter\AdapterInterface;
+
+class Config
 {
     /**
      * @var string, The name of the named connection to use by default
@@ -12,22 +14,19 @@ class Config implements \Serializable
     /**
      * @var array, Named connections, indexed by name
      */
-    protected $connections = array();
-
-    /**
-     * @var \Spot\Config
-     */
-    protected static $instance;
+    protected $connections;
 
     /**
      * @var array, Maps type to a type class to be used when filtering
      * entity column data
      */
-    protected static $typeHandlers;
+    protected $typeHandlers;
 
     protected function __construct()
     {
-        static::$typeHandlers = array(
+        $this->connections = [];
+
+        $this->typeHandlers = [
             'string'    => '\\Spot\\Type\\String',
             'text'      => '\\Spot\\Type\\String',
             'char'      => '\\Spot\\Type\\String',
@@ -54,109 +53,74 @@ class Config implements \Serializable
 
             'db2.date'  => '\\Spot\\Type\\Db2Date',
             'db2.timestamp' => '\\Spot\\Type\\Db2Timestamp',
-        );
-    }
-
-    /**
-     * Dont allow cloning
-     */
-    protected function __clone() {}
-
-    /**
-     * Singleton method
-     * @param bool $reset, if flag is true, re-instantiate the singleton instance
-     * @return \Spot\Config
-     */
-    public static function getInstance($reset = false)
-    {
-        if ($reset === true || !isset(static::$instance)) {
-            static::$instance = new static;
-        }
-        return static::$instance;
+        ];
     }
 
     /**
      * Set type handler class by type
      * @param string $type Field type (i.e. 'string' or 'int', etc.)
      * @param string $class
+     * @return \Spot\Config
      */
-    public static function setTypeHandler($type, $class)
+    public function setTypeHandler($type, $class)
     {
-        static::$typeHandlers[(string) $type] = (string) $class;
+        $this->typeHandlers[(string) $type] = (string) $class;
+        return $this;
     }
 
     /**
      * Get type handler class by type
-     * @param string $type
+     * @param string $offset
      * @return string
      * @throws \InvalidArgumentException
      */
-    public static function getTypeHandler($type)
+    public function getTypeHandler($offset)
     {
-        if (!isset(static::$typeHandlers[$type])) {
-            throw new \InvalidArgumentException("Type '$type' not registered. Register the type class handler with \Spot\Config::typeHandler('$type', '\Namespaced\Path\Class').");
+        if (!isset($this->typeHandlers[$offset])) {
+            throw new \InvalidArgumentException("Type '$offset' not registered. Register the type class handler with \Spot\Config::typeHandler('$type', '\Namespaced\Path\Class').");
         }
-        return static::$typeHandlers[$type];
+        return $this->typeHandlers[$offset];
     }
 
     /**
      * Add database connection. If passing $default = true, Spot will
      * use the passed connection as the default connection.
-     * @param string $name Unique name for the connection
-     * @param PDO $conn PDO connection, managed outside
-     * @param array $options Array of key => value options for adapter
+     * @param string $offset Unique name for the connection
+     * @param \Spot\Adapter\AdapterInterface $adapter
      * @param boolean $defaut Use this connection as the default? The first connection added is automatically set as the default, even if this flag is false.
-     * @return \Spot\Adapter\AdapterInterface
-     * @throws \Spot\Exception\Config
+     * @return \Spot\Config
+     * @throws \InvalidArgumentException
      */
-    public function addConnection($name, \Spot\Adapter\AdapterInterface $adapter, $default = false)
+    public function addConnection($offset, AdapterInterface $adapter, $default = false)
     {
         // Connection name must be unique
-        if (isset($this->connections[$name])) {
-            throw new Exception\Config("Connection for '" . $name . "' already exists. Connection name must be unique.");
+        if (isset($this->connections[$offset])) {
+            throw new \InvalidArgumentException("Connection for '" . $offset . "' already exists. Connection name must be unique.");
         }
 
         // Set as default connection?
         if (true === $default || null === $this->defaultConnection) {
-            $this->defaultConnection = $name;
+            $this->defaultConnection = $offset;
         }
 
         // Store connection and return adapter instance
-        $this->connections[$name] = $adapter;
-        return $adapter;
+        $this->connections[$offset] = $adapter;
+
+        return $this;
     }
 
     /**
      * Get connection by name. Passing null will return default connection
-     * @param string $name Unique name of the connection to be returned
+     * @param string $offset Unique name of the connection to be returned
      * @return \Spot\Adapter\AdapterInterface
+     * @throws \InvalidArgumentException
      */
-    public function connection($name = null)
+    public function getConnection($offset = null)
     {
-        null === $name && $name = $this->defaultConnection;
-        return (isset($this->connections[$name])) ? $this->connections[$name] : false;
+        null === $offset && $offset = $this->defaultConnection;
+        if (!isset($this->connections[$offset])) {
+            throw new \InvalidArgumentException("'$offset' is not a configured connection");
+        }
+        return  $this->connections[$offset];
     }
-
-    /**
-     * Get default connection
-     * @return \Spot\Adapter\AdapterInterface
-     */
-    public function defaultConnection()
-    {
-        return $this->connection($this->defaultConnection);
-    }
-
-    /**
-     * Prevent adapter connections from being serialized
-     * @return string
-     */
-    public function serialize()
-    {
-        return serialize(array());
-    }
-
-    /**
-     * {@inherit}
-     */
-    public function unserialize($serialized) {}
 }
