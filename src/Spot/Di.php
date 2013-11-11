@@ -9,7 +9,10 @@
 
 namespace Spot;
 
-use Spot\Di\DiInterface;
+use Spot\Di\DiInterface,
+	Spot\Config,
+	Spot\Entity\Manager as EntityManager,
+	Spot\Relation\Manager as RelationManager;
 
 class Di implements DiInterface
 {
