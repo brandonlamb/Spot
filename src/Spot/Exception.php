@@ -1,11 +1,12 @@
 <?php
 
-namespace Spot;
-
 /**
  * Handles generic Spot errors
  *
  * @package Spot
- * @link http://spot.os.ly
+ * @author Brandon Lamb <brandon@brandonlamb.com>
  */
+
+namespace Spot;
+
 class Exception extends \Exception {}

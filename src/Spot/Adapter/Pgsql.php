@@ -25,56 +25,6 @@ class Pgsql extends AbstractAdapter implements AdapterInterface
     }
 
     /**
-     * {@inherit}
-     */
-    public function migrate($table, array $fields, array $options = array())
-    {
-        return $this;
-    }
-
-    /**
-     * @{inherit}
-     */
-    public function createDatabase($database)
-    {
-        $sql = 'CREATE DATABASE ' . $database;
-
-        // Add query to log
-        Log::addQuery($this, $sql);
-
-        return $this->connection()->exec($sql);
-    }
-
-    /**
-     * @{inherit}
-     */
-    public function dropDatabase($database)
-    {
-        $sql = 'DROP DATABASE ' . $database;
-
-        // Add query to log
-        Log::addQuery($this, $sql);
-
-        return $this->connection()->exec($sql);
-    }
-
-    /**
-     * {@inherit}
-     */
-    public function truncateDatasource($datasource)
-    {
-        return $this;
-    }
-
-    /**
-     * {@inherit}
-     */
-    public function dropDatasource($datasource)
-    {
-        return $this;
-    }
-
-    /**
      * {@inheritdoc}
      */
     public function create($datasource, array $data, array $options = array())

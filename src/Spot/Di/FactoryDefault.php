@@ -15,7 +15,8 @@ use Spot\Di as DiContainer,
 	Spot\Entity\EntityFactory,
 	Spot\Entity\Collection\CollectionFactory,
 	Spot\Entity\Manager as EntityManager,
-	Spot\Relation\Manager as RelationManager;
+	Spot\Relation\Manager as RelationManager,
+	Spot\Events\Manager as EventsManager;
 
 class FactoryDefault Extends DiContainer implements DiInterface
 {
@@ -39,6 +40,12 @@ class FactoryDefault Extends DiContainer implements DiInterface
 		$this->storage['relationManager'] = function () {
 			static $resource;
 			null === $resource && $resource = new RelationManager($this);
+			return $resource;
+		};
+
+		$this->storage['eventsManager'] = function () {
+			static $resource;
+			null === $resource && $resource = new EventsManager($this);
 			return $resource;
 		};
 

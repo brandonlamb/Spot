@@ -158,44 +158,6 @@ interface AdapterInterface
     public function rollback();
 
     /**
-     * Migrate table structure changes to database
-     * @param string $table Table name
-     * @param array $fields Fields and their attributes as defined in the mapper
-     * @param array $options Options that may affect migrations or how tables are setup
-     * @return \Spot\Adapter\AbstractInterface
-     */
-    public function migrate($table, array $fields, array $options = array());
-
-    /**
-     * Create a database
-     * Will throw errors if user does not have proper permissions
-     */
-    public function createDatabase($database);
-
-    /**
-     * Drop an entire database
-     * Destructive and dangerous - drops entire table and all data
-     * Will throw errors if user does not have proper permissions
-     */
-    public function dropDatabase($database);
-
-    /**
-     * Truncate data source (table for SQL)
-     * Should delete all rows and reset serial/auto_increment keys to 0
-     * @param \Spot\Entity
-     * @return \Spot\Adapter\AdapterInterface
-     */
-    public function truncateDatasource($source);
-
-    /**
-     * Drop/delete data source (table for SQL)
-     * Destructive and dangerous - drops entire data source and all data
-     * @param \Spot\Entity
-     * @return \Spot\Adapter\AdapterInterface
-     */
-    public function dropDatasource($source);
-
-    /**
      * Using the query object passed, return the parsed sql query string.
      * This will only return the sql for the select building. Separate methods
      * exist for insert
