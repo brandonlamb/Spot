@@ -67,17 +67,14 @@ class Mapper
         return $this->adapterName;
     }
 
-
-
-
-
     /**
      * Create and return a new query builder object
      * @return \Spot\Query
+     * @todo Create query factory?
      */
     public function createSql()
     {
-        return new Query($this, $entityName);
+        return $this->queryFactory->create($this, $entityName);
     }
 
 

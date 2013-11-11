@@ -38,6 +38,11 @@ class Di implements DiInterface
 		if (!isset($this->storage[$offset])) {
 			throw new \InvalidArgumentException("$offset is not in the DI container");
 		}
-		return $this->storage[$offset];
+
+		if ($this->storage[$offset] instanceof \Closure) {
+			return $this->storage[$offset]();
+		} else {
+			return $this->storage[$offset];
+		}
 	}
 }
