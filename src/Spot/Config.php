@@ -1,19 +1,36 @@
 <?php
 
+/**
+ * Configuration for entity field types
+ *
+ * @package \Spot
+ * @author Brandon Lamb <brandon@brandonlamb.com>
+ */
+
 namespace Spot;
 
-use Spot\Adapter\AdapterInterface;
+use Spot\Di as DiContainer,
+    Spot\Di\InjectableTrait,
+    Spot\Adapter\AdapterInterface;
 
 class Config
 {
+    use InjectableTrait;
+
     /**
      * @var array, Maps type to a type class to be used when filtering
      * entity column data
      */
     protected $typeHandlers;
 
-    public function __construct()
+    /**
+     * Constructor
+     * @param \Spot\Di $di
+     */
+    public function __construct(DiContainer $di)
     {
+        $this->setDI($di);
+
         $this->typeHandlers = [
             'string'    => '\\Spot\\Type\\String',
             'text'      => '\\Spot\\Type\\String',
@@ -65,7 +82,10 @@ class Config
     public function getTypeHandler($offset)
     {
         if (!isset($this->typeHandlers[$offset])) {
-            throw new \InvalidArgumentException("Type '$offset' not registered. Register the type class handler with \Spot\Config::typeHandler('$type', '\Namespaced\Path\Class').");
+            throw new \InvalidArgumentException(
+                "'$offset' not a registered type. Register the type class handler with "
+                . "\Spot\Config->setTypeHandler('$type', '\Namespaced\Path\Class')."
+            );
         }
         return $this->typeHandlers[$offset];
     }

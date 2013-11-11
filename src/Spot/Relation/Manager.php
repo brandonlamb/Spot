@@ -8,45 +8,22 @@
 
 namespace Spot\Relation;
 
-use Spot\Mapper,
-	Spot\Config,
-	Spot\Entity\HasEntityManagerTrait,
-	Spot\Entity\CollectionInterface;
+use Spot\Di as DiContainer,
+    Spot\Di\InjectableTrait,
+    Spot\Entity\CollectionInterface;
 
 class Manager
 {
-	use HasEntityManagerTrait;
+	use InjectableTrait;
 
-	/**
-	 * @var \Spot\Config
-	 */
-	protected $config;
-
-	/**
-	 * Set the config
-	 * @param \Spot\Config
-	 * @return \Spot\Relation\Manager
-	 */
-	public function setConfig(Config $config)
-	{
-		$this->config = $config;
-		return $this;
-	}
-
-	/**
-	 * Get config
-	 * @return \Spot\Config
-	 */
-	public function getConfig()
-	{
-		return $this->config;
-	}
-
-
-
-
-
-
+    /**
+     * Constructor
+     * @param \Spot\Di $di
+     */
+    public function __construct(DiContainer $di)
+    {
+        $this->setDi($di);
+    }
 
     /**
      * Load defined relations

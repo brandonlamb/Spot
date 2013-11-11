@@ -2,32 +2,26 @@
 
 /**
  * Base Data Mapper
+ *
  * @package Spot
+ * @author Brandon Lamb <brandon@brandonlamb.com>
  */
 
 namespace Spot;
 
-use Spot\Config,
-    Spot\Entity\HasEntityManagerTrait,
-    Spot\Relation\HasRelationManagerTrait,
-    Spot\Entity\Manager as EntityManager,
-    Spot\Relation\Manager as RelationManager,
+use Spot\Di as DiContainer,
+    Spot\Di\InjectableTrait,
     Spot\Adapter\AdapterInterface,
     Spot\Query;
 
 class Mapper
 {
-    use HasEntityManagerTrait, HasRelationManagerTrait;
+    use InjectableTrait;
 
     /**
-     * @var \Spot\Config
+     * @var string
      */
-    protected $config;
-
-    /**
-     * @var \Spot\Adapter\AdapterInterface
-     */
-    protected $adapter;
+    protected $adapterName = 'db';
 
     /**
      * @var string, Class name to use for collections
@@ -46,59 +40,31 @@ class Mapper
 
     /**
      * Constructor Method
-     * @param \Spot\Config $config
-     * @param \Spot\Entity\Manager $entityManager
-     * @param \Spot\Relation\Manager $relationManager
-     * @param \Spot\Adapter\AdapterInterface $adapter
+     * @param \Spot\Di $di
      */
-    public function __construct(Config $config, EntityManager $entityManager, RelationManager $relationManager, AdapterInterface $adapter)
+    public function __construct(DiContainer $di)
     {
-        $this
-            ->setConfig($config)
-            ->setEntityManager($entityManager)
-            ->setRelationManager($relationManager)
-            ->setAdapter($adapter)
-            ;
-    }
-
-    /**
-     * Set config object
-     * @param \Spot\Config $config
-     * @return \Spot\Mapper
-     */
-    public function setConfig(Config $config)
-    {
-        $this->config = $config;
-        return $this;
-    }
-
-    /**
-     * Get config object
-     * @return \Spot\Config
-     */
-    public function getConfig()
-    {
-        return $this->config;
+        $this->setDi($di);
     }
 
     /**
      * Set the adapter object
-     * @param \Spot\Adapter\AdapterInterface
+     * @param string $adapterName
      * @return \Spot\Mapper
      */
-    public function setAdapter(AdapterInterface $adapter)
+    public function setAdapterName($adapterName)
     {
-        $this->adapter = $adapter;
+        $this->adapterName = (string) $adapterName;
         return $this;
     }
 
     /**
      * Get the adapter
-     * @return \Spot\Adapter\AdapterInterface
+     * @return string
      */
-    public function getAdapter()
+    public function getAdapterName()
     {
-        return $this->adapter;
+        return $this->adapterName;
     }
 
 
@@ -124,7 +90,7 @@ class Mapper
      */
     public function getEntityTable($entityName)
     {
-        return $this->getEntityManager()->getTable($entityName);
+        return $this->entityManager->getTable($entityName);
     }
 
     /**
@@ -145,7 +111,7 @@ class Mapper
      */
     public function getPrimaryKeyField($entityName)
     {
-        return $this->getEntityManager()->getPrimaryKeyField($entityName);
+        return $this->entityManager->getPrimaryKeyField($entityName);
     }
 
 
@@ -165,7 +131,7 @@ class Mapper
         foreach ($data as $field => $value) {
             // Skip type checking if dynamic field
             if (isset($fields[$field])) {
-                $typeHandler = $this->getConfig()->getTypeHandler($fields[$field]['type']);
+                $typeHandler = $this->config->getTypeHandler($fields[$field]['type']);
                 $loadedData[$field] = $typeHandler::loadInternal($value);
             } else {
                 $loadedData[$field] = $value;
@@ -187,7 +153,7 @@ class Mapper
      */
     public function fields($entityName)
     {
-        return $this->getEntityManager()->fields($entityName);
+        return $this->entityManager->fields($entityName);
     }
 
 
@@ -203,7 +169,7 @@ class Mapper
      */
     public function fieldsDefined($entityName)
     {
-        return $this->getEntityManager()->fieldsDefined($entityName);
+        return $this->entityManager->fieldsDefined($entityName);
     }
 
     /**
@@ -255,13 +221,13 @@ class Mapper
         // @todo Move this to collection class so entities will be lazy-loaded by Collection iteration
         foreach ($stmt as $data) {
             // Entity with data set
-            $entity = $this->getRelationManager()->hydrateEntity(new $entityName($data), $data);
+            $entity = $this->relationManager->hydrateEntity(new $entityName($data), $data);
 
             // Entity with data set
             $entity = new $entityName($data);
 
             // Load relation objects
-            $this->getRelationManager()->loadRelations($entity);
+            $this->relationManager->loadRelations($entity);
 
             // Store in array for Collection
             $results[] = $entity;
@@ -297,7 +263,7 @@ class Mapper
                 continue;
             }
 
-            $relationObj = $this->getRelationManager()->loadRelation($collection, $relationName);
+            $relationObj = $this->relationManager->loadRelation($collection, $relationName);
 
             // double execute() to make sure we get the \Spot\Entity\CollectionInterface back (and not just the \Spot\Query)
             $relatedEntities = $relationObj->execute()->limit(null)->execute();
@@ -379,7 +345,7 @@ class Mapper
      */
     public function query($entityName, $sql, array $params = [])
     {
-        $result = $this->getAdapter()->query($sql, $params);
+        $result = $this->db->query($sql, $params);
         if ($result) {
             return $this->collection($entityName, $result);
         }
@@ -449,7 +415,7 @@ class Mapper
         $pkField = $this->getPrimaryKeyField($entityName);
 
         // Get field options for primary key, merge with overrides (if any) passed
-        $options = array_merge($this->getEntityManager()->fields($entityName, $pkField), $options);
+        $options = array_merge($this->entityManager->fields($entityName, $pkField), $options);
 
         // Run beforeSave to know whether or not we can continue
         if (false === $this->triggerInstanceHook($entity, 'beforeSave', $this)) {
@@ -460,7 +426,7 @@ class Mapper
         if ($this->validate($entity)) {
             $pkField = $this->getPrimaryKeyField($entity->toString());
             $pk = $this->getPrimaryKey($entity);
-            $attributes = $this->getEntityManager()->fields($entity->toString(), $pkField);
+            $attributes = $this->entityManager->fields($entity->toString(), $pkField);
 
             // Do an update if pk is specified
             $isNew = empty($pkField) || (empty($pk) && ($attributes['identity'] | $attributes['serial'] | $attributes['sequence']));
@@ -513,7 +479,7 @@ class Mapper
         $pkField = $this->getPrimaryKeyField($entityName);
 
         // Get field options for primary key, merge with overrides (if any) passed
-        $options = array_merge($this->getEntityManager()->fields($entityName, $pkField), $options);
+        $options = array_merge($this->entityManager->fields($entityName, $pkField), $options);
 
         // Run beforeInsert to know whether or not we can continue
         $resultAfter = null;
@@ -534,14 +500,14 @@ class Mapper
         $data = $this->dumpEntity($entityName, $data);
 
         // Send to adapter
-        $result = $this->getAdapter()->create($this->getEntityTable($entityName), $data, $options);
+        $result = $this->db->create($this->getEntityTable($entityName), $data, $options);
 
         // Update primary key on entity object
         $pkField = $this->getPrimaryKeyField($entityName);
         $entity->$pkField = $result;
 
         // Load relations on new entity
-        $this->getRelationManager()->loadRelations($entity);
+        $this->relationManager->loadRelations($entity);
 
         // Run afterInsert
         $resultAfter = $this->triggerInstanceHook($entity, 'afterInsert', array($this, $result));
@@ -576,7 +542,7 @@ class Mapper
         // Handle with adapter
         if (count($data) > 0) {
             $data = $this->dumpEntity($entityName, $data);
-            $result = $this->getAdapter()->update(
+            $result = $this->db->update(
                 $this->getEntityTable($entityName),
                 $data,
                 [$this->getPrimaryKeyField($entityName) => $this->getPrimaryKey($entity)]
@@ -631,7 +597,7 @@ class Mapper
                 return false;
             }
 
-            $result = $this->getAdapter()->delete($this->getEntityTable($entityName), $conditions, $options);
+            $result = $this->db->delete($this->getEntityTable($entityName), $conditions, $options);
 
             // Run afterUpdate
             $resultAfter = $this->triggerInstanceHook($entity, 'afterDelete', array($this, $result));
@@ -640,7 +606,7 @@ class Mapper
 
         if (is_array($conditions)) {
             $conditions = [0 => ['conditions' => $conditions]];
-            return $this->getAdapter()->delete($this->getEntityTable($entityName), $conditions, $options);
+            return $this->db->delete($this->getEntityTable($entityName), $conditions, $options);
         } else {
             throw new $this->exceptionClass(__METHOD__ . " conditions must be an array, given " . gettype($conditions) . "");
         }
@@ -673,7 +639,7 @@ class Mapper
         $fields = $entityName::fields();
 
         foreach ($data as $field => $value) {
-            $typeHandler = $this->getConfig()->getTypeHandler($fields[$field]['type']);
+            $typeHandler = $this->config->getTypeHandler($fields[$field]['type']);
             $dumpedData[$field] = $typeHandler::dumpInternal($value);
         }
         return $dumpedData;
@@ -889,7 +855,7 @@ class Mapper
      */
     public function transaction(\Closure $work, $entityName = null)
     {
-        $adapter = $this->getAdapter();
+        $adapter = $this->db;
 
         try {
             $adapter->beginTransaction();

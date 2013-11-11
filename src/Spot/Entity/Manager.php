@@ -1,14 +1,29 @@
 <?php
 
-namespace Spot\Entity;
-
 /**
  * Entity Manager for storing information about entities
  *
  * @package Spot
  */
+
+namespace Spot\Entity;
+
+use Spot\Di as DiContainer,
+    Spot\Di\InjectableTrait;
+
 class Manager
 {
+    use InjectableTrait;
+
+    /**
+     * Constructor
+     * @param \Spot\Di $di
+     */
+    public function __construct(DiContainer $di)
+    {
+        $this->setDi($di);
+    }
+
     /**
      * @var array
      */
