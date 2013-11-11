@@ -7,16 +7,6 @@ use Spot\Adapter\AdapterInterface;
 class Config
 {
     /**
-     * @var string, The name of the named connection to use by default
-     */
-    protected $defaultConnection;
-
-    /**
-     * @var array, Named connections, indexed by name
-     */
-    protected $connections;
-
-    /**
      * @var array, Maps type to a type class to be used when filtering
      * entity column data
      */
@@ -24,8 +14,6 @@ class Config
 
     public function __construct()
     {
-        $this->connections = [];
-
         $this->typeHandlers = [
             'string'    => '\\Spot\\Type\\String',
             'text'      => '\\Spot\\Type\\String',
@@ -80,47 +68,5 @@ class Config
             throw new \InvalidArgumentException("Type '$offset' not registered. Register the type class handler with \Spot\Config::typeHandler('$type', '\Namespaced\Path\Class').");
         }
         return $this->typeHandlers[$offset];
-    }
-
-    /**
-     * Add database connection. If passing $default = true, Spot will
-     * use the passed connection as the default connection.
-     * @param string $offset Unique name for the connection
-     * @param \Spot\Adapter\AdapterInterface $adapter
-     * @param boolean $defaut Use this connection as the default? The first connection added is automatically set as the default, even if this flag is false.
-     * @return \Spot\Config
-     * @throws \InvalidArgumentException
-     */
-    public function addConnection($offset, AdapterInterface $adapter, $default = false)
-    {
-        // Connection name must be unique
-        if (isset($this->connections[$offset])) {
-            throw new \InvalidArgumentException("Connection for '" . $offset . "' already exists. Connection name must be unique.");
-        }
-
-        // Set as default connection?
-        if (true === $default || null === $this->defaultConnection) {
-            $this->defaultConnection = $offset;
-        }
-
-        // Store connection and return adapter instance
-        $this->connections[$offset] = $adapter;
-
-        return $this;
-    }
-
-    /**
-     * Get connection by name. Passing null will return default connection
-     * @param string $offset Unique name of the connection to be returned
-     * @return \Spot\Adapter\AdapterInterface
-     * @throws \InvalidArgumentException
-     */
-    public function getConnection($offset = null)
-    {
-        null === $offset && $offset = $this->defaultConnection;
-        if (!isset($this->connections[$offset])) {
-            throw new \InvalidArgumentException("'$offset' is not a configured connection");
-        }
-        return  $this->connections[$offset];
     }
 }

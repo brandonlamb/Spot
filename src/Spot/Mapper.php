@@ -7,12 +7,18 @@
 
 namespace Spot;
 
-use Spot\Entity\Manager as EntityManager,
-    Spot\Config,
-    Spot\Adapter\AdapterInterface;
+use Spot\Config,
+    Spot\Entity\HasEntityManagerTrait,
+    Spot\Relation\HasRelationManagerTrait,
+    Spot\Entity\Manager as EntityManager,
+    Spot\Relation\Manager as RelationManager,
+    Spot\Adapter\AdapterInterface,
+    Spot\Query;
 
 class Mapper
 {
+    use HasEntityManagerTrait, HasRelationManagerTrait;
+
     /**
      * @var \Spot\Config
      */
@@ -24,19 +30,9 @@ class Mapper
     protected $adapter;
 
     /**
-     * @var \Spot\Entity\Manager
-     */
-    protected $entityManager;
-
-    /**
      * @var string, Class name to use for collections
      */
     protected $collectionClass = '\\Spot\\Entity\\Collection';
-
-    /**
-     * @var string, Class name to use for Query objects
-     */
-    protected $queryClass = '\\Spot\\Query';
 
     /**
      * @var array, Array of error messages and types
@@ -51,70 +47,137 @@ class Mapper
     /**
      * Constructor Method
      * @param \Spot\Config $config
-     * @param \Spot\Entity\Manager $manager
+     * @param \Spot\Entity\Manager $entityManager
+     * @param \Spot\Relation\Manager $relationManager
+     * @param \Spot\Adapter\AdapterInterface $adapter
      */
-    public function __construct(AdapterInterface $adapter, EntityManager $manager)
+    public function __construct(Config $config, EntityManager $entityManager, RelationManager $relationManager, AdapterInterface $adapter)
     {
-        $this->adapter = $adapter;
-        $this->manager = $manager;
+        $this
+            ->setConfig($config)
+            ->setEntityManager($entityManager)
+            ->setRelationManager($relationManager)
+            ->setAdapter($adapter)
+            ;
     }
 
     /**
-     * Get config class mapper was instantiated with. Optionally set config
+     * Set config object
      * @param \Spot\Config $config
+     * @return \Spot\Mapper
+     */
+    public function setConfig(Config $config)
+    {
+        $this->config = $config;
+        return $this;
+    }
+
+    /**
+     * Get config object
      * @return \Spot\Config
      */
-    public function config(Config $config = null)
+    public function getConfig()
     {
-d($config);
-        $config instanceof Config && $this->config = $config;
         return $this->config;
     }
 
     /**
-     * Get query class name to use. Optionally set the class name
-     * @param string $queryClass
-     * @return string
+     * Set the adapter object
+     * @param \Spot\Adapter\AdapterInterface
+     * @return \Spot\Mapper
      */
-    public function queryClass($queryClass = null)
+    public function setAdapter(AdapterInterface $adapter)
     {
-        null !== $queryClass && $this->queryClass = (string) $queryClass;
-        return $this->queryClass;
+        $this->adapter = $adapter;
+        return $this;
     }
 
     /**
-     * Get collection class name to use. Optionally set the class name
-     * @param string $collectionClass
-     * @return string
+     * Get the adapter
+     * @return \Spot\Adapter\AdapterInterface
      */
-    public function collectionClass($collectionClass = null)
+    public function getAdapter()
     {
-        null !== $collectionClass && $this->collectionClass = (string) $collectionClass;
-        return $this->collectionClass;
+        return $this->adapter;
     }
 
-    /**
-     * Entity manager class for storing information and meta-data about entities.
-     * This is static across all mappers.
-     * @return \Spot\Entity\Manager
-     */
-    public function entityManager()
-    {
-        if (null === $this->entityManager) {
-            $this->entityManager = new EntityManager();
-        }
-        return $this->entityManager;
-    }
+
+
+
 
     /**
-     * Get datasource name (table name) for given entity.
+     * Create and return a new query builder object
+     * @return \Spot\Query
+     */
+    public function createSql()
+    {
+        return new Query($this, $entityName);
+    }
+
+
+
+
+    /**
+     * Get table name for given entity.
      * @param string $entityName, Name of the entity class
-     * @return string, Name of datasource defined on entity class
+     * @return string, Name of table defined on entity class
      */
-    public function datasource($entityName)
+    public function getEntityTable($entityName)
     {
-        return $this->entityManager()->datasource($entityName);
+        return $this->getEntityManager()->getTable($entityName);
     }
+
+    /**
+     * Get value of primary key for given row result
+     * @param \Spot\Entity $entity Instance of an entity to find the primary key of
+     * @return mixed
+     */
+    public function getPrimaryKey(Entity $entity)
+    {
+        $field = $this->getPrimaryKeyField($entity->toString());
+        return $entity->$field;
+    }
+
+    /**
+     * Get the field name of the primary key for given entity
+     * @param string $entityName Name of the entity class
+     * @return string
+     */
+    public function getPrimaryKeyField($entityName)
+    {
+        return $this->getEntityManager()->getPrimaryKeyField($entityName);
+    }
+
+
+
+
+    /**
+     * Hydrate an entity from an array of data.
+     * @param string $entityName
+     * @param array $data
+     * @return array
+     */
+    public function hydrateEntity($entityName, array $data)
+    {
+        $loadedData = [];
+        $fields = $entityName::fields();
+
+        foreach ($data as $field => $value) {
+            // Skip type checking if dynamic field
+            if (isset($fields[$field])) {
+                $typeHandler = $this->getConfig()->getTypeHandler($fields[$field]['type']);
+                $loadedData[$field] = $typeHandler::loadInternal($value);
+            } else {
+                $loadedData[$field] = $value;
+            }
+        }
+
+        return $loadedData;
+    }
+
+
+
+
 
     /**
      * Get formatted fields with all neccesary array keys and values.
@@ -124,8 +187,14 @@ d($config);
      */
     public function fields($entityName)
     {
-        return $this->entityManager()->fields($entityName);
+        return $this->getEntityManager()->fields($entityName);
     }
+
+
+
+
+
+
 
     /**
      * Get field information exactly how it is defined in the class
@@ -134,38 +203,7 @@ d($config);
      */
     public function fieldsDefined($entityName)
     {
-        return $this->entityManager()->fieldsDefined($entityName);
-    }
-
-    /**
-     * Get defined relations
-     * @param string, $entityName Name of the entity class
-     * @return array
-     */
-    public function relations($entityName)
-    {
-        return $this->entityManager()->relations($entityName);
-    }
-
-    /**
-     * Get value of primary key for given row result
-     * @param \Spot\Entity $entity Instance of an entity to find the primary key of
-     * @return mixed
-     */
-    public function primaryKey(Entity $entity)
-    {
-        $pkField = $this->entityManager()->primaryKeyField($entity->toString());
-        return $entity->$pkField;
-    }
-
-    /**
-     * Get the field name of the primary key for given entity
-     * @param string $entityName Name of the entity class
-     * @return string
-     */
-    public function primaryKeyField($entityName)
-    {
-        return $this->entityManager()->primaryKeyField($entityName);
+        return $this->getEntityManager()->fieldsDefined($entityName);
     }
 
     /**
@@ -190,27 +228,10 @@ d($config);
         return $this->fieldExists($entityName, $field) ? $fields[$field]['type'] : false;
     }
 
-    /**
-     * Return the named connection, or the default if no name specified
-     * @param string $connectionName Named connection or entity class name
-     * @return Spot\Adapter\AdapterInterrace
-     * @throws Spot\Exception\Mapper
-     */
-    public function connection($connectionName = null)
-    {
-        // Try getting connection based on given name
-        if ($connectionName === null) {
-            return $this->config()->defaultConnection();
-        } elseif ($connection = $this->config()->connection($connectionName)) {
-            return $connection;
-        } elseif ($connection = $this->entityManager()->connection($connectionName)) {
-            return $connection;
-        } elseif ($connection = $this->config()->defaultConnection()) {
-            return $connection;
-        }
 
-        throw new Exception\Mapper("Connection '" . $connectionName . "' does not exist. Please setup connection using Spot\\Config::addConnection().");
-    }
+
+
+
 
     /**
      * Create collection of entities.
@@ -234,19 +255,19 @@ d($config);
         // @todo Move this to collection class so entities will be lazy-loaded by Collection iteration
         foreach ($stmt as $data) {
             // Entity with data set
-            $data = $this->loadEntity($entityName, $data);
+            $entity = $this->getRelationManager()->hydrateEntity(new $entityName($data), $data);
 
             // Entity with data set
             $entity = new $entityName($data);
 
             // Load relation objects
-            $this->loadRelations($entity);
+            $this->getRelationManager()->loadRelations($entity);
 
             // Store in array for Collection
             $results[] = $entity;
 
             // Store primary key of each unique record in set
-            $pk = $this->primaryKey($entity);
+            $pk = $this->getPrimaryKey($entity);
             if (!in_array($pk, $resultsIdentities) && !empty($pk)) {
                 $resultsIdentities[] = $pk;
             }
@@ -276,7 +297,7 @@ d($config);
                 continue;
             }
 
-            $relationObj = $this->loadRelation($collection, $relationName);
+            $relationObj = $this->getRelationManager()->loadRelation($collection, $relationName);
 
             // double execute() to make sure we get the \Spot\Entity\CollectionInterface back (and not just the \Spot\Query)
             $relatedEntities = $relationObj->execute()->limit(null)->execute();
@@ -291,7 +312,7 @@ d($config);
                     // @todo this is awkward, but $resolvedConditions['where'] is returned as an array
                     foreach ($resolvedConditions as $key => $value) {
                         if ($relatedEntity->$key == $value) {
-                            $pk = $this->primaryKey($relatedEntity);
+                            $pk = $this->getPrimaryKey($relatedEntity);
                             if (!in_array($pk, $collectedIdentities) && !empty($pk)) {
                                 $collectedIdentities[] = $pk;
                             }
@@ -317,58 +338,15 @@ d($config);
         return $collection;
     }
 
-    /**
-     * Get or set array of entity data
-     * @param \Spot\Entity $entity
-     * @param array $data
-     * @return array
-     */
-    public function data(Entity $entity, array $data = [])
-    {
-        // SET data
-        if (count($data) > 0) {
-            return $entity->data($data);
-        }
 
-        // GET data
-        return $entity->data();
-    }
 
-    /**
-     * Get a new entity object, or an existing entity from identifiers
-     * @param string $entityClass Name of the entity class
-     * @param mixed $identifier Primary key or array of key/values
-     * @return mixed Depends on input false If $identifier is scalar and no entity exists
-     */
-    public function get($entityClass, $identifier = false)
-    {
-        if (false === $identifier) {
-            // No parameter passed, create a new empty entity object
-            $entity = new $entityClass();
-            $entity->data(array($this->primaryKeyField($entityClass) => null));
-        } elseif (is_array($identifier)) {
-            // An array was passed, create a new entity with that data
-            $entity = new $entityClass($identifier);
-            $entity->data(array($this->primaryKeyField($entityClass) => null));
-        } else {
-            // Scalar, find record by primary key
-            $entity = $this->first($entityClass, array($this->primaryKeyField($entityClass) => $identifier));
-            if (!$entity) {
-                return false;
-            }
-            $this->loadRelations($entity);
-        }
 
-        // Set default values if entity not loaded
-        if (!$this->primaryKey($entity)) {
-            $entityDefaultValues = $this->entityManager()->fieldDefaultValues($entityClass);
-            if (count($entityDefaultValues) > 0) {
-                $entity->data($entityDefaultValues);
-            }
-        }
 
-        return $entity;
-    }
+
+
+
+
+
 
     /**
      * Get a new entity object and set given data on it, and save it
@@ -383,6 +361,15 @@ d($config);
         return $entity;
     }
 
+
+
+
+
+
+
+
+
+
     /**
      * Find records with custom query. Essentially a raw sql method
      * @param string $entityName Name of the entity class
@@ -392,7 +379,7 @@ d($config);
      */
     public function query($entityName, $sql, array $params = [])
     {
-        $result = $this->connection($entityName)->query($sql, $params);
+        $result = $this->getAdapter()->query($sql, $params);
         if ($result) {
             return $this->collection($entityName, $result);
         }
@@ -436,11 +423,15 @@ d($config);
      */
     public function select($entityName, $fields = '*')
     {
-        $queryClass = $this->queryClass();
-        $query = new $queryClass($this, $entityName);
-        $query->select($fields, $this->datasource($entityName));
-        return $query;
+        return $this->createSql()->select($fields, $this->getEntityTable($entityName));
     }
+
+
+
+
+
+
+
 
     /**
      * Save record
@@ -455,10 +446,10 @@ d($config);
         $entityName = $entity->toString();
 
         // Get the primary key field for the entity class
-        $pkField = $this->primaryKeyField($entityName);
+        $pkField = $this->getPrimaryKeyField($entityName);
 
         // Get field options for primary key, merge with overrides (if any) passed
-        $options = array_merge($this->entityManager()->fields($entityName, $pkField), $options);
+        $options = array_merge($this->getEntityManager()->fields($entityName, $pkField), $options);
 
         // Run beforeSave to know whether or not we can continue
         if (false === $this->triggerInstanceHook($entity, 'beforeSave', $this)) {
@@ -467,9 +458,9 @@ d($config);
 
         // Run validation
         if ($this->validate($entity)) {
-            $pkField = $this->primaryKeyField($entity->toString());
-            $pk = $this->primaryKey($entity);
-            $attributes = $this->entityManager()->fields($entity->toString(), $pkField);
+            $pkField = $this->getPrimaryKeyField($entity->toString());
+            $pk = $this->getPrimaryKey($entity);
+            $attributes = $this->getEntityManager()->fields($entity->toString(), $pkField);
 
             // Do an update if pk is specified
             $isNew = empty($pkField) || (empty($pk) && ($attributes['identity'] | $attributes['serial'] | $attributes['sequence']));
@@ -486,7 +477,7 @@ d($config);
 
                     // If the Entity did not define a sequence, automatically generate an assumed sequence name
                     if (empty($options['sequence'])) {
-                        $options['sequence'] = $entityName::datasource() . '_' . $pkField . '_seq';
+                        $options['sequence'] = $entityName->getTable() . '_' . $pkField . '_seq';
                     }
                 }
 
@@ -519,10 +510,10 @@ d($config);
         $entityName = $entity->toString();
 
         // Get the primary key field for the entity class
-        $pkField = $this->primaryKeyField($entityName);
+        $pkField = $this->getPrimaryKeyField($entityName);
 
         // Get field options for primary key, merge with overrides (if any) passed
-        $options = array_merge($this->entityManager()->fields($entityName, $pkField), $options);
+        $options = array_merge($this->getEntityManager()->fields($entityName, $pkField), $options);
 
         // Run beforeInsert to know whether or not we can continue
         $resultAfter = null;
@@ -542,15 +533,15 @@ d($config);
 
         $data = $this->dumpEntity($entityName, $data);
 
-        // Send to adapter via named connection
-        $result = $this->connection($entityName)->create($this->datasource($entityName), $data, $options);
+        // Send to adapter
+        $result = $this->getAdapter()->create($this->getEntityTable($entityName), $data, $options);
 
         // Update primary key on entity object
-        $pkField = $this->primaryKeyField($entityName);
+        $pkField = $this->getPrimaryKeyField($entityName);
         $entity->$pkField = $result;
 
         // Load relations on new entity
-        $this->loadRelations($entity);
+        $this->getRelationManager()->loadRelations($entity);
 
         // Run afterInsert
         $resultAfter = $this->triggerInstanceHook($entity, 'afterInsert', array($this, $result));
@@ -585,7 +576,11 @@ d($config);
         // Handle with adapter
         if (count($data) > 0) {
             $data = $this->dumpEntity($entityName, $data);
-            $result = $this->connection($entityName)->update($this->datasource($entityName), $data, array($this->primaryKeyField($entityName) => $this->primaryKey($entity)));
+            $result = $this->getAdapter()->update(
+                $this->getEntityTable($entityName),
+                $data,
+                [$this->getPrimaryKeyField($entityName) => $this->getPrimaryKey($entity)]
+            );
 
             // Run afterUpdate
             $resultAfter = $this->triggerInstanceHook($entity, 'afterUpdate', array($this, $result));
@@ -628,7 +623,7 @@ d($config);
         if (is_object($entityName)) {
             $entity = $entityName;
             $entityName = get_class($entityName);
-            $conditions = array($this->primaryKeyField($entityName) => $this->primaryKey($entity));
+            $conditions = array($this->getPrimaryKeyField($entityName) => $this->getPrimaryKey($entity));
 
             // Run beforeUpdate to know whether or not we can continue
             $resultAfter = null;
@@ -636,7 +631,7 @@ d($config);
                 return false;
             }
 
-            $result = $this->connection($entityName)->delete($this->datasource($entityName), $conditions, $options);
+            $result = $this->getAdapter()->delete($this->getEntityTable($entityName), $conditions, $options);
 
             // Run afterUpdate
             $resultAfter = $this->triggerInstanceHook($entity, 'afterDelete', array($this, $result));
@@ -644,12 +639,27 @@ d($config);
         }
 
         if (is_array($conditions)) {
-            $conditions = array(0 => array('conditions' => $conditions));
-            return $this->connection($entityName)->delete($this->datasource($entityName), $conditions, $options);
+            $conditions = [0 => ['conditions' => $conditions]];
+            return $this->getAdapter()->delete($this->getEntityTable($entityName), $conditions, $options);
         } else {
             throw new $this->exceptionClass(__METHOD__ . " conditions must be an array, given " . gettype($conditions) . "");
         }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     /**
      * Prepare data to be dumped to the data store
@@ -663,114 +673,25 @@ d($config);
         $fields = $entityName::fields();
 
         foreach ($data as $field => $value) {
-            $typeHandler = \Spot\Config::getTypeHandler($fields[$field]['type']);
+            $typeHandler = $this->getConfig()->getTypeHandler($fields[$field]['type']);
             $dumpedData[$field] = $typeHandler::dumpInternal($value);
         }
         return $dumpedData;
     }
 
-    /**
-     * Retrieve data from the data store
-     * @param string $entityName
-     * @param array $data
-     * @return array
-     */
-    public function loadEntity($entityName, $data)
-    {
-        $loadedData = [];
-        $fields = $entityName::fields();
 
-        foreach ($data as $field => $value) {
-            // Skip type checking if dynamic field
-            if (isset($fields[$field])) {
-                $typeHandler = \Spot\Config::getTypeHandler($fields[$field]['type']);
-                $loadedData[$field] = $typeHandler::loadInternal($value);
-            } else {
-                $loadedData[$field] = $value;
-            }
-        }
 
-        return $loadedData;
-    }
 
-    /**
-     * Load defined relations
-     * @param \Spot\Entity|\Spot\Entity\CollectionInterface
-     * @param bool $reload
-     * @return array
-     * @throws \InvalidArgumentException
-     */
-    public function loadRelations($entity, $reload = false)
-    {
-        $entityName = $entity instanceof \Spot\Entity\CollectionInterface ? $entity->entityName() : $entity->toString();
-        if (!$entityName) {
-            throw new \InvalidArgumentException("Cannot load relation with a null \$entityName");
-        }
 
-        $relations = [];
-        $rels = $this->relations($entityName);
-        foreach ($rels as $field => $relation) {
-            $relations[$field] = $this->loadRelation($entity, $field, $reload);
-        }
 
-        return $relations;
-    }
 
-    /**
-     * Load defined relations
-     * @param \Spot\Entity
-     * @param string $name
-     * @param bool $reload
-     * @return \Spot\Relation\AbstractRelation
-     * @throws \InvalidArgumentException
-     */
-    public function loadRelation($entity, $name, $reload = false)
-    {
-        $entityName = $entity instanceof \Spot\Entity\CollectionInterface ? $entity->entityName() : $entity->toString();
-        if (!$entityName) {
-            throw new \InvalidArgumentException("Cannot load relation with a null \$entityName");
-        }
 
-        $rels = $this->relations($entityName);
-        if (isset($rels[$name])) {
-            return $this->getRelationObject($entity, $name, $rels[$name]);
-        }
-    }
 
-    /**
-     * @param \Spot\Entity $entity
-     * @param string $field
-     * @param \Spot\Relation\AbstractRelation
-     * @param bool $reload
-     * @return \Spot\Relation\AbstractRelation
-     * @throws \InvalidArgumentException
-     */
-    protected function getRelationObject($entity, $field, $relation, $reload = false)
-    {
-        $entityName = $entity instanceof \Spot\Entity\CollectionInterface ? $entity->entityName() : $entity->toString();
-        if (!$entityName) {
-            throw new \InvalidArgumentException("Cannot load relation with a null \$entityName");
-        }
 
-        if (isset($entity->$field) && !$reload) {
-            return $entity->$field;
-        }
 
-        $relationEntity = isset($relation['entity']) ? $relation['entity'] : false;
-        if (!$relationEntity) {
-            throw new $this->exceptionClass("Entity for '" . $field . "' relation has not been defined.");
-        }
 
-        // Self-referencing entity relationship?
-        $relationEntity == ':self' && $relationEntity = $entityName;
 
-        // Load relation class to lazy-loading relations on demand
-        $relationClass = '\\Spot\\Relation\\' . $relation['type'];
 
-        // Set field equal to relation class instance
-        $relationObj = new $relationClass($this, $entity, $relation);
-        return $entity->$field = $relationObj;
-    }
 
     /**
      * Run set validation rules on fields
@@ -818,6 +739,14 @@ d($config);
         // Return error result
         return !$entity->hasErrors();
     }
+
+
+
+
+
+
+
+
 
     /**
      * Add event listener
@@ -946,16 +875,10 @@ d($config);
         }
     }
 
-    /**
-     * Check if a value is empty, excluding 0 (annoying PHP issue)
-     *
-     * @param mixed $value
-     * @return boolean
-     */
-    public function isEmpty($value)
-    {
-        return empty($value) && !is_numeric($value);
-    }
+
+
+
+
 
     /**
      * Transaction with closure
@@ -966,27 +889,46 @@ d($config);
      */
     public function transaction(\Closure $work, $entityName = null)
     {
-        $connection = $this->connection($entityName);
+        $adapter = $this->getAdapter();
 
         try {
-            $connection->beginTransaction();
+            $adapter->beginTransaction();
 
             // Execute closure for work inside transaction
             $result = $work($this);
 
             // Rollback on boolean 'false' return
             if ($result === false) {
-                $connection->rollback();
+                $adapter->rollback();
             } else {
-                $connection->commit();
+                $adapter->commit();
             }
         } catch(\Exception $e) {
             // Rollback on uncaught exception
-            $connection->rollback();
+            $adapter->rollback();
 
             // Re-throw exception so we don't bury it
             throw $e;
         }
         return $this;
     }
+
+
+
+
+
+
+
+
+    /**
+     * Get collection class name to use. Optionally set the class name
+     * @param string $collectionClass
+     * @return string
+     */
+    public function collectionClass($collectionClass = null)
+    {
+        null !== $collectionClass && $this->collectionClass = (string) $collectionClass;
+        return $this->collectionClass;
+    }
+
 }

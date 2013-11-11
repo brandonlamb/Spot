@@ -240,10 +240,6 @@ abstract class AbstractAdapter
      */
     public function read(QueryInterface $query, array $options = array())
     {
-        if (($cache = $query->mapper()->getCache()) && $data = $cache->get($query->cacheKey())) {
-            return $query->mapper()->collection($query->entityName(), $data);
-        }
-
         $sql = $this->getQuerySql($query);
         $binds = $this->getBinds($query->params());
 
@@ -855,8 +851,6 @@ abstract class AbstractAdapter
             // Ensure statement is closed
             $stmt->closeCursor();
 
-            $this->cacheCollection($query, $collection);
-
             return $collection;
         } else {
 #           $mapper->addError(__METHOD__ . " - Unable to execute query " . implode(' | ', $this->connection()->errorInfo()));
@@ -886,15 +880,5 @@ abstract class AbstractAdapter
             $stmt->bindValue($field, $value);
         }
         return true;
-    }
-
-    /**
-     * Save collection to cache
-     * @param \Spot\QueryInterface $query
-     * @param \Spot\Entity\CollectionInterface $collection
-     */
-    protected function cacheCollection(\Spot\QueryInterface $query, \Spot\Entity\CollectionInterface $collection)
-    {
-        ($cache = $query->mapper()->getCache()) && $cache->set($query->cacheKey(), $collection->toArray(), $query->cacheTtl());
     }
 }

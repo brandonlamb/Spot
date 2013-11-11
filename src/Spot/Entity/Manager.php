@@ -10,21 +10,56 @@ namespace Spot\Entity;
 class Manager
 {
     /**
+     * @var array
+     */
+    protected $tables = [];
+
+    /**
      * @var array, Field and relation info
      */
-    protected static $properties = array();
-    protected static $fields = array();
-    protected static $fieldsDefined = array();
-    protected static $fieldDefaultValues = array();
-    protected static $relations = array();
-    protected static $primaryKeyField = array();
+    protected static $properties = [];
+    protected static $fields = [];
+    protected static $fieldsDefined = [];
+    protected static $fieldDefaultValues = [];
+    protected static $relations = [];
+    protected static $primaryKeyFields = [];
 
     /**
      * @var array, Connection and datasource info
      */
-    protected static $connection = array();
-    protected static $datasource = array();
-    protected static $datasourceOptions = array();
+    protected static $connection = [];
+    protected static $datasource = [];
+    protected static $datasourceOptions = [];
+
+
+    /**
+     * Get name of table for given entity class
+     * @param string $entityName Name of the entity class
+     * @return string
+     */
+    public function getTable($entityName)
+    {
+        if (!isset($this->tables[$entityName])) {
+            $this->fields($entityName);
+        }
+        return (string) $this->tables[$entityName];
+    }
+
+    /**
+     * Get value of primary key for given row result
+     *
+     * @param string $entityName Name of the entity class
+     * @return string
+     */
+    public function getPrimaryKeyField($entityName)
+    {
+        if (!isset(static::$primaryKeyFields[$entityName])) {
+            $this->fields($entityName);
+        }
+        return static::$primaryKeyFields[$entityName];
+    }
+
+
 
     /**
      * Get formatted fields with all neccesary array keys and values.
@@ -56,7 +91,7 @@ class Manager
         if (null === $entityDatasource || !is_string($entityDatasource)) {
             throw new \InvalidArgumentException("Entity must have a datasource defined. Please define a protected property named 'datasource' on your '" . $entityName . "' entity class.");
         }
-        static::$datasource[$entityName] = $entityDatasource;
+        $this->tables[$entityName] = $entityDatasource;
 
         // Datasource Options
         $entityDatasourceOptions = $entityName::datasourceOptions();
@@ -100,8 +135,8 @@ class Manager
             throw new \InvalidArgumentException($entityName . " Must have at least one field defined.");
         }
 
-        $returnFields = array();
-        static::$fieldDefaultValues[$entityName] = array();
+        $returnFields = [];
+        static::$fieldDefaultValues[$entityName] = [];
 
         foreach ($entityFields as $fieldName => $fieldOpts) {
             // Store field definition exactly how it is defined before modifying it below
@@ -120,7 +155,7 @@ class Manager
 
             // Store primary key
             if (true === $fieldOpts['primary']) {
-                static::$primaryKeyField[$entityName] = $fieldName;
+                static::$primaryKeyFields[$entityName] = $fieldName;
             }
 
             // Store default value
@@ -134,7 +169,7 @@ class Manager
             static::$fields[$entityName] = $returnFields;
 
             // Relations
-            $entityRelations = array();
+            $entityRelations = [];
             $entityRelations = $entityName::relations();
 
             if (!is_array($entityRelations)) {
@@ -186,23 +221,9 @@ class Manager
     {
         $this->fields($entityName);
         if (!isset(static::$relations[$entityName])) {
-            return array();
+            return [];
         }
         return static::$relations[$entityName];
-    }
-
-    /**
-     * Get value of primary key for given row result
-     *
-     * @param string $entityName Name of the entity class
-     * @return string
-     */
-    public function primaryKeyField($entityName)
-    {
-        if (!isset(static::$primaryKeyField[$entityName])) {
-            $this->fields($entityName);
-        }
-        return static::$primaryKeyField[$entityName];
     }
 
     /**
@@ -245,19 +266,6 @@ class Manager
         return static::$connection[$entityName];
     }
 
-    /**
-     * Get name of datasource for given entity class
-     *
-     * @param string $entityName Name of the entity class
-     * @return string
-     */
-    public function datasource($entityName)
-    {
-        if (!isset(static::$datasource[$entityName])) {
-            $this->fields($entityName);
-        }
-        return static::$datasource[$entityName];
-    }
 
     /**
      * Get datasource options for given entity class
