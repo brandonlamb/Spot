@@ -13,7 +13,7 @@ use Spot\Di as DiContainer,
 	Spot\Config,
 	Spot\Query\QueryFactory,
 	Spot\Entity\EntityFactory,
-	Spot\Entity\Collection\Factory\CollectionFactory,
+	Spot\Entity\CollectionFactory,
 	Spot\Entity\Manager as EntityManager,
 	Spot\Relation\Manager as RelationManager,
 	Spot\Events\Manager as EventsManager;

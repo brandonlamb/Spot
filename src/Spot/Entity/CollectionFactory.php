@@ -3,7 +3,7 @@
 /**
  * Entity collection factory
  *
- * @package \Spot\Entity\Collection
+ * @package \Spot\Entity
  * @author Brandon Lamb <brandon@brandonlamb.com>
  */
 
