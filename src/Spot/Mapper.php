@@ -24,11 +24,6 @@ class Mapper
     protected $adapterName = 'db';
 
     /**
-     * @var string, Class name to use for collections
-     */
-    protected $collectionClass = '\\Spot\\Entity\\Collection';
-
-    /**
      * @var array, Array of error messages and types
      */
     protected $errors = [];
@@ -67,6 +62,13 @@ class Mapper
         return $this->adapterName;
     }
 
+
+
+
+
+
+
+
     /**
      * Create and return a new query builder object
      * @return \Spot\Query
@@ -77,42 +79,18 @@ class Mapper
         return $this->queryFactory->create($this, $entityName);
     }
 
-
-
-
     /**
-     * Get table name for given entity.
-     * @param string $entityName, Name of the entity class
-     * @return string, Name of table defined on entity class
+     * Get a new entity object and set given data on it, and save it
+     * @param string $entityClass Name of the entity class
+     * @param array $data array of key/values to set on new Entity instance
+     * @return \Spot\Entity, Instance of $entityClass with $data set on it
      */
-    public function getEntityTable($entityName)
+    public function create($entityClass, array $data)
     {
-        return $this->entityManager->getTable($entityName);
+        $entity = $this->entityFactory->create($entityClass, $data);
+        $this->save($entity);
+        return $entity;
     }
-
-    /**
-     * Get value of primary key for given row result
-     * @param \Spot\Entity $entity Instance of an entity to find the primary key of
-     * @return mixed
-     */
-    public function getPrimaryKey(Entity $entity)
-    {
-        $field = $this->getPrimaryKeyField($entity->toString());
-        return $entity->$field;
-    }
-
-    /**
-     * Get the field name of the primary key for given entity
-     * @param string $entityName Name of the entity class
-     * @return string
-     */
-    public function getPrimaryKeyField($entityName)
-    {
-        return $this->entityManager->getPrimaryKeyField($entityName);
-    }
-
-
-
 
     /**
      * Hydrate an entity from an array of data.
@@ -137,60 +115,6 @@ class Mapper
 
         return $loadedData;
     }
-
-
-
-
-
-    /**
-     * Get formatted fields with all neccesary array keys and values.
-     * Merges defaults with defined field values to ensure all options exist for each field.
-     * @param string, $entityName Name of the entity class
-     * @return array, Defined fields plus all defaults for full array of all possible options
-     */
-    public function fields($entityName)
-    {
-        return $this->entityManager->fields($entityName);
-    }
-
-
-
-
-
-
-
-    /**
-     * Get field information exactly how it is defined in the class
-     * @param string, $entityName Name of the entity class
-     * @return array, Defined fields plus all defaults for full array of all possible options
-     */
-    public function fieldsDefined($entityName)
-    {
-        return $this->entityManager->fieldsDefined($entityName);
-    }
-
-    /**
-     * Check if field exists in defined fields
-     * @param string $entityName Name of the entity class
-     * @param string $field Field name to check for existence
-     */
-    public function fieldExists($entityName, $field)
-    {
-        return array_key_exists($field, $this->fields($entityName));
-    }
-
-    /**
-     * Return field type for given entity's field
-     * @param string $entityName Name of the entity class
-     * @param string $field Field name
-     * @return mixed Field type string or boolean false
-     */
-    public function fieldType($entityName, $field)
-    {
-        $fields = $this->fields($entityName);
-        return $this->fieldExists($entityName, $field) ? $fields[$field]['type'] : false;
-    }
-
 
 
 
@@ -230,14 +154,13 @@ class Mapper
             $results[] = $entity;
 
             // Store primary key of each unique record in set
-            $pk = $this->getPrimaryKey($entity);
+            $pk = $this->entityManager->getPrimaryKey($entity);
             if (!in_array($pk, $resultsIdentities) && !empty($pk)) {
                 $resultsIdentities[] = $pk;
             }
         }
 
-        $collectionClass = $this->collectionClass();
-        $collection = new $collectionClass($results, $resultsIdentities, $entityName);
+        $collection = $this->collectionFactory->create($results, $resultsIdentities, $entityName);
         return $this->with($collection, $entityName, $with);
     }
 
@@ -249,13 +172,13 @@ class Mapper
      * @return \Spot\Entity\CollectionInterface
      */
     public function with($collection, $entityName, $with = []) {
-        $return = $this->triggerStaticHook($entityName, 'beforeWith', array($collection, $with, $this));
+        $return = $this->triggerStaticHook($entityName, 'beforeWith', [$collection, $with, $this]);
         if (false === $return) {
             return $collection;
         }
 
         foreach ($with as $relationName) {
-            $return = $this->triggerStaticHook($entityName, 'loadWith', array($collection, $relationName, $this));
+            $return = $this->triggerStaticHook($entityName, 'loadWith', [$collection, $relationName, $this]);
             if (false === $return) {
                 continue;
             }
@@ -275,7 +198,7 @@ class Mapper
                     // @todo this is awkward, but $resolvedConditions['where'] is returned as an array
                     foreach ($resolvedConditions as $key => $value) {
                         if ($relatedEntity->$key == $value) {
-                            $pk = $this->getPrimaryKey($relatedEntity);
+                            $pk = $this->entityManager->getPrimaryKey($relatedEntity);
                             if (!in_array($pk, $collectedIdentities) && !empty($pk)) {
                                 $collectedIdentities[] = $pk;
                             }
@@ -296,7 +219,7 @@ class Mapper
             }
         }
 
-        $this->triggerStaticHook($entityName, 'afterWith', array($collection, $with, $this));
+        $this->triggerStaticHook($entityName, 'afterWith', [$collection, $with, $this]);
 
         return $collection;
     }
@@ -308,21 +231,6 @@ class Mapper
 
 
 
-
-
-
-    /**
-     * Get a new entity object and set given data on it, and save it
-     * @param string $entityClass Name of the entity class
-     * @param array $data array of key/values to set on new Entity instance
-     * @return \Spot\Entity, Instance of $entityClass with $data set on it
-     */
-    public function create($entityClass, array $data)
-    {
-        $entity = $this->get($entityClass)->data($data);
-        $this->save($entity);
-        return $entity;
-    }
 
 
 
@@ -386,7 +294,7 @@ class Mapper
      */
     public function select($entityName, $fields = '*')
     {
-        return $this->createSql()->select($fields, $this->getEntityTable($entityName));
+        return $this->createSql()->select($fields, $this->entityManager->getTable($entityName));
     }
 
 
@@ -409,7 +317,7 @@ class Mapper
         $entityName = $entity->toString();
 
         // Get the primary key field for the entity class
-        $pkField = $this->getPrimaryKeyField($entityName);
+        $pkField = $this->entityManager->getPrimaryKeyField($entityName);
 
         // Get field options for primary key, merge with overrides (if any) passed
         $options = array_merge($this->entityManager->fields($entityName, $pkField), $options);
@@ -421,8 +329,8 @@ class Mapper
 
         // Run validation
         if ($this->validate($entity)) {
-            $pkField = $this->getPrimaryKeyField($entity->toString());
-            $pk = $this->getPrimaryKey($entity);
+            $pkField = $this->entityManager->getPrimaryKeyField($entity->toString());
+            $pk = $this->entityManager->getPrimaryKey($entity);
             $attributes = $this->entityManager->fields($entity->toString(), $pkField);
 
             // Do an update if pk is specified
@@ -455,7 +363,7 @@ class Mapper
         }
 
         // Use return value from 'afterSave' method if not null
-        $resultAfter = $this->triggerInstanceHook($entity, 'afterSave', array($this, $result));
+        $resultAfter = $this->triggerInstanceHook($entity, 'afterSave', [$this, $result]);
         return (null !== $resultAfter) ? $resultAfter : $result;
     }
 
@@ -473,7 +381,7 @@ class Mapper
         $entityName = $entity->toString();
 
         // Get the primary key field for the entity class
-        $pkField = $this->getPrimaryKeyField($entityName);
+        $pkField = $this->entityManager->getPrimaryKeyField($entityName);
 
         // Get field options for primary key, merge with overrides (if any) passed
         $options = array_merge($this->entityManager->fields($entityName, $pkField), $options);
@@ -485,29 +393,29 @@ class Mapper
         }
 
         // If the primary key is a sequence, serial or identity column, exclude the PK from the array of columns to insert
-        $data = ($options['sequence'] | $options['serial'] | $options['identity'] === true) ? $entity->dataExcept(array($pkField)) : $entity->data();
+        $data = ($options['sequence'] | $options['serial'] | $options['identity'] === true) ? $entity->dataExcept([$pkField]) : $entity->data();
         if (count($data) <= 0) {
             return false;
         }
 
         // Save only known, defined fields
-        $entityFields = $this->fields($entityName);
+        $entityFields = $this->entityManager->fields($entityName);
         $data = array_intersect_key($data, $entityFields);
 
         $data = $this->dumpEntity($entityName, $data);
 
         // Send to adapter
-        $result = $this->db->create($this->getEntityTable($entityName), $data, $options);
+        $result = $this->db->create($this->entityManager->getTable($entityName), $data, $options);
 
         // Update primary key on entity object
-        $pkField = $this->getPrimaryKeyField($entityName);
+        $pkField = $this->entityManager->getPrimaryKeyField($entityName);
         $entity->$pkField = $result;
 
         // Load relations on new entity
         $this->relationManager->loadRelations($entity);
 
         // Run afterInsert
-        $resultAfter = $this->triggerInstanceHook($entity, 'afterInsert', array($this, $result));
+        $resultAfter = $this->triggerInstanceHook($entity, 'afterInsert', [$this, $result]);
 
         return (null !== $resultAfter) ? $resultAfter : $result;
     }
@@ -533,20 +441,20 @@ class Mapper
         $data = $entity->dataModified();
 
         // Save only known, defined fields
-        $entityFields = $this->fields($entityName);
+        $entityFields = $this->entityManager->fields($entityName);
         $data = array_intersect_key($data, $entityFields);
 
         // Handle with adapter
         if (count($data) > 0) {
             $data = $this->dumpEntity($entityName, $data);
             $result = $this->db->update(
-                $this->getEntityTable($entityName),
+                $this->entityManager->getTable($entityName),
                 $data,
-                [$this->getPrimaryKeyField($entityName) => $this->getPrimaryKey($entity)]
+                [$this->entityManager->getPrimaryKeyField($entityName) => $this->entityManager->getPrimaryKey($entity)]
             );
 
             // Run afterUpdate
-            $resultAfter = $this->triggerInstanceHook($entity, 'afterUpdate', array($this, $result));
+            $resultAfter = $this->triggerInstanceHook($entity, 'afterUpdate', [$this, $result]);
         } else {
             $result = true;
         }
@@ -586,7 +494,7 @@ class Mapper
         if (is_object($entityName)) {
             $entity = $entityName;
             $entityName = get_class($entityName);
-            $conditions = array($this->getPrimaryKeyField($entityName) => $this->getPrimaryKey($entity));
+            $conditions = [$this->entityManager->getPrimaryKeyField($entityName) => $this->entityManager->getPrimaryKey($entity)];
 
             // Run beforeUpdate to know whether or not we can continue
             $resultAfter = null;
@@ -594,16 +502,16 @@ class Mapper
                 return false;
             }
 
-            $result = $this->db->delete($this->getEntityTable($entityName), $conditions, $options);
+            $result = $this->db->delete($this->entityManager->getTable($entityName), $conditions, $options);
 
             // Run afterUpdate
-            $resultAfter = $this->triggerInstanceHook($entity, 'afterDelete', array($this, $result));
+            $resultAfter = $this->triggerInstanceHook($entity, 'afterDelete', [$this, $result]);
             return (null !== $resultAfter) ? $resultAfter : $result;
         }
 
         if (is_array($conditions)) {
             $conditions = [0 => ['conditions' => $conditions]];
-            return $this->db->delete($this->getEntityTable($entityName), $conditions, $options);
+            return $this->db->delete($this->entityManager->getTable($entityName), $conditions, $options);
         } else {
             throw new $this->exceptionClass(__METHOD__ . " conditions must be an array, given " . gettype($conditions) . "");
         }
@@ -669,7 +577,7 @@ class Mapper
         $v = new \Valitron\Validator($entity->data());
 
         // Check validation rules on each feild
-        foreach ($this->fields($entityName) as $field => $fieldAttrs) {
+        foreach ($this->entityManager->fields($entityName) as $field => $fieldAttrs) {
             // Required field
             if (isset($fieldAttrs['required']) && true === $fieldAttrs['required']) {
                 $v->rule('required', $field);
@@ -677,7 +585,7 @@ class Mapper
 
             // Unique field
             if (isset($fieldAttrs['unique']) && true === $fieldAttrs['unique']) {
-                if ($this->first($entityName, array($field => $entity->$field)) !== false) {
+                if ($this->first($entityName, [$field => $entity->$field]) !== false) {
                     $entity->error($field, "" . ucwords(str_replace('_', ' ', $field)) . " '" . $entity->$field . "' is already taken.");
                 }
             }
@@ -691,8 +599,8 @@ class Mapper
                         $ruleName = $rule;
                     }
 
-                    $params = array_merge(array($ruleName, $field), $params);
-                    call_user_func_array(array($v, 'rule'), $params);
+                    $params = array_merge([$ruleName, $field], $params);
+                    call_user_func_array([$v, 'rule'], $params);
                 }
             }
         }
@@ -770,7 +678,7 @@ class Mapper
             $hooks = $this->hooks[$entityName][$hook];
         }
 
-        if (is_callable(array($entityName, 'hooks'))) {
+        if (is_callable([$entityName, 'hooks'])) {
             $entityHooks = $entityName::hooks();
             if (isset($entityHooks[$hook])) {
                 // If you pass an object/method combination
@@ -795,15 +703,15 @@ class Mapper
     protected function triggerInstanceHook($object, $hook, $arguments = [])
     {
         if (is_object($arguments) || !is_array($arguments)) {
-            $arguments = array($arguments);
+            $arguments = [$arguments];
         }
 
         $ret = null;
         foreach($this->getHooks(get_class($object), $hook) as $callable) {
-            if (is_callable(array($object, $callable))) {
-                $ret = call_user_func_array(array($object, $callable), $arguments);
+            if (is_callable([$object, $callable])) {
+                $ret = call_user_func_array([$object, $callable], $arguments);
             } else {
-                $args = array_merge(array($object), $arguments);
+                $args = array_merge([$object], $arguments);
                 $ret = call_user_func_array($callable, $args);
             }
 
@@ -826,7 +734,7 @@ class Mapper
     protected function triggerStaticHook($objectClass, $hook, $arguments)
     {
         if (is_object($arguments) || !is_array($arguments)) {
-            $arguments = array($arguments);
+            $arguments = [$arguments];
         }
 
         array_unshift($arguments, $objectClass);
@@ -875,23 +783,4 @@ class Mapper
         }
         return $this;
     }
-
-
-
-
-
-
-
-
-    /**
-     * Get collection class name to use. Optionally set the class name
-     * @param string $collectionClass
-     * @return string
-     */
-    public function collectionClass($collectionClass = null)
-    {
-        null !== $collectionClass && $this->collectionClass = (string) $collectionClass;
-        return $this->collectionClass;
-    }
-
 }

@@ -9,7 +9,8 @@
 namespace Spot\Entity;
 
 use Spot\Di as DiContainer,
-    Spot\Di\InjectableTrait;
+    Spot\Di\InjectableTrait,
+    Spot\Entity\EntityInterface;
 
 class Manager
 {
@@ -74,6 +75,16 @@ class Manager
         return static::$primaryKeyFields[$entityName];
     }
 
+    /**
+     * Get value of primary key for given entity
+     * @param \Spot\Entity\EntityInterface $entity Instance of an entity to find the primary key of
+     * @return mixed
+     */
+    public function getPrimaryKey(EntityInterface $entity)
+    {
+        $field = $this->getPrimaryKeyField($entity->toString());
+        return $entity->$field;
+    }
 
 
     /**
@@ -254,7 +265,7 @@ class Manager
     }
 
     /**
-     * Return field type
+     * Return field type for given entity's field
      *
      * @param string $entityName Name of the entity class
      * @param string $field Field name

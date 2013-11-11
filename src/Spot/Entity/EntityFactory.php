@@ -10,20 +10,20 @@
 
 namespace Spot\Entity;
 
-use Spot\Relation\HasRelationManagerTrait;
+use Spot\Di as DiContainer,
+    Spot\Di\InjectableTrait;
 
 class EntityFactory
 {
-	use HasEntityManagerTrait, HasRelationManagerTrait;
+	use InjectableTrait;
 
     /**
-     * Get the field name of the primary key for given entity
-     * @param string $entityName Name of the entity class
-     * @return string
+     * Constructor
+     * @param \Spot\Di $di
      */
-    public function getPrimaryKeyField($entityName)
+    public function __construct(DiContainer $di)
     {
-        return $this->getEntityManager()->getPrimaryKeyField($entityName);
+        $this->setDi($di);
     }
 
     /**
@@ -37,23 +37,23 @@ class EntityFactory
         if (false === $identifier) {
             // No parameter passed, create a new empty entity object
             $entity = new $entityClass();
-            $entity->data(array($this->getPrimaryKeyField($entityClass) => null));
-        } elseif (is_array($identifier)) {
+            $entity->data([$this->entityManager->getPrimaryKeyField($entityClass) => null]);
+        } else if (is_array($identifier)) {
             // An array was passed, create a new entity with that data
             $entity = new $entityClass($identifier);
-            $entity->data(array($this->getPrimaryKeyField($entityClass) => null));
+            $entity->data([$this->entityManager->getPrimaryKeyField($entityClass) => null]);
         } else {
             // Scalar, find record by primary key
-            $entity = $this->first($entityClass, array($this->getPrimaryKeyField($entityClass) => $identifier));
+            $entity = $this->first($entityClass, [$this->entityManager->getPrimaryKeyField($entityClass) => $identifier]);
             if (!$entity) {
                 return false;
             }
-            $this->getRelationManager()->loadRelations($entity);
+            $this->relationManager->loadRelations($entity);
         }
 
         // Set default values if entity not loaded
-        if (!$this->getPrimaryKey($entity)) {
-            $entityDefaultValues = $this->getEntityManager()->fieldDefaultValues($entityClass);
+        if (!$this->entityManager->getPrimaryKey($entity)) {
+            $entityDefaultValues = $this->entityManager->fieldDefaultValues($entityClass);
             if (count($entityDefaultValues) > 0) {
                 $entity->data($entityDefaultValues);
             }

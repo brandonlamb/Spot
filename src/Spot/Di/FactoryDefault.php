@@ -12,6 +12,8 @@ namespace Spot\Di;
 use Spot\Di as DiContainer,
 	Spot\Config,
 	Spot\Query\QueryFactory,
+	Spot\Entity\EntityFactory,
+	Spot\Entity\Collection\CollectionFactory,
 	Spot\Entity\Manager as EntityManager,
 	Spot\Relation\Manager as RelationManager;
 
@@ -43,6 +45,18 @@ class FactoryDefault Extends DiContainer implements DiInterface
 		$this->storage['queryFactory'] = function () {
 			static $resource;
 			null === $resource && $resource = new QueryFactory();
+			return $resource;
+		};
+
+		$this->storage['entityFactory'] = function () {
+			static $resource;
+			null === $resource && $resource = new EntityFactory();
+			return $resource;
+		};
+
+		$this->storage['collectionFactory'] = function () {
+			static $resource;
+			null === $resource && $resource = new CollectionFactory();
 			return $resource;
 		};
 	}

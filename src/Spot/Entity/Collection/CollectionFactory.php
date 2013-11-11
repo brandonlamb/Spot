@@ -1,13 +1,13 @@
 <?php
 
 /**
- * Query factory
+ * Entity collection factory
  *
- * @package \Spot\Query
+ * @package \Spot\Entity\Collection
  * @author Brandon Lamb <brandon@brandonlamb.com>
  */
 
-namespace Spot\Query;
+namespace Spot\Entity\Collection;
 
 use Spot\Mapper;
 
@@ -16,7 +16,7 @@ class QueryFactory
 	/**
 	 * @var string, name of query class to instantiate
 	 */
-	protected $className = '\\Spot\\Query';
+	protected $className = '\\Spot\\Entity\\Collection';
 
 	/**
 	 * Constructor
@@ -48,13 +48,14 @@ class QueryFactory
 	}
 
 	/**
-	 * Create a query class
-	 * @param \Spot\Mapper $mapper
+	 * Create an entity collection
+	 * @param array $results
+	 * @param array $resultsIdentities
 	 * @param string $entityName
-	 * @return mixed
+	 * @return \Spot\Entity\CollectionInterface
 	 */
-	public function create(Mapper $mapper, $entityName)
+	public function create($results, $resultsIdentities, $entityName)
 	{
-		return new $this->className($mapper, $entityName);
+		return new $this->className($results, $resultsIdentities, $entityName);
 	}
 }
