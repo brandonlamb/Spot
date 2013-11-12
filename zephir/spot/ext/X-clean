@@ -1,0 +1,5 @@
+#!/bin/bash
+make clean
+phpize --clean
+rm -r spot.c spot.h spot
+#rm config.m4

@@ -152,27 +152,27 @@ abstract class AbstractEntity implements Serializable, ArrayAccess
         // Check for custom getter method (override)
         $getMethod = 'get' . $offset;
 
-        $value = null;
-
         // We can't use isset for dataModified because it returns false for NULL values
         if (array_key_exists($offset, $this->dataModified)) {
-            $value =  $this->dataModified[$offset];
-        } elseif (isset($this->data[$offset])) {
-            $value = $this->data[$offset];
-        } else if (method_exists($this, $getMethod) && !array_key_exists($offset, $this->getterIgnore)) {
+            return $this->dataModified[$offset];
+        }
+
+        if (isset($this->data[$offset])) {
+            return $this->data[$offset];
+        }
+
+        if (method_exists($this, $getMethod) && !array_key_exists($offset, $this->getterIgnore)) {
             // Tell this function to ignore the overload on further calls for this variable
             $this->getterIgnore[$offset] = 1;
 
             // Call custom getter
-            $value = $this->$getMethod();
+            return $this->$getMethod();
 
             // Remove ignore rule
             unset($this->getterIgnore[$offset]);
-        } else {
-            $value = $default;
         }
 
-        return $value;
+        return $default;
     }
 
     /**
@@ -190,7 +190,7 @@ abstract class AbstractEntity implements Serializable, ArrayAccess
             $value = call_user_func($fields[$field]['filter'], $value);
         } else if (method_exists($this, $setMethod) && !array_key_exists($field, $this->setterIgnore)) {
             // Tell this function to ignore the overload on further calls for this variable
-            $this->_setterIgnore[$field] = 1;
+            $this->setterIgnore[$field] = 1;
 
             // Call custom setter
             $value = $this->$setMethod($value);
@@ -493,7 +493,7 @@ abstract class AbstractEntity implements Serializable, ArrayAccess
         // Return errors for given field
         if (is_string($msgs)) {
             return isset($this->errors[$msgs]) ? $this->errors[$msgs] : [];
-        } elseif (is_array($msgs)) {
+        } else if (is_array($msgs)) {
             // Set error messages from given array
             $this->errors = $msgs;
         }

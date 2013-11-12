@@ -54,7 +54,7 @@ class Manager implements ArrayAccess
      */
     public function offsetSet($offset, $value)
     {
-    	$this->hooks[()]
+    	$this->hooks[(string) $offset] = $value;
     }
 
     /**
