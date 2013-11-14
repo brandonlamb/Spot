@@ -3,11 +3,11 @@
 /**
  * Query factory
  *
- * @package \Spot\Query
+ * @package \Spot\Factory
  * @author Brandon Lamb <brandon@brandonlamb.com>
  */
 
-namespace Spot\Query;
+namespace Spot\Factory;
 
 use Spot\Mapper;
 

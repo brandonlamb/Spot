@@ -3,11 +3,11 @@
 /**
  * Entity collection factory
  *
- * @package \Spot\Entity
+ * @package \Spot\Factory
  * @author Brandon Lamb <brandon@brandonlamb.com>
  */
 
-namespace Spot\Entity\Collection;
+namespace Spot\Factory;
 
 use Spot\Mapper;
 

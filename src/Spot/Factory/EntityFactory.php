@@ -4,11 +4,11 @@
  * Spot Entity Factory
  *
  * Creates entities, optionally hydrating their data
- * @package \Spot\Entity
+ * @package \Spot\Factory
  * @author Brandon Lamb <brandon@brandonlamb.com>
  */
 
-namespace Spot\Entity;
+namespace Spot\Factory;
 
 use Spot\Di as DiContainer,
     Spot\Di\InjectableTrait;
