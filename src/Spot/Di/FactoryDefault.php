@@ -9,14 +9,14 @@
 
 namespace Spot\Di;
 
-use Spot\Di as DiContainer,
+use Spot\Di\Container as DiContainer,
 	Spot\Config,
-	Spot\Query\QueryFactory,
-	Spot\Entity\EntityFactory,
-	Spot\Entity\CollectionFactory,
-	Spot\Entity\Manager as EntityManager,
-	Spot\Relation\Manager as RelationManager,
-	Spot\Events\Manager as EventsManager;
+	Spot\Factory\QueryFactory,
+	Spot\Factory\EntityFactory,
+	Spot\Factory\CollectionFactory,
+	Spot\Manager\EntityManager,
+	Spot\Manager\RelationManager,
+	Spot\Manager\EventsManager;
 
 class FactoryDefault Extends DiContainer implements DiInterface
 {

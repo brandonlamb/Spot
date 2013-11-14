@@ -3,7 +3,7 @@
 /**
  * Events manager
  *
- * @package \Spot\Events
+ * @package \Spot\Manager
  * @author Brandon Lamb <brandon@brandonlamb.com>
  */
 
@@ -12,7 +12,7 @@ use Spot\Di as DiContainer,
     Spot\Di\InjectableTrait,
     ArrayAccess;
 
-class Manager implements ArrayAccess
+class EventsManager implements ArrayAccess
 {
 	use InjectableTrait;
 

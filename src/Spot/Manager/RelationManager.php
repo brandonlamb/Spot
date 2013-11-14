@@ -2,11 +2,11 @@
 
 /**
  * Entity Relation Manager
- * @package \Spot\Relation
+ * @package \Spot\Manager
  * @author Brandon Lamb <brandon@brandonlamb.com>
  */
 
-namespace Spot\Relation;
+namespace Spot\Manager;
 
 use Spot\Di as DiContainer,
     Spot\Di\InjectableTrait,

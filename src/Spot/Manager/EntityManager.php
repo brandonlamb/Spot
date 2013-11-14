@@ -3,16 +3,16 @@
 /**
  * Entity Manager for storing information about entities
  *
- * @package Spot
+ * @package Spot\Manager
  */
 
-namespace Spot\Entity;
+namespace Spot\Manager;
 
 use Spot\Di as DiContainer,
     Spot\Di\InjectableTrait,
     Spot\Entity\EntityInterface;
 
-class Manager
+class EntityManager
 {
     use InjectableTrait;
 
