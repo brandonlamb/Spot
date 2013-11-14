@@ -33,20 +33,17 @@ class Manager
     /**
      * @var array, Field and relation info
      */
-    protected static $properties = [];
-    protected static $fields = [];
-    protected static $fieldsDefined = [];
-    protected static $fieldDefaultValues = [];
-    protected static $relations = [];
-    protected static $primaryKeyFields = [];
+    protected $properties = [];
+    protected $fields = [];
+    protected $fieldsDefined = [];
+    protected $fieldDefaultValues = [];
+    protected $relations = [];
+    protected $primaryKeyFields = [];
 
     /**
-     * @var array, Connection and datasource info
+     * @var array, datasource info
      */
-    protected static $connection = [];
-    protected static $datasource = [];
-    protected static $datasourceOptions = [];
-
+    protected $datasource = [];
 
     /**
      * Get name of table for given entity class
@@ -69,10 +66,10 @@ class Manager
      */
     public function getPrimaryKeyField($entityName)
     {
-        if (!isset(static::$primaryKeyFields[$entityName])) {
+        if (!isset($this->primaryKeyFields[$entityName])) {
             $this->fields($entityName);
         }
-        return static::$primaryKeyFields[$entityName];
+        return $this->primaryKeyFields[$entityName];
     }
 
     /**
@@ -106,8 +103,8 @@ class Manager
             throw new \Spot\Exception\Manager($entityName . " must be subclass of '\Spot\Entity\EntityInterface'.");
         }
 
-        if (isset(static::$fields[$entityName])) {
-            $returnFields = static::$fields[$entityName];
+        if (isset($this->fields[$entityName])) {
+            $returnFields = $this->fields[$entityName];
             return null === $field ? $returnFields : $returnFields[$field];
         }
 
@@ -118,16 +115,6 @@ class Manager
             throw new \InvalidArgumentException("Entity must have a datasource defined. Please define a protected property named 'datasource' on your '" . $entityName . "' entity class.");
         }
         $this->tables[$entityName] = $entityDatasource;
-
-        // Datasource Options
-        $entityDatasourceOptions = $entityName::datasourceOptions();
-        static::$datasourceOptions[$entityName] = $entityDatasourceOptions;
-
-        // Connection info
-        $entityConnection = $entityName::connection();
-
-        // If no adapter specified, Spot will use default one from config object (or first one set if default is not explicitly set)
-        static::$connection[$entityName] = ($entityConnection) ? $entityConnection : false;
 
         // Default settings for all fields
         $fieldDefaults = array(
@@ -162,12 +149,12 @@ class Manager
         }
 
         $returnFields = [];
-        static::$fieldDefaultValues[$entityName] = [];
+        $this->fieldDefaultValues[$entityName] = [];
 
         foreach ($entityFields as $fieldName => $fieldOpts) {
             // Store field definition exactly how it is defined before modifying it below
             if ($fieldOpts['type'] != 'relation') {
-                static::$fieldsDefined[$entityName][$fieldName] = $fieldOpts;
+                $this->fieldsDefined[$entityName][$fieldName] = $fieldOpts;
             }
 
             // Format field will full set of default options
@@ -181,18 +168,18 @@ class Manager
 
             // Store primary key
             if (true === $fieldOpts['primary']) {
-                static::$primaryKeyFields[$entityName] = $fieldName;
+                $this->primaryKeyFields[$entityName] = $fieldName;
             }
 
             // Store default value
             if (null !== $fieldOpts['default']) {
-                static::$fieldDefaultValues[$entityName][$fieldName] = $fieldOpts['default'];
+                $this->fieldDefaultValues[$entityName][$fieldName] = $fieldOpts['default'];
             } else {
-                static::$fieldDefaultValues[$entityName][$fieldName] = null;
+                $this->fieldDefaultValues[$entityName][$fieldName] = null;
             }
 
             $returnFields[$fieldName] = $fieldOpts;
-            static::$fields[$entityName] = $returnFields;
+            $this->fields[$entityName] = $returnFields;
 
             // Relations
             $entityRelations = [];
@@ -203,7 +190,7 @@ class Manager
             }
 
             foreach ($entityRelations as $relationAlias => $relationOpts) {
-                static::$relations[$entityName][$relationAlias] = $relationOpts;
+                $this->relations[$entityName][$relationAlias] = $relationOpts;
             }
         }
         return null === $field ? $returnFields : $returnFields[$field];
@@ -217,10 +204,10 @@ class Manager
      */
     public function fieldsDefined($entityName)
     {
-        if (!isset(static::$fieldsDefined[$entityName])) {
+        if (!isset($this->fieldsDefined[$entityName])) {
             $this->fields($entityName);
         }
-        return static::$fieldsDefined[$entityName];
+        return $this->fieldsDefined[$entityName];
     }
 
     /**
@@ -231,10 +218,10 @@ class Manager
      */
     public function fieldDefaultValues($entityName)
     {
-        if (!isset(static::$fieldDefaultValues[$entityName])) {
+        if (!isset($this->fieldDefaultValues[$entityName])) {
             $this->fields($entityName);
         }
-        return static::$fieldDefaultValues[$entityName];
+        return $this->fieldDefaultValues[$entityName];
     }
 
     /**
@@ -246,10 +233,10 @@ class Manager
     public function relations($entityName)
     {
         $this->fields($entityName);
-        if (!isset(static::$relations[$entityName])) {
+        if (!isset($this->relations[$entityName])) {
             return [];
         }
-        return static::$relations[$entityName];
+        return $this->relations[$entityName];
     }
 
     /**
@@ -275,35 +262,5 @@ class Manager
     {
         $fields = $this->fields($entityName);
         return $this->fieldExists($entityName, $field) ? $fields[$field]['type'] : false;
-    }
-
-    /**
-     * Get defined connection to use for entity
-     *
-     * @param string $entityName Name of the entity class
-     * @return string
-     */
-    public function connection($entityName)
-    {
-        $this->fields($entityName);
-        if (!isset(static::$connection[$entityName])) {
-            return false;
-        }
-        return static::$connection[$entityName];
-    }
-
-
-    /**
-     * Get datasource options for given entity class
-     *
-     * @param array Options to pass
-     * @return string
-     */
-    public function datasourceOptions($entityName)
-    {
-        if (!isset(static::$datasourceOptions[$entityName])) {
-            $this->fields($entityName);
-        }
-        return static::$datasourceOptions[$entityName];
     }
 }

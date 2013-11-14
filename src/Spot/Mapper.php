@@ -78,16 +78,14 @@ class Mapper
     }
 
     /**
-     * Get a new entity object and set given data on it, and save it
+     * Get a new entity object and set given data on it
      * @param string $entityClass Name of the entity class
      * @param array $data array of key/values to set on new Entity instance
      * @return \Spot\Entity, Instance of $entityClass with $data set on it
      */
-    public function create($entityClass, array $data)
+    public function createEntity($entityClass, array $data)
     {
-        $entity = $this->entityFactory->create($entityClass, $data);
-        $this->save($entity);
-        return $entity;
+        return $this->entityFactory->create($entityClass, $data);
     }
 
     /**

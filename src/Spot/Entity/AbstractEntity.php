@@ -3,36 +3,19 @@
 /**
  * Abstract Entity object
  *
+ * This abstract class implements the EntityInterface with the intention that most
+ * entity/model sub-classes will just extent this class to get 95% of their implementation.
+ *
  * @package \Spot\Entity
+ * @author Brandon lamb <brandon@brandonlamb.com>
  */
 
 namespace Spot\Entity;
 
-use Serializable,
-    ArrayAccess;
+use Serializable, ArrayAccess;
 
-abstract class AbstractEntity implements Serializable, ArrayAccess
+abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterface
 {
-    /**
-     * @var string, the name of the entity's schema
-     */
-    protected $schema;
-
-    /**
-     * @var string, the name of the sequence to use when insert new entitys
-     */
-    protected $sequence;
-
-    /**
-     * @var string, the table name for the entity
-     */
-    protected $table;
-
-    /**
-     * @var array
-     */
-    protected $datasourceOptions = [];
-
     /**
      * @var array, Entity data storage
      */
@@ -76,47 +59,39 @@ abstract class AbstractEntity implements Serializable, ArrayAccess
     }
 
     /**
-     * Enable isset() for object properties
-     * @return bool
+     * {@inheritDoc}
      */
     public function __isset($offset)
     {
-        return $this->offsetExists($offset);
+        return $this->has($offset);
     }
 
     /**
-     * Getter for field properties
-     * @param string $offset
-     * @return mixed
+     * {@inheritDoc}
      */
     public function __get($offset)
     {
-        return $this->offsetGet($offset);
+        return $this->get($offset);
     }
 
     /**
-     * Setter for field properties
-     * @param string $offset
-     * @param mixed $value
-     * @return $this
+     * {@inheritDoc}
      */
     public function __set($offset, $value)
     {
-        return $this->offsetSet($offset, $value);
+        $this->set($offset, $value);
     }
 
     /**
-     * String representation of the class
-     * @return string
+     * {@inheritDoc}
      */
     public function __toString()
     {
-        return $this->toString();
+        return get_called_class();
     }
 
     /**
-     * Serialize entity data
-     * @return string
+     * {@inheritDoc}
      */
     public function serialize()
     {
@@ -136,18 +111,48 @@ abstract class AbstractEntity implements Serializable, ArrayAccess
      */
     public function offsetExists($offset)
     {
+        return $this->has($offset);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function offsetGet($offset)
+    {
+        return $this->get($offset);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function offsetSet($field, $value)
+    {
+        $this->set($offset, $value);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function offsetUnset($offset)
+    {
+        unset($this->data[$offset]);
+        unset($this->dataModified[$offset]);
+    }
+
+    /**
+     * Check if model contains property
+     * @param string $offset
+     * @return bool
+     */
+    public function has($offset)
+    {
         return isset($this->data[$offset]) || isset($this->dataModified[$offset]);
     }
 
     /**
-     * Getter for field properties. This method will attempt to call a
-     * get$field() method if it exists, otherwise the field from the entity's
-     * data storage array.
-     * @param string $offset
-     * @param mixed $default, value to return if field doesnt exist
-     * @return mixed
+     * {@inheritDoc}
      */
-    public function offsetGet($offset, $default = null)
+    public function get($offset, $default = null)
     {
         // Check for custom getter method (override)
         $getMethod = 'get' . $offset;
@@ -166,7 +171,7 @@ abstract class AbstractEntity implements Serializable, ArrayAccess
             $this->getterIgnore[$offset] = 1;
 
             // Call custom getter
-            return $this->$getMethod();
+            $default = $this->$getMethod();
 
             // Remove ignore rule
             unset($this->getterIgnore[$offset]);
@@ -177,8 +182,9 @@ abstract class AbstractEntity implements Serializable, ArrayAccess
 
     /**
      * {@inheritDoc}
+     * @todo - figure out how to remove dependency on Config static method
      */
-    public function offsetSet($field, $value)
+    public function set($offset, $value)
     {
         // Check for custom setter method (override)
         $setMethod = 'set' . $field;
@@ -205,100 +211,8 @@ abstract class AbstractEntity implements Serializable, ArrayAccess
 
         // Set the data value
         $this->dataModified[$field] = $value;
-    }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function offsetUnset($offset)
-    {
-        unset($this->data[$offset]);
-        unset($this->dataModified[$offset]);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function get($offset, $default = null)
-    {
-        return $this->offsetGet($offset, $default);
-    }
-    /**
-     * {@inheritDoc}
-     */
-    public function set($offset, $value)
-    {
-        $this->offsetSet($offset, $value);
         return $this;
-    }
-
-    /**
-     * String representation of the class
-     * @return string
-     */
-    public function toString()
-    {
-        return get_called_class();
-    }
-
-    /**
-     * Return entity data array
-     * @return array
-     */
-    public function toArray()
-    {
-        return $this->data();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function setSchema($schema)
-    {
-        $this->schema = (string) $schema;
-        return $this;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getSchema()
-    {
-        return (string) $this->schema;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function setTable($table)
-    {
-        $this->table = (string) $table;
-        return $this;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getTable()
-    {
-        return (string) $this->table;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function setSequence($sequence)
-    {
-        $this->sequence = (string) $sequence;
-        return $this;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getSequence()
-    {
-        return (string) $this->sequence;
     }
 
     /**
@@ -350,10 +264,7 @@ abstract class AbstractEntity implements Serializable, ArrayAccess
     }
 
     /**
-     * Gets data that has not been modified since object construct,
-     * optionally allowing for selecting a single field
-     * @param string $field
-     * @return mixed
+     * {@inheritDoc}
      */
     public function getUnmodified($field = null)
     {
@@ -365,14 +276,18 @@ abstract class AbstractEntity implements Serializable, ArrayAccess
 
     /**
      * {@inheritDoc}
+     */
+    public function isEntityModified()
+    {
+       return (bool) !!count($this->getModified());
+    }
+
+    /**
+     * {@inheritDoc}
      * @throws \InvalidArgumentException
      */
-    public function isModified($offset = null)
+    public function isFieldModified($offset = null)
     {
-        if (null === $offset) {
-           return (bool) !!count($this->getModified());
-        }
-
         if (array_key_exists($offset, $this->getModified())) {
             if (null === $this->getModified($offset) || null === $this->getUnmodified($offset)) {
                 // Use strict comparison for null values, non-strict otherwise
@@ -386,53 +301,44 @@ abstract class AbstractEntity implements Serializable, ArrayAccess
         throw new \InvalidArgumentExceptio("$offset is not a valid entity property");
     }
 
-
-
-
-
-
-
-
-
-
-
     /**
-     * Datasource options getter/setter
-     * @param array $dsOpts
-     * @return array
+     * {@inheritDoc}
      */
-    public static function datasourceOptions(array $dsOpts = null)
+    public function getTable()
     {
-        null !== $dsOpts && static::$datasourceOptions = $dsOpts;
-        return static::$datasourceOptions;
+        return '';
     }
 
     /**
-     * Return defined fields of the entity
-     * @return array
+     * {@inheritDoc}
      */
-    public static function fields()
+    public function getSequence()
+    {
+        return '';
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getHooks()
     {
         return [];
     }
 
     /**
-     * Return defined hooks of the entity
-     * @return array
+     * {@inheritDoc}
      */
-    public static function hooks()
+    public function getRelations()
     {
         return [];
     }
 
-    /**
-     * Return defined fields of the entity
-     * @return array
-     */
-    public static function relations()
-    {
-        return [];
-    }
+
+
+
+
+
+
 
     /**
      * Set all field values to their defualts or null
@@ -440,7 +346,7 @@ abstract class AbstractEntity implements Serializable, ArrayAccess
      */
     protected function initFields()
     {
-        $fields = static::fields();
+        $fields = $this->getMetaData();
         foreach ($fields as $field => $opts) {
             if (!isset($this->data[$field])) {
                 $this->data[$field] = isset($opts['default']) ? $opts['default'] : null;
@@ -448,6 +354,11 @@ abstract class AbstractEntity implements Serializable, ArrayAccess
         }
         return $this;
     }
+
+
+
+
+
 
 
 
@@ -475,6 +386,7 @@ abstract class AbstractEntity implements Serializable, ArrayAccess
      * @param string $field OPTIONAL field name
      * @return bool
      */
+/*
     public function hasErrors($field = null)
     {
         if (null !== $field) {
@@ -482,12 +394,13 @@ abstract class AbstractEntity implements Serializable, ArrayAccess
         }
         return count($this->errors) > 0;
     }
-
+*/
     /**
      * Error message getter/setter
      * @param $field string|array String return errors with field key, array sets errors
      * @return self|array|boolean Setter return self, getter returns array or boolean if key given and not found
      */
+/*
     public function errors($msgs = null)
     {
         // Return errors for given field
@@ -500,13 +413,14 @@ abstract class AbstractEntity implements Serializable, ArrayAccess
 
         return $this->errors;
     }
-
+*/
     /**
      * Add an error to error messages array
      * @param string $field Field name that error message relates to
      * @param mixed $msg Error message text - String or array of messages
      * @return $this
      */
+/*
     public function error($field, $msg)
     {
         if (is_array($msg)) {
@@ -520,4 +434,5 @@ abstract class AbstractEntity implements Serializable, ArrayAccess
         }
         return $this;
     }
+*/
 }

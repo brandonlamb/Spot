@@ -28,45 +28,6 @@ interface EntityInterface
     public function set($offset, $value);
 
     /**
-     * Set the schema name for the entity.
-     * @param string $schema, The name of the schema
-     * @return \Spot\Entity\EntityInterface
-     */
-    public function setSchema($schema);
-
-    /**
-     * Get the schema name for the entity.
-     * @return string
-     */
-    public function getSchema();
-
-    /**
-     * Set the table for the entity
-     * @param string $table, The name of the table
-     * @return \Spot\Entity\EntityInterface
-     */
-    public function setTable($table);
-
-    /**
-     * Get the table name for the entity.
-     * @return string
-     */
-    public function getTable();
-
-    /**
-     * Set the sequence name for the entity.
-     * @param string $sequence, The name of the sequence, (ie posts_id_seq)
-     * @return \Spot\Entity\EntityInterface
-     */
-    public function setSequence($sequence);
-
-    /**
-     * Get the sequence name for the entity.
-     * @return string
-     */
-    public function getSequence();
-
-    /**
      * Set the entity data
      * @param array $data
      * @param bool $modified
@@ -97,10 +58,45 @@ interface EntityInterface
     public function getUnmodified($field = null);
 
     /**
-     * Check if a field or entire entity has been modified. If no field name
-     * is passed in then return whether any fields have been changed
+     * Check if the entire entity has been modified
+     * @return bool
+     */
+    public function isEntityModified();
+
+    /**
+     * Check if a field has been modified
      * @param string $offset
      * @return bool
      */
-    public function isModified($offset = null);
+    public function isFieldModified($offset = null);
+
+    /**
+     * Get entity meta data, containing information on columns
+     * @return array
+     */
+    public function getMetaData();
+
+    /**
+     * Get the table name for the entity.
+     * @return string
+     */
+    public function getTable();
+
+    /**
+     * Get the sequence name for the entity.
+     * @return string
+     */
+    public function getSequence();
+
+    /**
+     * Return defined hooks of the entity
+     * @return array
+     */
+    public function getHooks();
+
+    /**
+     * Return defined fields of the entity
+     * @return array
+     */
+    public function getRelations();
 }

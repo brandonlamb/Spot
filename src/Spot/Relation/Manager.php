@@ -63,7 +63,7 @@ class Manager
             throw new \InvalidArgumentException("Cannot load relation with a null \$entityName");
         }
 
-		$rels = $this->getEntityManager()->relations($entityName);
+		$rels = $this->entityManager->relations($entityName);
         if (isset($rels[$name])) {
             return $this->getRelationObject($entity, $name, $rels[$name]);
         }
