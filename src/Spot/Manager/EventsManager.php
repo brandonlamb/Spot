@@ -8,7 +8,8 @@
  */
 
 namespace Spot\Events;
-use Spot\Di as DiContainer,
+
+use Spot\Di\DiInterface,
     Spot\Di\InjectableTrait,
     ArrayAccess;
 
@@ -23,9 +24,9 @@ class EventsManager implements ArrayAccess
 
     /**
      * Constructor
-     * @param \Spot\Di $di
+     * @param \Spot\Di\DiInterface $di
      */
-    public function __construct(DiContainer $di)
+    public function __construct(DiInterface $di)
     {
         $this->setDi($di);
     }

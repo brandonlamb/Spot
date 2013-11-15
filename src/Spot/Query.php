@@ -1,7 +1,5 @@
 <?php
 
-namespace Spot;
-
 /**
  * Query Object - Used to build adapter-independent queries PHP-style
  *
@@ -9,7 +7,13 @@ namespace Spot;
  * @author Vance Lucas <vance@vancelucas.com>
  * @link http://spot.os.ly
  */
-class Query implements \Countable, \IteratorAggregate, QueryInterface
+
+namespace Spot;
+
+use Countable,
+    IteratorAggregate;
+
+class Query implements Countable, IteratorAggregate, QueryInterface
 {
     /**
      * @var \Spot\Mapper
@@ -22,59 +26,44 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     protected $entityName;
 
     /**
-     * @var array, cached data
-     */
-    protected $cache = array();
-
-    /**
-     * @var string, cache key name
-     */
-    protected $cacheKey;
-
-    /**
-     * @var int, cache ttl/timeout in seconds
-     */
-    protected $cacheTtl = 30;
-
-    /**
      * @var array, Select fields
      */
-    public $fields = array();
+    public $fields = [];
 
     /**
      * @var array, Table joins with clauses
      */
-    public $joins = array();
+    public $joins = [];
 
     /**
      * @var array, where conditions
      */
-    public $conditions = array();
+    public $conditions = [];
 
     /**
      * @var array, fulltext search conditions
      */
-    public $search = array();
+    public $search = [];
 
     /**
      * @var array, order by fields
      */
-    public $order = array();
+    public $order = [];
 
     /**
      * @var array, group by fields
      */
-    public $group = array();
+    public $group = [];
 
     /**
      * @var array, having conditions
      */
-    public $having = array();
+    public $having = [];
 
     /**
      * @var array, with conditions
      */
-    public $with = array();
+    public $with = [];
 
     /**
      * @var string, name of the table
@@ -94,7 +83,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     /**
      * @var array, Custom methods added by extensions or plugins
      */
-    protected static $customMethods = array();
+    protected static $customMethods = [];
 
     /**
      * @var array, which arrays can be reset when query object is reset
@@ -106,17 +95,17 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     /**
      * @var array, when doing a reset, a snapshot copy is stored here
      */
-    protected $snapshot = array();
+    protected $snapshot = [];
 
     /**
      *  Constructor Method
-     *  @param Spot\Mapper
+     *  @param \Spot\Mapper
      *  @param string $entityName Name of the entity to query on/for
      */
-    public function __construct(\Spot\Mapper $mapper, $entityName)
+    public function __construct(Mapper $mapper, $entityName = null)
     {
         $this->mapper = $mapper;
-        $this->entityName = $entityName;
+        $this->entityName = (string) $entityName;
 
         foreach (static::$resettable as $field) {
             $this->snapshot[$field] = $this->$field;
@@ -190,10 +179,10 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     public function select($fields = '*', $datasource = null)
     {
         // If calling this method, and the first fields index is * then we should clear this out
-        count($this->fields) === 1 && $this->fields[0] === '*' && $this->fields = array();
+        count($this->fields) === 1 && $this->fields[0] === '*' && $this->fields = [];
 
         if (null === $fields) {
-            $this->fields = array();
+            $this->fields = [];
         } elseif (is_string($fields)) {
             foreach (explode(',', $fields) as $field) {
                 $this->fields[] = trim($field);
@@ -227,7 +216,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
      * @param array $conditions Array of conditions in column => value pairs
      * @return self
      */
-    public function all(array $conditions = array())
+    public function all(array $conditions = [])
     {
         return $this->where($conditions);
     }
@@ -336,11 +325,11 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
      * @param string $setType Keyword that will separate the whole set of conditions - 'AND', 'OR'
      * @return self
      */
-    public function where(array $conditions = array(), $type = 'AND', $setType = 'AND')
+    public function where(array $conditions = [], $type = 'AND', $setType = 'AND')
     {
         // Don't add WHERE clause if array is empty (easy way to support dynamic request options that modify current query)
         if ($conditions) {
-            $where = array();
+            $where = [];
             $where['conditions'] = $conditions;
             $where['type'] = $type;
             $where['setType'] = $setType;
@@ -356,7 +345,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
      * @param string $type
      * @return self
      */
-    public function orWhere(array $conditions = array(), $type = 'AND')
+    public function orWhere(array $conditions = [], $type = 'AND')
     {
         return $this->where($conditions, $type, 'OR');
     }
@@ -367,7 +356,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
      * @param string $type
      * @return self
      */
-    public function andWhere(array $conditions = array(), $type = 'AND')
+    public function andWhere(array $conditions = [], $type = 'AND')
     {
         return $this->where($conditions, $type, 'AND');
     }
@@ -381,7 +370,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
         if (is_null($relations)) {
             return $this->with;
         } elseif (is_bool($relations) && !$relations) {
-            $this->with = array();
+            $this->with = [];
         }
 
         $entityName = $this->entityName();
@@ -412,7 +401,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
      * @param array $fields Array of field names to use for sorting
      * @return self
      */
-    public function order($fields = array())
+    public function order($fields = [])
     {
         $defaultSort = "ASC";
 
@@ -437,7 +426,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
      * @param array $fields Array of field names to use for grouping
      * @return self
      */
-    public function group(array $fields = array())
+    public function group(array $fields = [])
     {
         foreach ($fields as $field) {
             $this->group[] = $field;
@@ -450,7 +439,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
      * @param array $having Array (like where) for HAVING statement for filter records by
      * @return self
      */
-    public function having(array $having = array())
+    public function having(array $having = [])
     {
         $this->having[] = array('conditions' => $having);
         return $this;
@@ -488,7 +477,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
      */
     public function params()
     {
-        $params = array();
+        $params = [];
         $ci = 0;
 
         // WHERE + HAVING
@@ -564,7 +553,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     {
         // Execute query and return result set for iteration
         $result = $this->execute();
-        return ($result !== false) ? $result : array();
+        return ($result !== false) ? $result : [];
     }
 
     /**
@@ -585,7 +574,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
                 // method that assigns all the defaults for
                 // conditions, etc
                 if (is_array($value)) {
-                    $this->$field = array();
+                    $this->$field = [];
                 } else {
                     $this->$field = null;
                 }
@@ -621,7 +610,7 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     public function toArray($keyColumn = null, $valueColumn = null)
     {
         $result = $this->execute();
-        return ($result !== false) ? $result->toArray($keyColumn, $valueColumn) : array();
+        return ($result !== false) ? $result->toArray($keyColumn, $valueColumn) : [];
     }
 
     /**
@@ -653,27 +642,5 @@ class Query implements \Countable, \IteratorAggregate, QueryInterface
     public function execute()
     {
         return $this->mapper()->connection($this->entityName())->read($this);
-    }
-
-    /**
-     * Get/set cache key
-     * @param string $key
-     * @return string|bool
-     */
-    public function cacheKey($cacheKey = null)
-    {
-        null !== $cacheKey && $this->cacheKey = (string) $cacheKey;
-        return null !== $this->cacheKey ? $this->cacheKey : false;
-    }
-
-    /**
-     * Get/set the cache ttl
-     * @param int $cacheTtl
-     * @return int
-     */
-    public function cacheTtl($cacheTtl = null)
-    {
-        null !== $cacheTtl && $this->cacheTtl = (int) $cacheTtl;
-        return $this->cacheTtl;
     }
 }

@@ -9,62 +9,43 @@
 
 namespace Spot\Di;
 
-use Spot\Di\Container as DiContainer,
-	Spot\Config,
-	Spot\Factory\QueryFactory,
+use Spot\Config,
 	Spot\Factory\EntityFactory,
 	Spot\Factory\CollectionFactory,
+	Spot\Factory\QueryFactory,
 	Spot\Manager\EntityManager,
-	Spot\Manager\RelationManager,
-	Spot\Manager\EventsManager;
+	Spot\Manager\EventsManager,
+	Spot\Manager\RelationManager;
 
-class FactoryDefault Extends DiContainer implements DiInterface
+class FactoryDefault Extends Container implements DiInterface
 {
 	/**
 	 * Constructor
 	 */
 	public function __construct()
 	{
-		$this->storage['config'] = function () {
-			static $resource;
-			null === $resource && $resource = new Config($this);
+		$this->set('config', function () {
+			$resource = new Config($this);
 			return $resource;
-		};
+		});
 
-		$this->storage['entityManager'] = function () {
-			static $resource;
-			null === $resource && $resource = new EntityManager($this);
+		$this->set('entityManager', function () {
+			$resource = new EntityManager($this);
 			return $resource;
-		};
+		});
 
-		$this->storage['relationManager'] = function () {
-			static $resource;
-			null === $resource && $resource = new RelationManager($this);
+		$this->set('relationManager', function () {
+			$resource = new RelationManager($this);
 			return $resource;
-		};
+		});
 
-		$this->storage['eventsManager'] = function () {
-			static $resource;
-			null === $resource && $resource = new EventsManager($this);
+		$this->set('eventsManager', function () {
+			$resource = new EventsManager($this);
 			return $resource;
-		};
+		});
 
-		$this->storage['queryFactory'] = function () {
-			static $resource;
-			null === $resource && $resource = new QueryFactory();
-			return $resource;
-		};
-
-		$this->storage['entityFactory'] = function () {
-			static $resource;
-			null === $resource && $resource = new EntityFactory();
-			return $resource;
-		};
-
-		$this->storage['collectionFactory'] = function () {
-			static $resource;
-			null === $resource && $resource = new CollectionFactory();
-			return $resource;
-		};
+		$this->set('entityFactory', '\\Spot\\Factory\\EntityFactory');
+		$this->set('collectionFactory', '\\Spot\\Factory\\CollectionFactory');
+		$this->set('queryFactory', '\\Spot\\Factory\\QueryFactory');
 	}
 }

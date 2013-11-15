@@ -53,7 +53,7 @@ class QueryFactory
 	 * @param string $entityName
 	 * @return mixed
 	 */
-	public function create(Mapper $mapper, $entityName)
+	public function create(Mapper $mapper, $entityName = null)
 	{
 		return new $this->className($mapper, $entityName);
 	}

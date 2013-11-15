@@ -8,7 +8,7 @@
 
 namespace Spot\Manager;
 
-use Spot\Di as DiContainer,
+use Spot\Di\DiInterface,
     Spot\Di\InjectableTrait,
     Spot\Entity\EntityInterface;
 
@@ -18,9 +18,9 @@ class EntityManager
 
     /**
      * Constructor
-     * @param \Spot\Di $di
+     * @param \Spot\Di\DiInterface $di
      */
-    public function __construct(DiContainer $di)
+    public function __construct(DiInterface $di)
     {
         $this->setDi($di);
     }
@@ -110,7 +110,7 @@ class EntityManager
 
         // Datasource info
         $entityDatasource = null;
-        $entityDatasource = $entityName->getTable();
+        $entityDatasource = $entityName::getTable();
         if (null === $entityDatasource || !is_string($entityDatasource)) {
             throw new \InvalidArgumentException("Entity must have a datasource defined. Please define a protected property named 'datasource' on your '" . $entityName . "' entity class.");
         }
@@ -142,7 +142,7 @@ class EntityManager
         );
 
         // Get entity fields from entity class
-        $entityFields = $entityName::fields();
+        $entityFields = $entityName::getMetaData();
 
         if (!is_array($entityFields) || count($entityFields) < 1) {
             throw new \InvalidArgumentException($entityName . " Must have at least one field defined.");
@@ -183,7 +183,7 @@ class EntityManager
 
             // Relations
             $entityRelations = [];
-            $entityRelations = $entityName::relations();
+            $entityRelations = $entityName::getRelations();
 
             if (!is_array($entityRelations)) {
                 throw new \InvalidArgumentException($entityName . " Relation definitons must be formatted as an array.");

@@ -1,27 +1,28 @@
 <?php
 
 /**
- * Collection of Spot_Entity objects
+ * Collection of Spot\Entity objects
  *
- * @package Spot
- * @link http://spot.os.ly
+ * @package Spot\Entity
+ * @author Brandon Lamb <brandon@brandonlamb.com>
  */
 
 namespace Spot\Entity;
 
-use Spot\Entity\CollectionInterface;
+use Spot\Entity\ResultSetInterface,
+    Spot\Entity\EntityInterface;
 
-class Collection implements CollectionInterface
+class Collection implements ResultSetInterface
 {
     /**
      * @var array
      */
-    protected $results = array();
+    protected $results = [];
 
     /**
      * @var array
      */
-    protected $resultsIdentities = array();
+    protected $resultsIdentities = [];
 
     /**
      * @var string, class name of the entity to create instances for
@@ -34,7 +35,7 @@ class Collection implements CollectionInterface
      * @param array $resultsIdentities Array of key values for given result set primary key
      * @param string $entityName
      */
-    public function __construct(array $results = array(), array $resultsIdentities = array(), $entityName = null)
+    public function __construct(array $results = [], array $resultsIdentities = [], $entityName = null)
     {
         $this->results = $results;
         $this->resultsIdentities = $resultsIdentities;
@@ -54,7 +55,7 @@ class Collection implements CollectionInterface
     /**
     * {@inherit}
     */
-    public function add(\Spot\Entity $entity)
+    public function add(EntityInterface $entity)
     {
         $this->results[] = $entity;
     }
@@ -63,7 +64,7 @@ class Collection implements CollectionInterface
      * {@inherit}
      * @todo Implement faster uniqueness checking by hash, entity manager, primary key field, etc.
      */
-    public function merge(CollectionInterface $collection, $onlyUnique = true)
+    public function merge(ResultSetInterface $collection, $onlyUnique = true)
     {
         foreach ($collection as $entity) {
             if ($onlyUnique && in_array($entity, $this->results)) {
@@ -127,7 +128,7 @@ class Collection implements CollectionInterface
      */
     public function map($func)
     {
-        $ret = array();
+        $ret = [];
         foreach ($this as $obj) {
             $ret[] = $func($obj);
         }
@@ -215,9 +216,9 @@ class Collection implements CollectionInterface
     public function offsetSet($key, $value)
     {
         if ($key === null) {
-            return $this->results[] = $value;
+            $this->results[] = $value;
         } else {
-            return $this->results[$key] = $value;
+            $this->results[$key] = $value;
         }
     }
 

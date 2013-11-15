@@ -12,6 +12,36 @@ namespace Spot\Entity;
 interface EntityInterface
 {
     /**
+     * Get entity meta data, containing information on columns
+     * @return array
+     */
+    public static function getMetaData();
+
+    /**
+     * Get the table name for the entity.
+     * @return string
+     */
+    public static function getTable();
+
+    /**
+     * Get the sequence name for the entity.
+     * @return string
+     */
+    public static function getSequence();
+
+    /**
+     * Return defined hooks of the entity
+     * @return array
+     */
+    public static function getHooks();
+
+    /**
+     * Return defined fields of the entity
+     * @return array
+     */
+    public static function getRelations();
+
+    /**
      * Getter for field properties
      * @param string $offset
      * @param mixed $default
@@ -69,34 +99,4 @@ interface EntityInterface
      * @return bool
      */
     public function isFieldModified($offset = null);
-
-    /**
-     * Get entity meta data, containing information on columns
-     * @return array
-     */
-    public function getMetaData();
-
-    /**
-     * Get the table name for the entity.
-     * @return string
-     */
-    public function getTable();
-
-    /**
-     * Get the sequence name for the entity.
-     * @return string
-     */
-    public function getSequence();
-
-    /**
-     * Return defined hooks of the entity
-     * @return array
-     */
-    public function getHooks();
-
-    /**
-     * Return defined fields of the entity
-     * @return array
-     */
-    public function getRelations();
 }

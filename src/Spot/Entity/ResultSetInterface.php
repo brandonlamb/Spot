@@ -1,27 +1,39 @@
 <?php
 
+/**
+ * Interface for ResultSets
+ *
+ * @package \Spot\Entity
+ * @author Brandon Lamb <brandon@brandonlamb.com>
+ */
+
 namespace Spot\Entity;
 
-interface CollectionInterface extends \Iterator, \Countable, \ArrayAccess
+use Spot\Entity\EntityInterface,
+    Iterator,
+    Countable,
+    ArrayAccess;
+
+interface ResultSetInterface extends Iterator, Countable, ArrayAccess
 {
     /**
     * Add a single entity to the collection
     * @param \Spot\Entity $entity to add
     */
-    public function add(\Spot\Entity $entity);
+    public function add(EntityInterface $entity);
 
     /**
     * Merge another collection into this collections set of entities
     * This will only add entitys that don't already exist in the current
     * collection
-    * @param \Spot\Entity\CollectionInterface $collection
-    * @return \Spot\Entity\CollectionInterface
+    * @param \Spot\Entity\ResultSetInterface $collection
+    * @return \Spot\Entity\ResultSetInterface
     * @todo Implement faster uniqueness checking by hash, entity manager, primary key field, etc.
     */
-    public function merge(\Spot\Entity\CollectionInterface $collection, $onlyUnique = true);
+    public function merge(ResultSetInterface $collection, $onlyUnique = true);
 
     /**
-     * Return an array representation of the Collection.
+     * Return an array representation of the ResultSet.
      * @param mixed $keyColumn
      * @param mixed $valueColumn
      * @return array

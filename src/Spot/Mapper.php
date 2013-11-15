@@ -12,7 +12,7 @@
 
 namespace Spot;
 
-use Spot\Di as DiContainer,
+use Spot\Di\DiInterface,
     Spot\Di\InjectableTrait,
     Spot\Adapter\AdapterInterface,
     Spot\Query;
@@ -40,7 +40,7 @@ class Mapper
      * Constructor Method
      * @param \Spot\Di $di
      */
-    public function __construct(DiContainer $di)
+    public function __construct(DiInterface $di)
     {
         $this->setDi($di);
     }
@@ -74,7 +74,7 @@ class Mapper
      */
     public function createSql()
     {
-        return $this->queryFactory->create($this, $entityName);
+        return $this->queryFactory->create($this);
     }
 
     /**

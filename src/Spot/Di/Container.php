@@ -1,6 +1,15 @@
 <?php
 
+/**
+ * Dependency Injection container
+ *
+ * @package \Spot\Di
+ * @author Brandon Lamb <brandon@brandonlamb.com>
+ */
+
 namespace Spot\Di;
+
+use Spot\Exception;
 
 class Container implements DiInterface
 {
@@ -36,12 +45,12 @@ class Container implements DiInterface
 	public function __construct($container = null, $sharedContainer = null, $paramContainer = null)
 	{
 		if (null === static::$defaultInstance) {
-			self::$defaultInstance = $this;
+			static::$defaultInstance = $this;
 		}
 
-		$this->container = is_array($container) ? $container : array();
-		$this->sharedContainer = is_array($sharedContainer) ? $sharedContainer : array();
-		$this->paramContainer = is_array($paramContainer) ? $paramContainer : array();
+		$this->container = is_array($container) ? $container : [];
+		$this->sharedContainer = is_array($sharedContainer) ? $sharedContainer : [];
+		$this->paramContainer = is_array($paramContainer) ? $paramContainer : [];
 	}
 
 	/**
@@ -220,7 +229,7 @@ class Container implements DiInterface
 	 */
 	public static function setDefault(DiInterface $di)
 	{
-		self::$defaultInstance = $di;
+		static::$defaultInstance = $di;
 		return $di;
 	}
 
@@ -232,11 +241,11 @@ class Container implements DiInterface
 	 */
 	public static function getDefault()
 	{
-		if (null === self::$defaultInstance) {
-			self::$defaultInstance = new self();
+		if (null === static::$defaultInstance) {
+			static::$defaultInstance = new static();
 		}
 
-		return self::$defaultInstance;
+		return static::$defaultInstance;
 	}
 
 	/**

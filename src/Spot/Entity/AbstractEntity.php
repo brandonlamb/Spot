@@ -304,7 +304,7 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
     /**
      * {@inheritDoc}
      */
-    public function getTable()
+    public static function getTable()
     {
         return '';
     }
@@ -312,7 +312,7 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
     /**
      * {@inheritDoc}
      */
-    public function getSequence()
+    public static function getSequence()
     {
         return '';
     }
@@ -320,7 +320,7 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
     /**
      * {@inheritDoc}
      */
-    public function getHooks()
+    public static function getHooks()
     {
         return [];
     }
@@ -328,7 +328,7 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
     /**
      * {@inheritDoc}
      */
-    public function getRelations()
+    public static function getRelations()
     {
         return [];
     }
@@ -346,7 +346,7 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
      */
     protected function initFields()
     {
-        $fields = $this->getMetaData();
+        $fields = static::getMetaData();
         foreach ($fields as $field => $opts) {
             if (!isset($this->data[$field])) {
                 $this->data[$field] = isset($opts['default']) ? $opts['default'] : null;

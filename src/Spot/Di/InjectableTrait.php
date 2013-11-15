@@ -2,11 +2,13 @@
 
 /**
  * A quick and dirty trait for classes that need di
+ * @package \Spot\Di
+ * @author Brandon Lamb <brandon@brandonlamb.com>
  */
 
 namespace Spot\Di;
 
-use Spot\Di as DiContainer;
+use Spot\Di\DiInterface;
 
 trait InjectableTrait
 {
@@ -22,21 +24,21 @@ trait InjectableTrait
 	 */
 	public function __get($offset)
 	{
-		return $this->di->get($offset);
+		return $this->di->getShared($offset);
 	}
 
 	/**
 	 * Set the Di object
-	 * @param \Spot\Di $di
+	 * @param \Spot\Di\DiInterface $di
 	 */
-	public function setDi(DiContainer $di)
+	public function setDi(DiInterface $di)
 	{
 		$this->di = $di;
 	}
 
 	/**
 	 * Get the Di container
-	 * @return \Spot\Di
+	 * @return \Spot\Di\DiInterface
 	 */
 	public function getDi()
 	{

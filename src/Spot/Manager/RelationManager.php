@@ -8,7 +8,7 @@
 
 namespace Spot\Manager;
 
-use Spot\Di as DiContainer,
+use Spot\Di\DiInterface,
     Spot\Di\InjectableTrait,
     Spot\Entity\CollectionInterface;
 
@@ -18,9 +18,9 @@ class Manager
 
     /**
      * Constructor
-     * @param \Spot\Di $di
+     * @param \Spot\Di\DiInterface $di
      */
-    public function __construct(DiContainer $di)
+    public function __construct(DiInterface $di)
     {
         $this->setDi($di);
     }
