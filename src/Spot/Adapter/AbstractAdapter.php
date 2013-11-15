@@ -241,7 +241,7 @@ abstract class AbstractAdapter
     public function read(QueryInterface $query, array $options = [])
     {
         $sql = $this->getQuerySql($query);
-        $binds = $this->getBinds($query->params());
+        $binds = $this->getBinds($query->getParameters());
 
         // Unset any NULL values in binds (compared as "IS NULL" and "IS NOT NULL" in SQL instead)
         if ($binds && count($binds) > 0) {
@@ -286,7 +286,7 @@ abstract class AbstractAdapter
     public function count(QueryInterface $query, array $options = [])
     {
         $conditions = $this->getConditionsSql($query->getConditions());
-        $binds = $this->getBinds($query->params());
+        $binds = $this->getBinds($query->getparameters());
 
         $sql = "
             SELECT COUNT(*) AS count
@@ -839,7 +839,7 @@ abstract class AbstractAdapter
      */
     public function toCollection(QueryInterface $query, $stmt)
     {
-        $mapper = $query->mapper();
+        $mapper = $query->getMapper();
         $entityClass = $query->getEntityName();
 
         if ($stmt instanceof \PDOStatement) {

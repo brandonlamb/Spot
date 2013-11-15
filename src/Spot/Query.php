@@ -114,20 +114,27 @@ class Query implements Countable, IteratorAggregate, QueryInterface
         $this->mapper = $mapper;
         $this->entityName = (string) $entityName;
 
-        foreach (static::$resettable as $field) {
+        foreach (self::$resettable as $field) {
             $this->snapshot[$field] = $this->$field;
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function __toString()
+    {
+        return $this->toString();
     }
 
     /**
      * Run user-added callback
      * @param string $method Method name called
      * @param array $args Array of arguments used in missing method call
-     * @throws BadMethodCallException
+     * @throws \BadMethodCallException
      */
     public function __call($method, $args)
     {
-        d($method, $args);
         if (isset(self::$customMethods[$method]) && is_callable(self::$customMethods[$method])) {
             $callback = self::$customMethods[$method];
 
@@ -135,11 +142,29 @@ class Query implements Countable, IteratorAggregate, QueryInterface
             array_unshift($args, $this);
 
             return call_user_func_array($callback, $args);
-        } else if (method_exists('\\Spot\\Entity\\Collection', $method)) {
+        } else if (method_exists('\\Spot\\Entity\\ResultSet', $method)) {
             return $this->execute()->$method($args[0]);
         } else {
-            throw new \BadMethodCallException("Method '" . __CLASS__ . "::" . $method . "' not found");
+            throw new \BadMethodCallException("Method '" . __METHOD__ . "' not found");
         }
+    }
+
+    /**
+     * Get data mapper
+     * @return \Spot\Mapper
+     */
+    public function getMapper()
+    {
+        return $this->mapper;
+    }
+
+    /**
+     * Get entity class name that the query is to be performed on
+     * @return string
+     */
+    public function getEntityName()
+    {
+        return $this->entityName;
     }
 
     /**
@@ -223,57 +248,58 @@ class Query implements Countable, IteratorAggregate, QueryInterface
         return (int) $this->offset;
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     /**
-     * Add a custom user method via closure or PHP callback
-     * @param string $method Method name to add
-     * @param callback $callback Callback or closure that will be executed when missing method call matching $method is made
-     * @throws InvalidArgumentException
+     * Return array of parameters in key => value format
+     * @return array Parameters in key => value format
      */
-    public static function addMethod($method, $callback)
+    public function getParameters()
     {
-        if (!is_callable($callback)) {
-            throw new \InvalidArgumentException("Second argument is expected to be a valid callback or closure.");
+        $params = [];
+        $ci = 0;
+
+        // WHERE + HAVING
+        $conditions = array_merge($this->conditions, $this->having);
+
+        foreach ($conditions as $i => $data) {
+            if (isset($data['conditions']) && is_array($data['conditions'])) {
+                foreach ($data['conditions'] as $field => $value) {
+                    // Column name with comparison operator
+                    $columnData = explode(' ', $field);
+                    $operator = '=';
+                    if (count($columnData) > 2) {
+                        $operator = array_pop($columnData);
+                        $columnData = array(implode(' ', $columnData), $operator);
+                    }
+                    $field = $columnData[0];
+                    $params[$field . $ci] = $value;
+                    $ci++;
+                }
+            }
         }
-        if (method_exists(__CLASS__, $method)) {
-            throw new \InvalidArgumentException("Method '" . $method . "' already exists on " . __CLASS__);
-        }
-        self::$customMethods[$method] = $callback;
+        return $params;
     }
 
     /**
-     * Get current mapper
-     * @return \Spot\Mapper
+     * Get with array for relations
+     * @return array
      */
-    public function mapper()
+    public function getWith()
     {
-        return $this->mapper;
+        return (array) $this->with;
     }
 
-    /**
-     * Get current entity class name that the query is to be performed on
-     * @return string
-     */
-    public function getEntityName()
-    {
-        return $this->entityName;
-    }
+
+
+
+
+
+
+
+
+
+
+
+
 
     /**
      * The mapper's select() method chains to this method. Used to select
@@ -308,17 +334,6 @@ class Query implements Countable, IteratorAggregate, QueryInterface
     {
         $this->tableName = (string) $table;
         return $this;
-    }
-
-    /**
-     * Find records with given conditions
-     * If all parameters are empty, find all records
-     * @param array $conditions Array of conditions in column => value pairs
-     * @return \Spot\QueryInterface
-     */
-    public function all(array $conditions = [])
-    {
-        return $this->where($conditions);
     }
 
     /**
@@ -428,7 +443,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
     public function where(array $conditions = [], $type = 'AND', $setType = 'AND')
     {
         // Don't add WHERE clause if array is empty (easy way to support dynamic request options that modify current query)
-        if ($conditions) {
+        if (!empty($conditions)) {
             $where = [];
             $where['conditions'] = $conditions;
             $where['type'] = $type;
@@ -459,41 +474,6 @@ class Query implements Countable, IteratorAggregate, QueryInterface
     public function andWhere(array $conditions = [], $type = 'AND')
     {
         return $this->where($conditions, $type, 'AND');
-    }
-
-    /**
-     * Relations to be loaded non-lazily
-     * @param mixed $relations Array/string of relation(s) to be loaded.  False to erase all withs.  Null to return existing $with value
-     */
-    public function with($relations = null)
-    {
-        if (is_null($relations)) {
-            return $this->with;
-        } elseif (is_bool($relations) && !$relations) {
-            $this->with = [];
-        }
-
-        $entityName = $this->entityName();
-        $entityRelations = array_keys($entityName::relations());
-
-        foreach ((array) $relations as $idx => $relation) {
-            $add = true;
-            if (!is_numeric($idx) && isset($this->with[$idx])) {
-                $add = $relation;
-                $relation = $idx;
-            }
-
-            if ($add && in_array($relation, $entityRelations)) {
-                $this->with[] = $relation;
-            } elseif (!$add) {
-                foreach (array_keys($this->with, $relation, true) as $key) {
-                    unset($this->with[$key]);
-                }
-            }
-        }
-
-        $this->with = array_unique($this->with);
-        return $this;
     }
 
     /**
@@ -572,35 +552,119 @@ class Query implements Countable, IteratorAggregate, QueryInterface
     }
 
     /**
-     * Return array of parameters in key => value format
-     * @return array Parameters in key => value format
+     * Relations to be loaded non-lazily
+     * @param mixed $relations Array/string of relation(s) to be loaded.  False to erase all withs.  Null to return existing $with value
      */
-    public function params()
+    public function with($relations = null)
     {
-        $params = [];
-        $ci = 0;
+        if (is_null($relations)) {
+            return $this->with;
+        } elseif (is_bool($relations) && !$relations) {
+            $this->with = [];
+        }
 
-        // WHERE + HAVING
-        $conditions = array_merge($this->conditions, $this->having);
+        $entityName = $this->entityName();
+        $entityRelations = array_keys($entityName::relations());
 
-        foreach ($conditions as $i => $data) {
-            if (isset($data['conditions']) && is_array($data['conditions'])) {
-                foreach ($data['conditions'] as $field => $value) {
-                    // Column name with comparison operator
-                    $colData = explode(' ', $field);
-                    $operator = '=';
-                    if (count($colData) > 2) {
-                        $operator = array_pop($colData);
-                        $colData = array(implode(' ', $colData), $operator);
-                    }
-                    $field = $colData[0];
-                    $params[$field . $ci] = $value;
-                    $ci++;
+        foreach ((array) $relations as $idx => $relation) {
+            $add = true;
+            if (!is_numeric($idx) && isset($this->with[$idx])) {
+                $add = $relation;
+                $relation = $idx;
+            }
+
+            if ($add && in_array($relation, $entityRelations)) {
+                $this->with[] = $relation;
+            } elseif (!$add) {
+                foreach (array_keys($this->with, $relation, true) as $key) {
+                    unset($this->with[$key]);
                 }
             }
         }
-        return $params;
+
+        $this->with = array_unique($this->with);
+        return $this;
     }
+
+
+
+
+    /**
+     * SPL IteratorAggregate function
+     * Called automatically when attribute is used in a 'foreach' loop
+     *
+     * @return \Spot\Entity\ResultSetInterface
+     */
+    public function getIterator()
+    {
+        // Execute query and return result set for iteration
+        $result = $this->execute();
+        return ($result !== false) ? $result : [];
+    }
+
+    /**
+     * Return the first entity matched by the query
+     * @return mixed Spotentity on success, boolean false on failure
+     */
+    public function first(array $conditions = [])
+    {
+        $result = $this->where($conditions)->limit(1)->execute();
+        return ($result !== false) ? $result->first() : false;
+    }
+
+    /**
+     * Find records with given conditions
+     * If all parameters are empty, find all records
+     * @param array $conditions Array of conditions in column => value pairs
+     * @return \Spot\QueryInterface
+     */
+    public function all(array $conditions = [])
+    {
+        return $this->where($conditions);
+    }
+
+    /**
+     * Convenience function passthrough for ResultSet
+     * @param string $keyColumn
+     * @param string $valueColumn
+     * @return array
+     */
+    public function toArray($keyColumn = null, $valueColumn = null)
+    {
+        $result = $this->execute();
+        return ($result !== false) ? $result->toArray($keyColumn, $valueColumn) : [];
+    }
+
+    /**
+     * return query as a string
+     * @return string
+     */
+    public function toString()
+    {
+        return $this->mapper->getDi()->get($this->mapper->getAdapterName())->getQuerySql($this);
+    }
+    
+    /**
+     * Execute and return query as a collection
+     * @return mixed ResultSet object on success, boolean false on failure
+     */
+    public function execute()
+    {
+        return $this->mapper->getDi()->get($this->mapper->getAdapterName())->read($this);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     /**
      * SPL Countable function
@@ -637,23 +701,42 @@ class Query implements Countable, IteratorAggregate, QueryInterface
             $result = $this->mapper->getDi()->get($this->mapper->getAdapterName())->count($this);
 
             // Set cache
-            $this->_cache[$cacheKey] = $result;
+            $this->cache[$cacheKey] = $result;
         }
 
         return is_numeric($result) ? $result : 0;
     }
 
     /**
-     * SPL IteratorAggregate function
-     * Called automatically when attribute is used in a 'foreach' loop
+     * Add a custom user method via closure or PHP callback
+     * @param string $method Method name to add
+     * @param callback $callback Callback or closure that will be executed when missing method call matching $method is made
+     * @throws InvalidArgumentException
+     */
+    public static function addMethod($method, $callback)
+    {
+        if (!is_callable($callback)) {
+            throw new \InvalidArgumentException("Second argument is expected to be a valid callback or closure.");
+        }
+        if (method_exists(__CLASS__, $method)) {
+            throw new \InvalidArgumentException("Method '" . $method . "' already exists on " . __CLASS__);
+        }
+        self::$customMethods[$method] = $callback;
+    }
+
+    /**
+     * Reset the query back to its original state
+     * Called automatically after a 'foreach' loop
      *
+     * @see getIterator
      * @return Spot_Query_Set
      */
-    public function getIterator()
+    public function snapshot()
     {
-        // Execute query and return result set for iteration
-        $result = $this->execute();
-        return ($result !== false) ? $result : [];
+        foreach (self::$resettable as $field) {
+             $this->snapshot[$field] = $this->$field;
+        }
+        return $this;
     }
 
     /**
@@ -666,8 +749,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
      * @see snapshot
      * @return Spot_Query_Set
      */
-/*
-    public function reset($hardReset = false)
+/*    public function reset($hardReset = false)
     {
         foreach ($this->snapshot as $field => $value) {
             if ($hardReset) {
@@ -684,65 +766,5 @@ class Query implements Countable, IteratorAggregate, QueryInterface
             }
         }
         return $this;
-    }
-*/
-
-    /**
-     * Reset the query back to its original state
-     * Called automatically after a 'foreach' loop
-     *
-     * @see getIterator
-     * @return Spot_Query_Set
-     */
-    public function snapshot()
-    {
-        foreach (static::$resettable as $field) {
-             $this->snapshot[$field] = $this->$field;
-        }
-        return $this;
-    }
-
-    /**
-     * Convenience function passthrough for Collection
-     *
-     * @param string $keyColumn
-     * @param string $valueColumn
-     * @return array
-     */
-    public function toArray($keyColumn = null, $valueColumn = null)
-    {
-        $result = $this->execute();
-        return ($result !== false) ? $result->toArray($keyColumn, $valueColumn) : [];
-    }
-
-    /**
-     * return query as a string
-     *
-     * @return string
-     */
-    public function toString()
-    {
-        return $this->mapper->getDi()->get($this->mapper->getAdapterName())->getQuerySql($this);
-    }
-
-    /**
-     * Return the first entity matched by the query
-     *
-     * @return mixed Spotentity on success, boolean false on failure
-     */
-    public function first()
-    {
-        $result = $this->limit(1)->execute();
-        return ($result !== false) ? $result->first() : false;
-    }
-
-    /**
-     * Execute and return query as a collection
-     *
-     * @return mixed Collection object on success, boolean false on failure
-     */
-    public function execute()
-    {
-        return $this->mapper->getDi()->get($this->mapper->getAdapterName())->read($this);
-    }
+    } */
 }

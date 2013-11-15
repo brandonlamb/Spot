@@ -15,7 +15,8 @@ namespace Spot;
 use Spot\Di\DiInterface,
     Spot\Di\InjectableTrait,
     Spot\Adapter\AdapterInterface,
-    Spot\Query;
+    Spot\Query,
+    Spot\Entity\EntityInterface;
 
 class Mapper
 {
@@ -233,11 +234,7 @@ class Mapper
      */
     public function query($entityName, $sql, array $params = [])
     {
-        $result = $this->db->query($sql, $params);
-        if ($result) {
-            return $this->collection($entityName, $result);
-        }
-        return false;
+        return ($result = $this->db->query($sql, $params)) ? $this->collection($entityName, $result) : false;
     }
 
     /**
@@ -259,13 +256,12 @@ class Mapper
      */
     public function first($entityName, array $conditions = [])
     {
-        $query = $this->select($entityName)->where($conditions)->limit(1);
-        $collection = $query->execute();
-        if ($collection) {
-            return $collection->first();
-        } else {
-            return false;
-        }
+        $query = $this
+            ->select($entityName)
+            ->where($conditions)
+            ->limit(1);
+        
+        return ($collection = $query->execute()) ? $collection->first() : false;
     }
 
     /**
@@ -287,11 +283,11 @@ class Mapper
     /**
      * Save record
      * Will update if primary key found, insert if not. Performs validation automatically before saving record
-     * @param Entity $entity Entity object or array of field => value pairs
+     * @param \Spot\Entity\EntityInterface $entity Entity object or array of field => value pairs
      * @param array $options Array of adapter-specific options
      * @return bool
      */
-    public function save(Entity $entity, array $options = [])
+    public function save(EntityInterface $entity, array $options = [])
     {
         // Get the entity class name
         $entityName = $entity->toString();
@@ -352,11 +348,11 @@ class Mapper
      * Insert record using entity object
      * You can override the entity's primary key options by passing the respective
      * option in the options array (second parameter)
-     * @param \Spot\Entity $entity, Entity object already populated to be inserted
+     * @param \Spot\Entity\EntityInterface $entity, Entity object already populated to be inserted
      * @param array $options, override default PK field options
      * @return bool
      */
-    public function insert(Entity $entity, array $options = [])
+    public function insert(EntityInterface $entity, array $options = [])
     {
         // Get the entity class name
         $entityName = $entity->toString();
@@ -406,10 +402,10 @@ class Mapper
      * Update record using entity object
      * You can override the entity's primary key options by passing the respective
      * option in the options array (second parameter)
-     * @param \Spot\Entity $entity, Entity object already populated to be updated
+     * @param \Spot\Entity\EntityInterface $entity, Entity object already populated to be updated
      * @return bool
      */
-    public function update(Entity $entity)
+    public function update(EntityInterface $entity)
     {
         $entityName = $entity->toString();
 
@@ -525,11 +521,11 @@ class Mapper
 
     /**
      * Run set validation rules on fields
-     * @param \Spot\Entity $entity
+     * @param \Spot\Entity\EntitInterface $entity
      * @return bool
      * @todo A LOT more to do here... More validation, break up into classes with rules, etc.
      */
-    public function validate(Entity $entity)
+    public function validate(EntityInterface $entity)
     {
         $entityName = $entity->toString();
 
