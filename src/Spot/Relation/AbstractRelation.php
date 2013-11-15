@@ -3,7 +3,7 @@
 namespace Spot\Relation;
 
 use Spot\Mapper,
-    Spot\Entity;
+    Spot\Entity\EntityInterface;
 
 /**
  * Abstract class for relations
@@ -19,7 +19,7 @@ abstract class AbstractRelation
     protected $mapper;
 
     /**
-     * @var \Spot\Entity, the source entity to find relation(s) for
+     * @var \Spot\Entity\EntityInterface, the source entity to find relation(s) for
      */
     protected $sourceEntity;
 
@@ -56,20 +56,20 @@ abstract class AbstractRelation
     /**
      * Constructor function
      *
-     * @param \Spot\Mapper $mapper Spot_Mapper_Abstract object to query on for relationship data
-     * @param \Spot\Entity $entity
+     * @param \Spot\Mapper $mapper object to query on for relationship data
+     * @param \Spot\Entity\EntityInterface $entity
      * @param array $resultsIdentities Array of key values for given result set primary key
      * @throws \InvalidArgumentException
      */
-    public function __construct(Mapper $mapper, Entity $entity, array $relationData = array())
+    public function __construct(Mapper $mapper, EntityInterface $entity, array $relationData = array())
     {
         $entityType = null;
-        if ($entity instanceof \Spot\Entity) {
+        if ($entity instanceof \Spot\Entity\EntityInterface) {
             $entityType = $entity->toString();
         } elseif ($entity instanceof \Spot\Entity\CollectionInterface) {
             $entityType = $entity->entityName();
         } else {
-            throw new \InvalidArgumentException("Entity or collection must be an instance of \\Spot\\Entity or \\Spot\\Entity\\Colletion");
+            throw new \InvalidArgumentException("Entity or collection must be an instance of \\Spot\\Entity\\EntityInterface or \\Spot\\Entity\\Colletion");
         }
 
         $this->mapper = $mapper;
@@ -86,7 +86,7 @@ abstract class AbstractRelation
 
     /**
      * Get source entity object
-     * @return \Spot\Entity
+     * @return \Spot\Entity\EntityInterface
      */
     public function sourceEntity()
     {
@@ -99,7 +99,18 @@ abstract class AbstractRelation
      */
     public function entityName()
     {
-        return ($this->entityName === ':self') ? ($this->sourceEntity() instanceof \Spot\Entity\CollectionInterface ? $this->sourceEntity()->entityName() : get_class($this->sourceEntity())) : $this->entityName;
+        d($this->entityName);
+        if ($this->entityName !== ':self') {
+            return $this->entityName;
+        }
+
+        if ($this->sourceEntity() instanceof \Spot\Entity\CollectionInterface) {
+            return $this->sourceEntity()->entityName();
+        } else {
+            return get_class($this->sourceEntity());
+        }
+
+#        return ($this->entityName === ':self') ? ($this->sourceEntity() instanceof \Spot\Entity\CollectionInterface ? $this->sourceEntity()->entityName() : get_class($this->sourceEntity())) : $this->entityName;
     }
 
     /**
@@ -132,12 +143,12 @@ abstract class AbstractRelation
     /**
      * Replace entity value placeholders on relation definitions
      * Currently replaces ':entity.[col]' with the field value from the passed entity object
-     * @param \Spot\Entity $entity
+     * @param \Spot\Entity\EntityInterface $entity
      * @param array $conditions
      * @param string $replace
      * @return array
      */
-    public function resolveEntityConditions(Entity $entity, array $conditions, $replace = ':entity.')
+    public function resolveEntityConditions(EntityInterface $entity, array $conditions, $replace = ':entity.')
     {
         // Load foreign keys with data from current row
         // Replace ':entity.[col]' with the field value from the passed entity object
@@ -145,7 +156,7 @@ abstract class AbstractRelation
             foreach ($conditions as $relationCol => $col) {
                 if (is_string($col) && false !== strpos($col, $replace)) {
                     $col = str_replace($replace, '', $col);
-                    if ($entity instanceof \Spot\Entity) {
+                    if ($entity instanceof \Spot\Entity\EntityInterface) {
                         $conditions[$relationCol] = $entity->$col;
                     } else if($entity instanceof \Spot\Entity\CollectionInterface) {
                         $conditions[$relationCol] = $entity->toArray($col);

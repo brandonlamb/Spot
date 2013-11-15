@@ -12,7 +12,7 @@ namespace Spot\Entity;
 use Spot\Entity\ResultSetInterface,
     Spot\Entity\EntityInterface;
 
-class Collection implements ResultSetInterface
+class ResultSet implements ResultSetInterface
 {
     /**
      * @var array

@@ -23,17 +23,16 @@ interface QueryInterface
      * Called from mapper's select() function
      *
      * @param mixed $fields (optional)
-     * @param string $table Table name
      * @return string
      */
-    public function select($fields = '*', $table);
+    public function select($fields = '*');
 
     /**
-     * From
+     * Set the table name
      *
      * @param string $table Name of the table to perform the SELECT query on
      */
-    public function from($table = null);
+    public function from($table);
 
     /**
      * Add a table join (INNER, LEFT OUTER, RIGHT OUTER, FULL OUTER, CROSS)

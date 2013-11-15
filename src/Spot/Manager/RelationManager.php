@@ -12,7 +12,7 @@ use Spot\Di\DiInterface,
     Spot\Di\InjectableTrait,
     Spot\Entity\CollectionInterface;
 
-class Manager
+class RelationManager
 {
 	use InjectableTrait;
 
@@ -40,7 +40,7 @@ class Manager
         }
 
         $relations = [];
-        $rels = $this->getEntityManager()->relations($entityName);
+        $rels = $this->entityManager->relations($entityName);
         foreach ($rels as $field => $relation) {
             $relations[$field] = $this->loadRelation($entity, $field, $reload);
         }

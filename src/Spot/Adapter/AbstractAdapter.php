@@ -177,7 +177,7 @@ abstract class AbstractAdapter
     /**
      * {@inheritdoc}
      */
-    public function query($sql, array $binds = array())
+    public function query($sql, array $binds = [])
     {
         // Add query to log
         \Spot\Log::addQuery($this, $sql, $binds);
@@ -198,7 +198,7 @@ abstract class AbstractAdapter
     /**
      * {@inheritdoc}
      */
-    public function create($datasource, array $data, array $options = array())
+    public function create($datasource, array $data, array $options = [])
     {
         $binds = $this->getBinds($data);
         $sql = $this->getInsertSql($datasource, $data, $binds, $options);
@@ -238,7 +238,7 @@ abstract class AbstractAdapter
     /**
      * {@inheritdoc}
      */
-    public function read(QueryInterface $query, array $options = array())
+    public function read(QueryInterface $query, array $options = [])
     {
         $sql = $this->getQuerySql($query);
         $binds = $this->getBinds($query->params());
@@ -270,7 +270,7 @@ abstract class AbstractAdapter
         } catch (\PDOException $e) {
             // Table does not exist
             if ($e->getCode() == '42S02') {
-                throw new \Spot\Exception\Adapter("Table or datasource '" . $query->datasource . "' does not exist");
+                throw new \Spot\Exception\Adapter("Table or datasource '" . $query->getTableName() . "' does not exist");
             }
 
             // Throw new Spot exception
@@ -283,16 +283,16 @@ abstract class AbstractAdapter
     /**
      * {@inheritdoc}
      */
-    public function count(QueryInterface $query, array $options = array())
+    public function count(QueryInterface $query, array $options = [])
     {
-        $conditions = $this->getConditionsSql($query->conditions);
+        $conditions = $this->getConditionsSql($query->getConditions());
         $binds = $this->getBinds($query->params());
 
         $sql = "
             SELECT COUNT(*) AS count
-            FROM " . $query->datasource . "
+            FROM " . $query->getTableName() . "
             " . ($conditions ? 'WHERE ' . $conditions : '') . "
-            " . ($query->group ? 'GROUP BY ' . implode(', ', $query->group) : '');
+            " . ($query->getGroupBy() ? 'GROUP BY ' . implode(', ', $query->getGroupBy()) : '');
 
         // Unset any NULL values in binds (compared as "IS NULL" and "IS NOT NULL" in SQL instead)
         if ($binds && count($binds) > 0) {
@@ -321,7 +321,7 @@ abstract class AbstractAdapter
         } catch(\PDOException $e) {
             // Table does not exist
             if ($e->getCode() == '42S02') {
-                throw new \Spot\Exception\Adapter("Table or datasource '" . $query->datasource . "' does not exist");
+                throw new \Spot\Exception\Adapter("Table or datasource '" . $query->getTableName() . "' does not exist");
             }
 
             // Throw new Spot exception
@@ -334,12 +334,12 @@ abstract class AbstractAdapter
     /**
      * {@inheritdoc}
      */
-    public function update($datasource, array $data, array $where = array(), array $options = array())
+    public function update($datasource, array $data, array $where = [], array $options = [])
     {
         $dataBinds = $this->getBinds($data, 0);
         $whereBinds = $this->getBinds($where, count($dataBinds));
         $binds = array_merge($dataBinds, $whereBinds);
-        $placeholders = array();
+        $placeholders = [];
         $dataFields = array_combine(array_keys($data), array_keys($dataBinds));
 
         // Placeholders and passed data
@@ -390,7 +390,7 @@ abstract class AbstractAdapter
     /**
      * {@inheritdoc}
      */
-    public function delete($datasource, array $data, array $options = array())
+    public function delete($datasource, array $data, array $options = [])
     {
         $binds = $this->getBinds($data, 0);
         $conditions = $this->getConditionsSql($data);
@@ -468,24 +468,24 @@ abstract class AbstractAdapter
      */
     public function getQuerySql(QueryInterface $query)
     {
-        $conditions = $this->getConditionsSql($query->conditions);
-        $joins      = $this->getJoinsSql($query->joins);
-        $group      = $this->getGroupSql($query->group);
-        $order      = $this->getOrderSql($query->order);
-        $limit      = $this->getLimitSql($query->limit);
-        $offset     = $this->getOffsetSql($query->offset);
+        $conditions = $this->getConditionsSql($query->getConditions());
+        $joins      = $this->getJoinsSql($query->getJoins());
+        $group      = $this->getGroupSql($query->getGroupBy());
+        $order      = $this->getOrderSql($query->getOrderBy());
+        $limit      = $this->getLimitSql($query->getLimit());
+        $offset     = $this->getOffsetSql($query->getOffset());
 
-        if ($query->having) {
-            $having = $this->getConditionsSql($query->having);
+        if ($query->getHaving()) {
+            $having = $this->getConditionsSql($query->getHaving());
         }
 
         return "
-            SELECT " . $this->getFieldsSql($query->fields) . "
-            FROM " . $query->datasource . "
+            SELECT " . $this->getFieldsSql($query->getFields()) . "
+            FROM " . $query->getTableName() . "
             " . ($joins ? $joins : '') . "
             " . ($conditions ? 'WHERE ' . $conditions : '') . "
             " . ($group ? $group : '') . "
-            " . ($query->having ? 'HAVING' . $having : '') . "
+            " . ($query->getHaving() ? 'HAVING' . $having : '') . "
             " . ($order ? $order : '') . "
             " . ($limit ? $limit : '') . "
             " . ($limit && $offset ? $offset : '');
@@ -514,9 +514,9 @@ abstract class AbstractAdapter
     /**
      * {@inheritdoc}
      */
-    public function getFieldsSql(array $fields = array())
+    public function getFieldsSql(array $fields = [])
     {
-        $preparedFields = array();
+        $preparedFields = [];
         foreach ($fields as $field) {
             if (stripos($field, ' AS ') !== false || strpos($field, '.') !== false) {
                 // Leave calculated fields and SQL fragements alone
@@ -532,9 +532,9 @@ abstract class AbstractAdapter
     /**
      * {@inheritdoc}
      */
-    public function getJoinsSql(array $joins = array())
+    public function getJoinsSql(array $joins = [])
     {
-        $sqlJoins = array();
+        $sqlJoins = [];
 
         foreach ($joins as $join) {
             $sqlJoins[] = trim($join[2]) . ' JOIN' . ' ' . $join[0] . ' ON (' . trim($join[1]) . ')';
@@ -547,7 +547,7 @@ abstract class AbstractAdapter
      * {@inheritdoc}
      * @todo BETWEEN condition not filled in
      */
-    public function getConditionsSql(array $conditions = array(), $ci = 0)
+    public function getConditionsSql(array $conditions = [], $ci = 0)
     {
         if (count($conditions) === 0) { return; }
 
@@ -562,7 +562,7 @@ abstract class AbstractAdapter
                 $loopOnce = true;
             }
 
-            $sqlWhere = array();
+            $sqlWhere = [];
             foreach ($subConditions as $column => $value) {
                 $whereClause = '';
 
@@ -718,11 +718,11 @@ abstract class AbstractAdapter
     /**
      * {@inheritdoc}
      */
-    public function getBinds(array $conditions = array(), $ci = false)
+    public function getBinds(array $conditions = [], $ci = false)
     {
         if (count($conditions) === 0) { return; }
 
-        $binds = array();
+        $binds = [];
         $loopOnce = false;
 
         foreach ($conditions as $condition) {
@@ -796,7 +796,7 @@ abstract class AbstractAdapter
      */
     public function getOrderSql(array $order)
     {
-        $columns = array();
+        $columns = [];
 
         if ($order) {
             foreach ($order as $column => $sort) {
@@ -840,7 +840,7 @@ abstract class AbstractAdapter
     public function toCollection(QueryInterface $query, $stmt)
     {
         $mapper = $query->mapper();
-        $entityClass = $query->entityName();
+        $entityClass = $query->getEntityName();
 
         if ($stmt instanceof \PDOStatement) {
             // Set PDO fetch mode
@@ -854,7 +854,7 @@ abstract class AbstractAdapter
             return $collection;
         } else {
 #           $mapper->addError(__METHOD__ . " - Unable to execute query " . implode(' | ', $this->connection()->errorInfo()));
-            return array();
+            return [];
         }
     }
 

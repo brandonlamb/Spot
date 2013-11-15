@@ -45,7 +45,8 @@ class FactoryDefault Extends Container implements DiInterface
 		});
 
 		$this->set('entityFactory', '\\Spot\\Factory\\EntityFactory');
-		$this->set('collectionFactory', '\\Spot\\Factory\\CollectionFactory');
+		$this->set('collectionFactory', '\\Spot\\Factory\\ResultSetFactory');
+		$this->set('resultSetFactory', '\\Spot\\Factory\\ResultSetFactory');
 		$this->set('queryFactory', '\\Spot\\Factory\\QueryFactory');
 	}
 }

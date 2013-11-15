@@ -55,7 +55,7 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
     public function __construct(array $data = [])
     {
         $this->initFields();
-        $data && $this->data($data, false);
+        $data && $this->setData($data, false);
     }
 
     /**
@@ -86,6 +86,15 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
      * {@inheritDoc}
      */
     public function __toString()
+    {
+        return $this->toString();
+    }
+
+    /**
+     * Get entity name
+     * @return string
+     */
+    public function toString()
     {
         return get_called_class();
     }
@@ -226,12 +235,13 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
             throw new \InvalidArgumentException(__METHOD__ . " Expected array or object, " . gettype($data) . " given");
         }
 
-        $fields = $this->fields();
+        $entityName = (string) $this;
+        $fields = $entityName::getMetaData();
         foreach ($data as $k => $v) {
             // Ensure value is set with type handler if Entity field type
             if (array_key_exists($k, $fields)) {
-                $typeHandler = Config::getTypeHandler($fields[$k]['type']);
-                $v = $typeHandler::set($this, $v);
+#                $typeHandler = Config::getTypeHandler($fields[$k]['type']);
+#                $v = $typeHandler::set($this, $v);
             }
 
             if (true === $modified) {
@@ -372,7 +382,7 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
      */
     public function dataExcept(array $except)
     {
-        return array_diff_key($this->data(), array_flip($except));
+        return array_diff_key($this->getData(), array_flip($except));
     }
 
 

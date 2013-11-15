@@ -72,9 +72,9 @@ class Mapper
      * @return \Spot\Query
      * @todo Create query factory?
      */
-    public function createSql()
+    public function createSql($entityName = null)
     {
-        return $this->queryFactory->create($this);
+        return $this->queryFactory->create($this, $entityName);
     }
 
     /**
@@ -97,7 +97,7 @@ class Mapper
     public function hydrateEntity($entityName, array $data)
     {
         $loadedData = [];
-        $fields = $entityName::fields();
+        $fields = $entityName::getMetaData();
 
         foreach ($data as $field => $value) {
             // Skip type checking if dynamic field
@@ -136,7 +136,8 @@ class Mapper
         // @todo Move this to collection class so entities will be lazy-loaded by Collection iteration
         foreach ($stmt as $data) {
             // Entity with data set
-            $entity = $this->relationManager->hydrateEntity(new $entityName($data), $data);
+#            $entity = $this->relationManager->hydrateEntity(new $entityName($data), $data);
+            $entity = $this->hydrateEntity(new $entityName($data), $data);
 
             // Entity with data set
             $entity = new $entityName($data);
@@ -154,7 +155,7 @@ class Mapper
             }
         }
 
-        $collection = $this->collectionFactory->create($results, $resultsIdentities, $entityName);
+        $collection = $this->resultSetFactory->create($results, $resultsIdentities, $entityName);
         return $this->with($collection, $entityName, $with);
     }
 
@@ -276,7 +277,9 @@ class Mapper
      */
     public function select($entityName, $fields = '*')
     {
-        return $this->createSql()->select($fields, $this->entityManager->getTable($entityName));
+        return $this->createSql($entityName)
+            ->select($fields)
+            ->from($this->entityManager->getTable($entityName));
     }
 
 /* ====================================================================================================== */
@@ -509,7 +512,7 @@ class Mapper
     public function dumpEntity($entityName, array $data)
     {
         $dumpedData = [];
-        $fields = $entityName::fields();
+        $fields = $entityName::getMetaData();
 
         foreach ($data as $field => $value) {
             $typeHandler = $this->config->getTypeHandler($fields[$field]['type']);

@@ -16,6 +16,25 @@ use Countable,
 class Query implements Countable, IteratorAggregate, QueryInterface
 {
     /**
+     * @var array, Custom methods added by extensions or plugins
+     */
+    protected static $customMethods = [];
+
+    /**
+     * @var array, which arrays can be reset when query object is reset
+     */
+    protected static $resettable = [
+        'conditions',
+        'search',
+        'orderBy',
+        'groupBy',
+        'having',
+        'limit',
+        'offset',
+        'with',
+    ];
+
+    /**
      * @var \Spot\Mapper
      */
     protected $mapper;
@@ -26,71 +45,59 @@ class Query implements Countable, IteratorAggregate, QueryInterface
     protected $entityName;
 
     /**
+     * @var string, name of the table
+     */
+    protected $tableName;
+
+    /**
      * @var array, Select fields
      */
-    public $fields = [];
+    protected $fields = [];
 
     /**
      * @var array, Table joins with clauses
      */
-    public $joins = [];
+    protected $joins = [];
 
     /**
      * @var array, where conditions
      */
-    public $conditions = [];
+    protected $conditions = [];
 
     /**
      * @var array, fulltext search conditions
      */
-    public $search = [];
+    protected $search = [];
 
     /**
      * @var array, order by fields
      */
-    public $order = [];
+    protected $orderBy = [];
 
     /**
      * @var array, group by fields
      */
-    public $group = [];
+    protected $groupBy = [];
 
     /**
      * @var array, having conditions
      */
-    public $having = [];
+    protected $having = [];
 
     /**
      * @var array, with conditions
      */
-    public $with = [];
-
-    /**
-     * @var string, name of the table
-     */
-    public $datasource;
+    protected $with = [];
 
     /**
      * @var int, limit number
      */
-    public $limit;
+    protected $limit;
 
     /**
      * @var int, offset number
      */
-    public $offset;
-
-    /**
-     * @var array, Custom methods added by extensions or plugins
-     */
-    protected static $customMethods = [];
-
-    /**
-     * @var array, which arrays can be reset when query object is reset
-     */
-    protected static $resettable = array(
-        'conditions', 'search', 'order', 'group', 'having', 'limit', 'offset', 'with'
-    );
+    protected $offset;
 
     /**
      * @var array, when doing a reset, a snapshot copy is stored here
@@ -113,6 +120,127 @@ class Query implements Countable, IteratorAggregate, QueryInterface
     }
 
     /**
+     * Run user-added callback
+     * @param string $method Method name called
+     * @param array $args Array of arguments used in missing method call
+     * @throws BadMethodCallException
+     */
+    public function __call($method, $args)
+    {
+        d($method, $args);
+        if (isset(self::$customMethods[$method]) && is_callable(self::$customMethods[$method])) {
+            $callback = self::$customMethods[$method];
+
+            // Pass the current query object as the first parameter
+            array_unshift($args, $this);
+
+            return call_user_func_array($callback, $args);
+        } else if (method_exists('\\Spot\\Entity\\Collection', $method)) {
+            return $this->execute()->$method($args[0]);
+        } else {
+            throw new \BadMethodCallException("Method '" . __CLASS__ . "::" . $method . "' not found");
+        }
+    }
+
+    /**
+     * Get SELECT fields
+     * @return array
+     */
+    public function getFields()
+    {
+        return (array) $this->fields;
+    }
+
+    /**
+     * Get the table name
+     * @return string
+     */
+    public function getTableName()
+    {
+        return (string) $this->tableName;
+    }
+
+    /**
+     * Get JOINs
+     * @return array
+     */
+    public function getJoins()
+    {
+        return (array) $this->joins;
+    }
+
+    /**
+     * Get WHERE conditions
+     * @return array
+     */
+    public function getConditions()
+    {
+        return (array) $this->conditions;
+    }
+
+    /**
+     * Get HAVING
+     * @return array
+     */
+    public function getHaving()
+    {
+        return (array) $this->having;
+    }
+
+    /**
+     * Get GROUP BY
+     * @return array
+     */
+    public function getGroupBy()
+    {
+        return (array) $this->groupBy;
+    }
+
+    /**
+     * Get ORDER BY
+     * @return array
+     */
+    public function getOrderBy()
+    {
+        return (array) $this->orderBy;
+    }
+
+    /**
+     * Get LIMIT
+     * @return int
+     */
+    public function getLimit()
+    {
+        return (int) $this->limit;
+    }
+
+    /**
+     * Get OFFSET
+     * @return int
+     */
+    public function getOffset()
+    {
+        return (int) $this->offset;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /**
      * Add a custom user method via closure or PHP callback
      * @param string $method Method name to add
      * @param callback $callback Callback or closure that will be executed when missing method call matching $method is made
@@ -130,28 +258,6 @@ class Query implements Countable, IteratorAggregate, QueryInterface
     }
 
     /**
-     * Run user-added callback
-     * @param string $method Method name called
-     * @param array $args Array of arguments used in missing method call
-     * @throws BadMethodCallException
-     */
-    public function __call($method, $args)
-    {
-        if (isset(self::$customMethods[$method]) && is_callable(self::$customMethods[$method])) {
-            $callback = self::$customMethods[$method];
-
-            // Pass the current query object as the first parameter
-            array_unshift($args, $this);
-
-            return call_user_func_array($callback, $args);
-        } else if (method_exists('\\Spot\\Entity\\Collection', $method)) {
-            return $this->execute()->$method($args[0]);
-        } else {
-            throw new \BadMethodCallException("Method '" . __CLASS__ . "::" . $method . "' not found");
-        }
-    }
-
-    /**
      * Get current mapper
      * @return \Spot\Mapper
      */
@@ -164,7 +270,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
      * Get current entity class name that the query is to be performed on
      * @return string
      */
-    public function entityName()
+    public function getEntityName()
     {
         return $this->entityName;
     }
@@ -173,10 +279,9 @@ class Query implements Countable, IteratorAggregate, QueryInterface
      * The mapper's select() method chains to this method. Used to select
      * fields during the query.
      * @param mixed $fields (optional)
-     * @param string $source Data source name (table)
-     * @return self
+     * @return \Spot\QueryInterface
      */
-    public function select($fields = '*', $datasource = null)
+    public function select($fields = '*')
     {
         // If calling this method, and the first fields index is * then we should clear this out
         count($this->fields) === 1 && $this->fields[0] === '*' && $this->fields = [];
@@ -191,22 +296,17 @@ class Query implements Countable, IteratorAggregate, QueryInterface
             $this->fields = array_merge($this->fields, $fields);
         }
 
-        // Set the datasource (FROM) table
-        if (null !== $datasource) {
-            $this->from($datasource);
-        }
-
         return $this;
     }
 
     /**
-     * Specify the FROM table/datasource
-     * @param string $datasource Name of the data source to perform a query on
-     * @return self
+     * Specify the FROM table
+     * @param string $table Name of the table to perform a query on
+     * @return \Spot\QueryInterface
      */
-    public function from($datasource = null)
+    public function from($table)
     {
-        $this->datasource = $datasource;
+        $this->tableName = (string) $table;
         return $this;
     }
 
@@ -214,7 +314,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
      * Find records with given conditions
      * If all parameters are empty, find all records
      * @param array $conditions Array of conditions in column => value pairs
-     * @return self
+     * @return \Spot\QueryInterface
      */
     public function all(array $conditions = [])
     {
@@ -231,7 +331,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
      * recommended way to supply the constraint is as an array with three elements:
      * array(column1, operator, column2)
      * @param string $type, will be prepended to JOIN
-     * @return self
+     * @return \Spot\QueryInterface
      */
     public function join($table, $constraint = null, $type = 'INNER')
     {
@@ -267,7 +367,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
      * Add an INNER JOIN
      * @param string $table
      * @param string $constraint
-     * @return self
+     * @return \Spot\QueryInterface
      */
     public function innerJoin($table, $constraint)
     {
@@ -278,7 +378,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
      * Add a LEFT OUTER JOIN
      * @param string $table
      * @param string $constraint
-     * @return self
+     * @return \Spot\QueryInterface
      */
     public function leftOuterJoin($table, $constraint)
     {
@@ -289,7 +389,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
      * Add an RIGHT OUTER JOIN
      * @param string $table
      * @param string $constraint
-     * @return self
+     * @return \Spot\QueryInterface
      */
     public function rightOuterJoin($table, $constraint)
     {
@@ -300,7 +400,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
      * Add an FULL OUTER JOIN
      * @param string $table
      * @param string $constraint
-     * @return self
+     * @return \Spot\QueryInterface
      */
     public function fullOuterJoin($table, $constraint)
     {
@@ -311,7 +411,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
      * Add an CROSS JOIN
      * @param string $table
      * @param string $constraint
-     * @return self
+     * @return \Spot\QueryInterface
      */
     public function crossJoin($table, $constraint)
     {
@@ -323,7 +423,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
      * @param array $conditions Array of conditions for this clause
      * @param string $type Keyword that will separate each condition - 'AND', 'OR'
      * @param string $setType Keyword that will separate the whole set of conditions - 'AND', 'OR'
-     * @return self
+     * @return \Spot\QueryInterface
      */
     public function where(array $conditions = [], $type = 'AND', $setType = 'AND')
     {
@@ -343,7 +443,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
      * Convenience method for WHERE ... OR ...
      * @param array $conditions
      * @param string $type
-     * @return self
+     * @return \Spot\QueryInterface
      */
     public function orWhere(array $conditions = [], $type = 'AND')
     {
@@ -354,7 +454,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
      * Convenience method for WHERE ... AND ...
      * @param array $conditions
      * @param string $type
-     * @return self
+     * @return \Spot\QueryInterface
      */
     public function andWhere(array $conditions = [], $type = 'AND')
     {
@@ -399,7 +499,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
     /**
      * ORDER BY columns
      * @param array $fields Array of field names to use for sorting
-     * @return self
+     * @return \Spot\QueryInterface
      */
     public function order($fields = [])
     {
@@ -413,10 +513,10 @@ class Query implements Countable, IteratorAggregate, QueryInterface
                     $sort = $defaultSort;
                 }
 
-                $this->order[$field] = strtoupper($sort);
+                $this->orderBy[$field] = strtoupper($sort);
             }
         } else {
-            $this->order[$fields] = $defaultSort;
+            $this->orderBy[$fields] = $defaultSort;
         }
         return $this;
     }
@@ -424,12 +524,12 @@ class Query implements Countable, IteratorAggregate, QueryInterface
     /**
      * GROUP BY clause
      * @param array $fields Array of field names to use for grouping
-     * @return self
+     * @return \Spot\QueryInterface
      */
     public function group(array $fields = [])
     {
         foreach ($fields as $field) {
-            $this->group[] = $field;
+            $this->groupBy[] = $field;
         }
         return $this;
     }
@@ -437,7 +537,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
     /**
      * Having clause to filter results by a calculated value
      * @param array $having Array (like where) for HAVING statement for filter records by
-     * @return self
+     * @return \Spot\QueryInterface
      */
     public function having(array $having = [])
     {
@@ -450,7 +550,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
      * Implemented at adapter-level for databases that support it
      * @param int $limit Number of records to return
      * @param int $offset Record to start at for limited result set
-     * @return self
+     * @return \Spot\QueryInterface
      */
     public function limit($limit = 20, $offset = null)
     {
@@ -463,7 +563,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
      * Offset executed query to skip specified amount of records
      * Implemented at adapter-level for databases that support it
      * @param int $offset Record to start at for limited result set
-     * @return self
+     * @return \Spot\QueryInterface
      */
     public function offset($offset = 0)
     {
@@ -534,7 +634,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
             $result = $cacheResult;
         } else {
             // Execute query
-            $result = $this->mapper()->connection($this->entityName())->count($this);
+            $result = $this->mapper->getDi()->get($this->mapper->getAdapterName())->count($this);
 
             // Set cache
             $this->_cache[$cacheKey] = $result;
@@ -566,6 +666,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
      * @see snapshot
      * @return Spot_Query_Set
      */
+/*
     public function reset($hardReset = false)
     {
         foreach ($this->snapshot as $field => $value) {
@@ -584,6 +685,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
         }
         return $this;
     }
+*/
 
     /**
      * Reset the query back to its original state
@@ -620,7 +722,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
      */
     public function toString()
     {
-        return $this->mapper()->connection($this->entityName())->getQuerySql($this);
+        return $this->mapper->getDi()->get($this->mapper->getAdapterName())->getQuerySql($this);
     }
 
     /**
@@ -641,6 +743,6 @@ class Query implements Countable, IteratorAggregate, QueryInterface
      */
     public function execute()
     {
-        return $this->mapper()->connection($this->entityName())->read($this);
+        return $this->mapper->getDi()->get($this->mapper->getAdapterName())->read($this);
     }
 }

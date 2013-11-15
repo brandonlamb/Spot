@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Entity collection factory
+ * Entity result set factory
  *
  * @package \Spot\Factory
  * @author Brandon Lamb <brandon@brandonlamb.com>
@@ -11,12 +11,12 @@ namespace Spot\Factory;
 
 use Spot\Mapper;
 
-class CollectionFactory
+class ResultSetFactory
 {
 	/**
 	 * @var string, name of query class to instantiate
 	 */
-	protected $className = '\\Spot\\Entity\\Collection';
+	protected $className = '\\Spot\\Entity\\ResultSet';
 
 	/**
 	 * Constructor

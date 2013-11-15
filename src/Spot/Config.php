@@ -9,7 +9,7 @@
 
 namespace Spot;
 
-use Spot\Di as DiContainer,
+use Spot\Di\DiInterface,
     Spot\Di\InjectableTrait,
     Spot\Adapter\AdapterInterface;
 
@@ -25,9 +25,9 @@ class Config
 
     /**
      * Constructor
-     * @param \Spot\Di $di
+     * @param \Spot\Di\DiInterface $di
      */
-    public function __construct(DiContainer $di)
+    public function __construct(DiInterface $di)
     {
         $this->setDI($di);
 
