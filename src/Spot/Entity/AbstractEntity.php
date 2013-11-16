@@ -198,7 +198,7 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
         // Check for custom setter method (override)
         $setMethod = 'set' . $field;
 
-        $fields = $this->fields();
+        $fields = $this->getMetaData();
 
         // Run value through a filter call if set
         if (isset($fields[$field]['filter'])) {

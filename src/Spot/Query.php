@@ -643,7 +643,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
     {
         return $this->mapper->getDi()->get($this->mapper->getAdapterName())->getQuerySql($this);
     }
-    
+
     /**
      * Execute and return query as a collection
      * @return mixed ResultSet object on success, boolean false on failure

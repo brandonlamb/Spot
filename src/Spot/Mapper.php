@@ -238,17 +238,6 @@ class Mapper
     }
 
     /**
-     * Find records with given conditions If all parameters are empty, find all records
-     * @param string $entityName Name of the entity class
-     * @param array $conditions Array of conditions in column => value pairs
-     * @return \Spot\Query
-     */
-    public function all($entityName, array $conditions = [])
-    {
-        return $this->select($entityName)->where($conditions);
-    }
-
-    /**
      * Find first record matching given conditions
      * @param string $entityName Name of the entity class
      * @param array $conditions Array of conditions in column => value pairs
@@ -256,12 +245,20 @@ class Mapper
      */
     public function first($entityName, array $conditions = [])
     {
-        $query = $this
+        return ($collection = $this->select($entityName)->where($conditions)->limit(1)->execute()) ? $collection->first() : false;
+    }
+
+    /**
+     * Find records with given conditions If all parameters are empty, find all records
+     * @param string $entityName Name of the entity class
+     * @param array $conditions Array of conditions in column => value pairs
+     * @return \Spot\Query
+     */
+    public function all($entityName, array $conditions = [])
+    {
+        return $this
             ->select($entityName)
-            ->where($conditions)
-            ->limit(1);
-        
-        return ($collection = $query->execute()) ? $collection->first() : false;
+            ->where($conditions);
     }
 
     /**

@@ -109,8 +109,8 @@ class EntityManager
         }
 
         // Datasource info
-        $entityDatasource = null;
         $entityDatasource = $entityName::getTable();
+
         if (null === $entityDatasource || !is_string($entityDatasource)) {
             throw new \InvalidArgumentException("Entity must have a datasource defined. Please define a protected property named 'datasource' on your '" . $entityName . "' entity class.");
         }
@@ -193,6 +193,7 @@ class EntityManager
                 $this->relations[$entityName][$relationAlias] = $relationOpts;
             }
         }
+
         return null === $field ? $returnFields : $returnFields[$field];
     }
 
