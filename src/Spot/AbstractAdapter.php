@@ -46,7 +46,7 @@ abstract class AbstractAdapter
         $this->pdo = $pdo;
 
         $dialectClass = '\\Spot\\Dialect\\' . $this->dialectType;
-        $this->dialect = new $dialectClass();
+        $this->dialect = new $dialectClass($this);
     }
 
     /**

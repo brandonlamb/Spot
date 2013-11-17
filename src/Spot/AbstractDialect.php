@@ -14,7 +14,36 @@ namespace Spot;
 
 abstract class AbstractDialect
 {
+	/**
+	 * @var \Spot\AdapterInterface
+	 */
+	protected $adapter;
+
+	/**
+	 * @var string
+	 */
 	protected $escapeChar;
+
+	public function __construct(\Spot\AdapterInterface $adapter)
+	{
+		$this->setAdapter($adapter);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function getAdapter()
+	{
+		return $this->adapter;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function setAdapter(AdapterInterface $adapter)
+	{
+		$this->adapter = $adapter;
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -49,21 +78,17 @@ abstract class AbstractDialect
 			return $sqlQuery;
 		}
 
+		$ci = 0;
         $sqlStatement = '(';
         $loopOnce = false;
+
         foreach ($conditions as $condition) {
             if (isset($condition['conditions'])) {
-#            	echo "\nhasSubConditions\n";
                 $subConditions = $condition['conditions'];
             } else {
-#            	echo "\nnoSubConditions\n";
                 $subConditions = $conditions;
                 $loopOnce = true;
             }
-
-#print_r($conditions);
-
-#continue;
 
             $sqlWhere = [];
 
@@ -71,51 +96,40 @@ abstract class AbstractDialect
                 $whereClause = '';
 
                 // Column name with comparison operator
-                $colData = explode(' ', $column);
-                $operator = isset($colData[1]) ? $colData[1] : '=';
-                if (count($colData) > 2) {
-                    $operator = array_pop($colData);
-                    $colData = array(implode(' ', $colData), $operator);
+                $columnData = (strpos($column, ' ') !== false) ? explode(' ', $column) : [$column];
+                $operator = isset($columnData[1]) ? $columnData[1] : '=';
+
+                if (count($columnData) > 2) {
+                    $operator = array_pop($columnData);
+                    $columnData = array(implode(' ', $columnData), $operator);
                 }
-                $col = $colData[0];
 
-
-$operator = $this->getOperator($operator);
-d($column, $value, $operator, $col);
-continue;
+                $columnName = $columnData[0];
+				$operator = $this->getOperator($operator, $value);
 
 
 
-
-
-
-
-
-                // If WHERE clause not already set by the code above...
                 if (is_array($value)) {
 #                    $value = '(' . join(', ', array_fill(0, count($value), '?')) . ')'
                     $valueIn = '';
                     foreach ($value as $val) {
-                        $valueIn .= $this->quote($val) . ',';
+                        $valueIn .= $this->adapter->quote($val) . ',';
                     }
-                    $value = '(' . trim($valueIn, ',') . ')';
-                    $whereClause = $this->escapeIdentifier($col) . ' ' . $operator . ' ' . $value;
-                } elseif (is_null($value)) {
-                    $whereClause = $this->escapeIdentifier($col) . ' ' . $operator;
-                }
 
-                if (empty($whereClause)) {
+                    $sqlWhere[] = "$columnName $operator (" . trim($valueIn, ',') . ')';
+                } else if (is_null($value)) {
+                    $sqlWhere[] = $columnName . ' ' . $operator;
+                } else {
                     // Add to binds array and add to WHERE clause
-                    $colParam = preg_replace('/\W+/', '_', $col) . $ci;
+                    $colParam = preg_replace('/\W+/', '_', $columnName) . $ci;
 
                     // Dont escape calculated/aliased columns
-                    if (strpos($col, '.') !== false) {
-                        $sqlWhere[] = $col . ' ' . $operator . ' :' . $colParam . '';
+                    if (strpos($columnName, '.') !== false) {
+                        $sqlWhere[] = $columnName . ' ' . $operator . ' :' . $colParam . '';
                     } else {
-                        $sqlWhere[] = $this->escapeIdentifier($col) . ' ' . $operator . ' :' . $colParam . '';
+                        #$sqlWhere[] = $this->escapeIdentifier($columnName) . ' ' . $operator . ' :' . $colParam . '';
+                        $sqlWhere[] = $columnName . ' ' . $operator . ' :' . $colParam . '';
                     }
-                } else {
-                    $sqlWhere[] = $whereClause;
                 }
 
                 // Increment ensures column name distinction
@@ -123,20 +137,19 @@ continue;
                 // to maintain compatibility with getConditionsSql()
                 $ci++;
             }
+
             if ($sqlStatement != '(') {
                 $sqlStatement .= ' ' . (isset($condition['setType']) ? $condition['setType'] : 'AND') . ' (';
             }
-            $sqlStatement .= implode(' ' . (isset($condition['type']) ? $condition['type'] : 'AND') . ' ', $sqlWhere );
+            $sqlStatement .= implode(' ' . (isset($condition['type']) ? $condition['type'] : 'AND') . ' ', $sqlWhere);
             $sqlStatement .= ')';
-            if ($loopOnce) { break; }
-        }
-exit;
-        // Ensure we actually had conditions
-        if (0 == $ci) {
-            $sqlStatement = '';
+
+            if ($loopOnce) {
+            	break;
+            }
         }
 
-        return $sqlStatement;
+		return (empty($sqlStatement)) ? $sqlQuery : $sqlQuery . ' WHERE ' . $sqlStatement;
 	}
 
 	/**
@@ -204,91 +217,81 @@ exit;
         switch ($operator) {
             case '<':
             case ':lt':
-                $operator = '<';
-                break;
+                return '<';
 
             case '<=':
             case ':lte':
-                $operator = '<=';
-                break;
+                return '<=';
 
             case '>':
             case ':gt':
-                $operator = '>';
-                break;
+                return '>';
 
             case '>=':
             case ':gte':
-                $operator = '>=';
-                break;
+                return '>=';
 
             // REGEX matching
             case '~=':
             case '=~':
             case ':regex':
-                $operator = 'REGEX';
-                break;
+                return 'REGEX';
 
             // LIKE
             case ':like':
-                $operator = 'LIKE';
-                break;
+                return 'LIKE';
 
             // column IN ()
-#                    case ':in':
-#                    case 'in':
-#                        $whereClause = $this->escapeIdentifier($col) . ' IN (' . join(', ', array_fill(0, count($value), '?')) . ')';
-#                        break;
+            case 'in':
+            case ':in':
+#                $whereClause = $this->escapeIdentifier($col) . ' IN (' . join(', ', array_fill(0, count($value), '?')) . ')';
+                return 'IN';
 
             // column NOT IN ()
-#                    case ':notin':
-#                    case 'notin':
-#                        $whereClause = $this->escapeIdentifier($col) . ' NOT IN (' . join(', ', array_fill(0, count($value), '?')) . ')';
-#                        break;
+            case 'not in':
+            case ':notin':
+#                $whereClause = $this->escapeIdentifier($col) . ' NOT IN (' . join(', ', array_fill(0, count($value), '?')) . ')';
+            	return 'NOT IN';
 
             // column BETWEEN x AND y
-#                   case 'BETWEEN':
-#                       $sqlWhere = $condition['column'] . ' BETWEEN ' . join(' AND ', array_fill(0, count($condition['values']), '?'));
-#                       break;
+           case 'between':
+           case ':between':
+#               $sqlWhere = $condition['column'] . ' BETWEEN ' . join(' AND ', array_fill(0, count($condition['values']), '?'));
+           		return 'BETWEEN';
 
             // FULLTEXT search
             // MATCH(col) AGAINST(search)
+            case 'match':
             case ':fulltext':
-                $colParam = preg_replace('/\W+/', '_', $col) . $ci;
-                $whereClause = 'MATCH(' . $this->escapeIdentifier($col) . ') AGAINST(:' . $colParam . ')';
-                break;
-
-            // ALL - Find ALL values in a set - Kind of like IN(), but seeking *all* the values
-            case ':all':
-                throw new \Spot\Exception\Adapter("SQL adapters do not currently support the ':all' operator");
-                break;
+#                $colParam = preg_replace('/\W+/', '_', $col) . $ci;
+#                $whereClause = 'MATCH(' . $this->escapeIdentifier($col) . ') AGAINST(:' . $colParam . ')';
+                return 'MATCH';
 
             // Not equal
             case '<>':
             case '!=':
             case ':ne':
             case ':not':
-            case ':notin':
             case ':isnot':
-                $operator = '!=';
                 if (is_array($value)) {
-                    $operator = 'NOT IN';
-                } elseif (is_null($value)) {
-                    $operator = 'IS NOT NULL';
+                    return 'NOT IN';
+                } else if (is_null($value)) {
+                    return 'IS NOT NULL';
+                } else {
+                	return '!=';
                 }
-                break;
 
             // Equals
             case '=':
             case ':eq':
-            case ':in':
             case ':is':
             default:
-                $operator = '=';
                 if (is_array($value)) {
-                    $operator = 'IN';
-                } elseif (is_null($value)) {
-                    $operator = 'IS NULL';
+                    return 'IN';
+                } else if (is_null($value)) {
+                    return 'IS NULL';
+                } else {
+                	return '=';
                 }
         }
 	}

@@ -14,6 +14,17 @@ namespace Spot;
 interface DialectInterface
 {
 	/**
+	 * Get the Spot Adapter
+	 * @return \Spot\AdapterInterface
+	 */
+	public function getAdapter();
+	/**
+	 * Set the Spot Adapter
+	 * @param \Spot\AdapterInterface
+	 */
+	public function setAdapter(AdapterInterface $adapter);
+
+	/**
 	 * Creates a SELECT statement
 	 *
 	 * <code>
@@ -51,6 +62,8 @@ interface DialectInterface
 	 *  );
 	 * </code>
 	 *
+	 * Currently only supporting passing a single "(column = value)" or a set
+	 * (column = value AND column = value). Multiple sets are supported via multiple where() calls.
 	 * @param string $sqlQuery
 	 * @param array $conditions
 	 * @return string
