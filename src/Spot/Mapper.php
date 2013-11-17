@@ -14,8 +14,6 @@ namespace Spot;
 
 use Spot\Di\DiInterface,
     Spot\Di\InjectableTrait,
-    Spot\Adapter\AdapterInterface,
-    Spot\Query,
     Spot\Entity\EntityInterface;
 
 class Mapper

@@ -8,20 +8,29 @@
 
 namespace Spot\Adapter;
 
-use \Spot\Log;
+use Spot\AbstractAdapter,
+    Spot\AdapterInterface;
 
 class Pgsql extends AbstractAdapter implements AdapterInterface
 {
+    protected $type = 'Pgsql';
+    protected $dialectType = 'Pgsql';
+
     /**
-     * {@inheritdoc}
+     * @{inheritDoc}
+     * @todo Not quoting the columns essentially by just returning $field
      */
-    public function escapeField($field)
+    public function escapeIdentifier($identifier)
     {
-		if (false !== strpos('.', $field)) {
-            return $field === '*' ? $field : '"' . $field . '"';
-        } else {
-			return $field;
-		}
+        if (is_array($identifier)) {
+            return '"' . $identifier[0] . '"."' . $identifier[1] . '"';
+        }
+
+        if (false !== strpos('.', $identifier)) {
+            $identifier = ($identifier === '*') ?: '"' . $identifier . '"';
+        }
+
+        return $identifier;
     }
 
     /**
