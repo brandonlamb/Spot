@@ -71,7 +71,7 @@ class Mapper
      */
     public function getAdapter()
     {
-        return $this->getAdapter();
+        return $this->di->getShared($this->adapterName);
     }
 
 /* ====================================================================================================== */
