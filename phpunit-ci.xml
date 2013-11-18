@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<phpunit bootstrap="tests/bootstrap.php"
+		backupGlobals="false"
+		backupStaticAttributes="false"
+		strict="true"
+		verbose="true"
+		timeoutForSmallTests="5"
+		printsummary="true"
+		codecoverage="true">
+
+	<formatter todir="reports" type="xml" outfile="build/coverage/coverage.xml" />
+
+	<testsuites>
+		<testsuite name="Spot Test Suite">
+			<directory suffix=".php">./tests/Spot/Tests</directory>
+		</testsuite>
+	</testsuites>
+
+	<logging>
+		<log type="coverage-html" target="build/coverage" title="reporting" charset="UTF-8" yui="true" highlight="true" lowUpperBound="35" highLowerBound="70"/>
+		<log type="coverage-clover" target="build/logs/clover.xml"/>
+		<log type="junit" target="build/logs/junit.xml" logIncompleteSkipped="false"/>
+		<log type="metrics-xml" target="build/logs/metrics.xml"/>
+		<log type="pmd-xml" target="build/logs/pmd.xml" cpdMinLines="5" cpdMinMatches="70"/>
+		<log type="testdox-html" target="build/logs/testdox.html"/>
+
+		<pmd>
+			<rule class="PHPUnit_Util_Log_PMD_Rule_Project_CRAP" threshold="5,30"/>
+			<rule class="PHPUnit_Util_Log_PMD_Rule_Class_DepthOfInheritanceTree" threshold="6"/>
+			<rule class="PHPUnit_Util_Log_PMD_Rule_Class_EfferentCoupling" threshold="20"/>
+			<rule class="PHPUnit_Util_Log_PMD_Rule_Class_ExcessiveClassLength" threshold="1000"/>
+			<rule class="PHPUnit_Util_Log_PMD_Rule_Class_ExcessivePublicCount" threshold="45"/>
+			<rule class="PHPUnit_Util_Log_PMD_Rule_Class_TooManyFields" threshold="15"/>
+			<rule class="PHPUnit_Util_Log_PMD_Rule_Function_CodeCoverage" threshold="35,70"/>
+			<rule class="PHPUnit_Util_Log_PMD_Rule_Function_CRAP" threshold="30"/>
+			<rule class="PHPUnit_Util_Log_PMD_Rule_Function_CyclomaticComplexity" threshold="20"/>
+			<rule class="PHPUnit_Util_Log_PMD_Rule_Function_ExcessiveMethodLength" threshold="100"/>
+			<rule class="PHPUnit_Util_Log_PMD_Rule_Function_ExcessiveParameterList" threshold="10"/>
+			<rule class="PHPUnit_Util_Log_PMD_Rule_Function_NPathComplexity" threshold="200"/>
+		</pmd>
+	</logging>
+
+	<filter>
+		<whitelist addUncoveredFilesFromWhitelist="true">
+			<directory suffix=".php">src</directory>
+			<exclude>
+				<group>exceptions</group>
+				<file>src/autoload.php</file>
+			</exclude>
+		</whitelist>
+	</filter>
+
+<!--
+	<selenium>
+		<browser name="Firefox on localhost" browser="*chrome" host="localhost" port="4444" timeout="30000"/>
+	</selenium>
+-->
+</phpunit>

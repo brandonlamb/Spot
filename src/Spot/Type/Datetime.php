@@ -1,44 +1,49 @@
 <?php
+
 namespace Spot\Type;
 
-use Spot\Entity;
-
-class Datetime implements TypeInterface
+class Datetime extends AbstractType implements TypeInterface
 {
-	/** @var string */
-	protected static $format = 'Y-m-d h:i:s';
+    /**
+     * @var string
+     */
+    protected static $format = 'Y-m-d h:i:s';
 
-	/**
-	 * @{inherit}
-	 */
-	public static function cast($value)
-	{
-		if (is_string($value) || is_numeric($value)) {
-			// Create new \DateTime instance from string value
-			if (is_numeric($value)) {
-				$value = new \DateTime('@' . $value);
-			} else if ($value) {
-				$value = new \DateTime($value);
-			} else {
-				$value = null;
-			}
-		}
-		return null === $value ? $value : $value->format(static::$format);
-	}
+    /**
+     * @{inherit}
+     */
+    public static function cast($value)
+    {
+        // Ensure nulls or empty dates are preserved as null
+        $value = trim($value);
+        if (empty($value)) {
+            return null;
+        }
 
-	/**
-	 * @{inherit}
-	 */
-	public static function get(Entity $entity, $value)
-	{
-		return self::cast($value);
-	}
+        if (is_string($value) || is_numeric($value)) {
+            // Create new \DateTime instance from string value
+            if (is_numeric($value)) {
+                $value = new \DateTime('@' . $value);
+            } elseif ($value) {
+                $value = new \DateTime($value);
+            } else {
+                $value = new \DateTime();
+            }
+        }
 
-	/**
-	 * @{inherit}
-	 */
-	public static function set(Entity $entity, $value)
-	{
-		return self::cast($value);
-	}
+        if ($value instanceof \DateTime) {
+            return $value->format(static::$format);
+        } else {
+            $value = new \DateTime();
+            return $value->format(static::$format);
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public static function dump($value)
+    {
+        return static::cast($value);
+    }
 }

@@ -1,0 +1,9 @@
+#!/bin/bash
+cd ext
+./X-clean
+cd ..
+zephir generate
+zephir compile
+cd ext
+./X-install
+cd ..

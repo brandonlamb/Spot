@@ -1,88 +1,46 @@
 <?php
-namespace Spot\Adapter;
 
 /**
  * Postgresql Database Adapter
+ * @package \Spot\Adapter
+ * @author Brandon Lamb <brandon@brandonlamb.com>
  */
+
+namespace Spot\Adapter;
+
+use Spot\AbstractAdapter,
+    Spot\AdapterInterface;
+
 class Pgsql extends AbstractAdapter implements AdapterInterface
 {
-	// Format for date columns, formatted for PHP's date() function
-	protected $formatDate = 'Y-m-d';
-	protected $formatTime = ' H:i:s';
-	protected $formatDatetime = 'Y-m-d H:i:s';
+    protected $type = 'Pgsql';
+    protected $dialectType = 'Pgsql';
 
-	/**
-	 * Escape/quote direct user input
-	 *
-	 * @param string $string
-	 */
-	public function escapeField($field)
-	{
-		return $field === '*' ? $field : '"' . $field . '"';
-	}
+    /**
+     * @{inheritDoc}
+     * @todo Not quoting the columns essentially by just returning $field
+     */
+    public function escapeIdentifier($identifier)
+    {
+        if (is_array($identifier)) {
+            return '"' . $identifier[0] . '"."' . $identifier[1] . '"';
+        }
 
-	/**
-	 * {@inherit}
-	 */
-	public function migrate($table, array $fields, array $options = array())
-	{
-		return $this;
-	}
+        if (false !== strpos('.', $identifier)) {
+            $identifier = ($identifier === '*') ?: '"' . $identifier . '"';
+        }
 
-	/**
-	 * @{inherit}
-	 */
-	public function createDatabase($database)
-	{
-		$sql = 'CREATE DATABASE ' . $database;
+        return $identifier;
+    }
 
-		// Add query to log
-		\Spot\Log::addQuery($this, $sql);
-
-		return $this->connection()->exec($sql);
-	}
-
-	/**
-	 * @{inherit}
-	 */
-	public function dropDatabase($database)
-	{
-		$sql = 'DROP DATABASE ' . $database;
-
-		// Add query to log
-		\Spot\Log::addQuery($this, $sql);
-
-		return $this->connection()->exec($sql);
-	}
-
-	/**
-	 * {@inherit}
-	 */
-	public function truncateDatasource($datasource)
-	{
-		return $this;
-	}
-
-	/**
-	 * {@inherit}
-	 */
-	public function dropDatasource($datasource)
-	{
-		return $this;
-	}
-
-	/**
-	 * Return insert statement
-	 * @param string $datasource
-	 * @param array $data
-	 * @param array $binds
-	 * @return string
-	 */
-	public function statementInsert($datasource, $data, $binds)
-	{
-		// build the statement
-		return "INSERT INTO " . $datasource .
-			" (" . implode(', ', array_map(array($this, 'escapeField'), array_keys($data))) . ")" .
-			" VALUES (:" . implode(', :', array_keys($binds)) . ")";
-	}
+    /**
+     * {@inheritdoc}
+     */
+    public function create($datasource, array $data, array $options = array())
+    {
+        if ($options['serial'] === true && empty($options['sequence'])) {
+            $options['sequence'] = $datasource . '_id_seq';
+        }
+        return parent::create($datasource, $data, $options);
+    }
 }

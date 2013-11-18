@@ -1,10 +1,11 @@
 <?php
-namespace Spot\Type;
 
-use Spot\Entity;
+namespace Spot\Type;
 
 class Date extends Type\Datetime
 {
-	/** @var string */
-	protected static $format = 'Y-m-d';
+    /**
+     * @var string
+     */
+    protected static $format = 'Y-m-d';
 }

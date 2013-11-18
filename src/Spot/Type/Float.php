@@ -1,30 +1,19 @@
 <?php
+
 namespace Spot\Type;
-use Spot\Entity;
 
-class Float implements TypeInterface
+class Float extends AbstractType implements TypeInterface
 {
-	/**
-	 * @{inherit}
-	 */
-	public static function cast($value)
-	{
-		return (strlen($value)) ? (float) $value : null;
-	}
+    /**
+     * @var array
+     */
+    public static $defaultOptions = array('precision' => 14, 'scale' => 10);
 
-	/**
-	 * @{inherit}
-	 */
-	public static function get(Entity $entity, $value)
-	{
-		return self::cast($value);
-	}
-
-	/**
-	 * @{inherit}
-	 */
-	public static function set(Entity $entity, $value)
-	{
-		return self::cast($value);
-	}
+    /**
+     * @{inherit}
+     */
+    public static function cast($value)
+    {
+        return (strlen($value)) ? (float) $value : null;
+    }
 }

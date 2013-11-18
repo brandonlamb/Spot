@@ -1,0 +1,10 @@
+#!/bin/bash
+export CC="gcc"
+export CFLAGS="-O0 -g3 -Wall -fvisibility=hidden"
+if [ -f Makefile ]; then
+	make --silent clean
+	phpize --silent --clean
+fi
+phpize --silent
+./configure --silent --enable-spot
+make --silent && make --silent install

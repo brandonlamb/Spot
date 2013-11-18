@@ -1,26 +1,22 @@
 <?php
+
 namespace Spot\Type;
 
-use Spot\Entity,
-	Spot\Type;
-
-class Serialized extends Type
+class Serialized extends AbstractType implements TypeInterface
 {
-	/**
-	 * Cast given value to type required
-	 */
-	public static function load($value)
-	{
-		if(is_string($value)) {
-			$value = @unserialize($value);
-		} else {
-			$value = null;
-		}
-		return $value;
-	}
+    /**
+     * {@inheritdoc}
+     */
+    public static function load($value)
+    {
+        return is_string($value) ? @unserialize($value) : null;
+    }
 
-	public static function dump($value)
-	{
-		return serialize($value);
-	}
+    /**
+     * {@inheritdoc}
+     */
+    public static function dump($value)
+    {
+        return serialize($value);
+    }
 }

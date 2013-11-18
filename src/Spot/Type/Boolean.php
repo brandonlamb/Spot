@@ -1,30 +1,22 @@
 <?php
+
 namespace Spot\Type;
-use Spot\Entity;
 
-class Boolean implements TypeInterface
+class Boolean extends AbstractType implements TypeInterface
 {
-	/**
-	 * @{inherit}
-	 */
-	public static function cast($value)
-	{
-		return (bool) $value;
-	}
+    /**
+     * @{inherit}
+     */
+    public static function cast($value)
+    {
+        return (bool) $value;
+    }
 
-	/**
-	 * @{inherit}
-	 */
-	public static function get(Entity $entity, $value)
-	{
-		return self::cast($value);
-	}
-
-	/**
-	 * @{inherit}
-	 */
-	public static function set(Entity $entity, $value)
-	{
-		return self::cast($value);
-	}
+    /**
+     * Boolean is generally persisted as an integer
+     */
+    public static function dump($value)
+    {
+        return (int) $value;
+    }
 }
