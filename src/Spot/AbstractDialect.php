@@ -107,8 +107,6 @@ abstract class AbstractDialect
                 $columnName = $columnData[0];
 				$operator = $this->getOperator($operator, $value);
 
-
-
                 if (is_array($value)) {
 #                    $value = '(' . join(', ', array_fill(0, count($value), '?')) . ')'
                     $valueIn = '';
@@ -132,9 +130,8 @@ abstract class AbstractDialect
                     }
                 }
 
-                // Increment ensures column name distinction
-                // We need to do this whether it was used or not
-                // to maintain compatibility with getConditionsSql()
+                // Increment ensures column name distinction. We need to do this whether it was used or not
+                // to maintain compatibility with where()
                 $ci++;
             }
 
@@ -151,6 +148,20 @@ abstract class AbstractDialect
 
 		return (empty($sqlStatement)) ? $sqlQuery : $sqlQuery . ' WHERE ' . $sqlStatement;
 	}
+
+    /**
+     * {@inheritdoc}
+     */
+    public function join($sqlQuery, array $joins = [])
+    {
+        $sqlJoins = [];
+
+        foreach ($joins as $join) {
+            $sqlJoins[] = trim($join[2]) . ' JOIN' . ' ' . $join[0] . ' ON (' . trim($join[1]) . ')';
+        }
+
+        return empty($sqlJoins) ? $sqlQuery : $sqlQuery . implode(' ', $sqlJoins);
+    }
 
 	/**
 	 * {@inheritDoc}

@@ -195,49 +195,19 @@ abstract class AbstractAdapter
         $sqlQuery = $this->select(null, $query->getFields());
         $sqlQuery = $this->from($sqlQuery, $query->getTableName());
         $sqlQuery = $this->where($sqlQuery, $query->getConditions());
-
-d($sqlQuery);
-
-        $joins      = $this->getJoinsSql($query->getJoins());
-        $group      = $this->getGroupSql($query->getGroupBy());
-        $order      = $this->getOrderSql($query->getOrderBy());
-        $limit      = $this->getLimitSql($query->getLimit());
-        $offset     = $this->getOffsetSql($query->getOffset());
+        $sqlQuery = $this->join($sqlQuery, $query->getJoins());
+        $sqlQuery = $this->group($sqlQuery, $query->getGroupBy());
+        $sqlQuery = $this->order($sqlQuery, $query->getOrderBy());
+        $sqlQuery = $this->limit($sqlQuery, $query->getLimit());
+        $sqlQuery = $this->offset($sqlQuery, $query->getOffset());
 
         if ($query->getHaving()) {
-            $having = $this->getConditionsSql($query->getHaving());
+            $sqlQuery = $this->where($sqlQuery, $query->getHaving());
         }
 
-        return "
-            SELECT " . $this->getFieldsSql($query->getFields()) . "
-            FROM " . $query->getTableName() . "
-            " . ($joins ? $joins : '') . "
-            " . ($conditions ? 'WHERE ' . $conditions : '') . "
-            " . ($group ? $group : '') . "
-            " . ($query->getHaving() ? 'HAVING' . $having : '') . "
-            " . ($order ? $order : '') . "
-            " . ($limit ? $limit : '') . "
-            " . ($limit && $offset ? $offset : '');
-
-
-
-d($sql);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         $binds = $this->getBinds($query->getParameters());
+
+d($sqlQuery, $binds);
 
         // Unset any NULL values in binds (compared as "IS NULL" and "IS NOT NULL" in SQL instead)
         if ($binds && count($binds) > 0) {
@@ -248,26 +218,12 @@ d($sql);
             }
         }
 
-        // @todo - move this part to a separate method so that self::read() could return the sql statement
-        $result = false;
-        try {
-            // Prepare update query
-            $stmt = $this->pdo->prepare($sql);
-
-            if ($stmt) {
-                // Execute
-                $result = ($stmt->execute($binds)) ? $this->toCollection($query, $stmt) : false;
-            } else {
-                $result = false;
-            }
-        } catch (\PDOException $e) {
-            // Table does not exist
-            if ($e->getCode() == '42S02') {
-                throw new \Spot\Exception\Adapter("Table or datasource '" . $query->getTableName() . "' does not exist");
-            }
-
-            // Throw new Spot exception
-            throw new \Spot\Exception\Adapter(__METHOD__ . ': ' . $e->getMessage());
+        // Prepare update query
+        if ($stmt = $this->pdo->prepare($sqlQuery)) {
+            // Execute
+            $result = ($stmt->execute($binds)) ? $this->toCollection($query, $stmt) : false;
+        } else {
+            $result = false;
         }
 
         return $result;
@@ -479,90 +435,10 @@ d($sql);
     /**
      * {@inheritdoc}
      */
-    public function getJoinsSql(array $joins = [])
+    public function join($sqlQuery, array $joins = [])
     {
-        $sqlJoins = [];
-
-        foreach ($joins as $join) {
-            $sqlJoins[] = trim($join[2]) . ' JOIN' . ' ' . $join[0] . ' ON (' . trim($join[1]) . ')';
-        }
-
-        return join(' ', $sqlJoins);
+        return $this->dialect->join($sqlQuery, $joins);
     }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getBinds(array $conditions = [], $ci = false)
-    {
-        if (count($conditions) === 0) { return; }
-
-        $binds = [];
-        $loopOnce = false;
-
-        foreach ($conditions as $condition) {
-            if (is_array($condition) && isset($condition['conditions'])) {
-                $subConditions = $condition['conditions'];
-            } else {
-                $subConditions = $conditions;
-                $loopOnce = true;
-            }
-
-            foreach ($subConditions as $column => $value) {
-                $bindValue = false;
-
-                // Handle binding depending on type
-                if (is_object($value)) {
-                    if ($value instanceof \DateTime) {
-                        // @todo Need to take into account column type for date formatting
-                        $bindValue = (string) $value->format($this->dateTimeFormat());
-                    } else {
-                        $bindValue = (string) $value; // Attempt cast of object to string (calls object's __toString method)
-                    }
-                } elseif (is_bool($value)) {
-                    $bindValue = (int) $value; // Cast boolean to integer (false = 0, true = 1)
-                } elseif (!is_array($value)) {
-                    $bindValue = $value;
-                }
-
-                // Bind given value
-                if (false !== $bindValue) {
-                    // Column name with comparison operator
-                    $colData = explode(' ', $column);
-                    $operator = '=';
-                    if (count($colData) > 2) {
-                        $operator = array_pop($colData);
-                        $colData = array(implode(' ', $colData), $operator);
-                    }
-                    $col = $colData[0];
-
-                    if (false !== $ci) {
-                        $col = $col . $ci;
-                    }
-
-                    $colParam = preg_replace('/\W+/', '_', $col);
-
-                    // Add to binds array and add to WHERE clause
-                    $binds[$colParam] = $bindValue;
-                }
-                // Increment ensures column name distinction
-                // We need to do this whether it was used or not
-                // to maintain compatibility with getConditionsSql()
-                $ci++;
-            }
-
-            if ($loopOnce) {
-                break;
-            }
-        }
-        return $binds;
-    }
-
-
-
-
-
-
 
     /**
      * {@inheritdoc}
@@ -638,6 +514,74 @@ d($sql);
     public function lastInsertId($sequence = null)
     {
         return $this->pdo->lastInsertId($sequence);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getBinds(array $conditions = [], $ci = false)
+    {
+        if (count($conditions) === 0) { return; }
+
+        $binds = [];
+        $loopOnce = false;
+
+        foreach ($conditions as $condition) {
+            if (is_array($condition) && isset($condition['conditions'])) {
+                $subConditions = $condition['conditions'];
+            } else {
+                $subConditions = $conditions;
+                $loopOnce = true;
+            }
+
+            foreach ($subConditions as $column => $value) {
+                $bindValue = false;
+
+                // Handle binding depending on type
+                if (is_object($value)) {
+                    if ($value instanceof \DateTime) {
+                        // @todo Need to take into account column type for date formatting
+                        $bindValue = (string) $value->format($this->dateTimeFormat());
+                    } else {
+                        $bindValue = (string) $value; // Attempt cast of object to string (calls object's __toString method)
+                    }
+                } elseif (is_bool($value)) {
+                    $bindValue = (int) $value; // Cast boolean to integer (false = 0, true = 1)
+                } elseif (!is_array($value)) {
+                    $bindValue = $value;
+                }
+
+                // Bind given value
+                if (false !== $bindValue) {
+                    // Column name with comparison operator
+                    $colData = explode(' ', $column);
+                    $operator = '=';
+                    if (count($colData) > 2) {
+                        $operator = array_pop($colData);
+                        $colData = array(implode(' ', $colData), $operator);
+                    }
+                    $col = $colData[0];
+
+                    if (false !== $ci) {
+                        $col = $col . $ci;
+                    }
+
+                    $colParam = preg_replace('/\W+/', '_', $col);
+
+                    // Add to binds array and add to WHERE clause
+                    $binds[$colParam] = $bindValue;
+                }
+                // Increment ensures column name distinction
+                // We need to do this whether it was used or not
+                // to maintain compatibility with getConditionsSql()
+                $ci++;
+            }
+
+            if ($loopOnce) {
+                break;
+            }
+        }
+        return $binds;
     }
 
     /**

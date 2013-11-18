@@ -98,6 +98,7 @@ interface AdapterInterface
      *
      * @param \Sbux\QueryInterface $query
      * @param array $options
+     * @return bool|array
      * @throws \Spot\Exception\Adapter
      */
     public function read(QueryInterface $query, array $options = []);
@@ -187,13 +188,17 @@ interface AdapterInterface
     public function where($sqlQuery, array $conditions = []);
 
     /**
-     * Add a table join (INNER, LEFT OUTER, RIGHT OUTER, FULL OUTER, CROSS)
-     * array('user.id', '=', 'profile.user_id') will compile to ON `user`.`id` = `profile`.`user_id`
+     * Append a table join (INNER, LEFT OUTER, RIGHT OUTER, FULL OUTER, CROSS) to $sqlQuery argument
      *
+     * <code>
+     *  echo $connection->join("SELECT * FROM blog_post", ['post_comment', 'blog_post.id = post_comment.post_id']);
+     * </code>
+     *
+     * @param string $sqlQuery
      * @param array $joins
      * @return string
      */
-    public function getJoinsSql(array $joins = []);
+    public function join($sqlQuery, array $joins = []);
 
 
     /**

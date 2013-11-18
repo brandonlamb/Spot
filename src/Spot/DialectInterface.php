@@ -71,6 +71,22 @@ interface DialectInterface
 	public function where($sqlQuery, array $conditions);
 
 	/**
+	 * Create a JOIN predicate
+	 *
+	 * <code>
+	 *  echo $dialect->join(
+	 *      "SELECT * FROM blog_post",
+	 * 		["blog_comment", "blog_comment.post_id = blog_post.id"]
+	 *  );
+	 * </code>
+	 *
+	 * @param string $sqlQuery
+	 * @param array $joins
+	 * @return string
+	 */
+	public function join($sqlQuery, array $joins);
+
+	/**
 	 * Generates the SQL for GROUP BY clause
 	 *
 	 *<code>

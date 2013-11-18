@@ -8,8 +8,6 @@
 
 namespace Spot\Di;
 
-use Spot\Di\DiInterface;
-
 trait InjectableTrait
 {
 	/**
