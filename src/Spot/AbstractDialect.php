@@ -69,6 +69,20 @@ abstract class AbstractDialect
 		return $sqlQuery . ' FROM ' . $tableName;
 	}
 
+    /**
+     * {@inheritdoc}
+     */
+    public function join($sqlQuery, array $joins = [])
+    {
+        $sqlJoins = [];
+
+        foreach ($joins as $join) {
+            $sqlJoins[] = trim($join[2]) . ' JOIN' . ' ' . $join[0] . ' ON (' . trim($join[1]) . ')';
+        }
+
+        return empty($sqlJoins) ? $sqlQuery : $sqlQuery . ' ' . implode(' ', $sqlJoins);
+    }
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -148,20 +162,6 @@ abstract class AbstractDialect
 
 		return (empty($sqlStatement)) ? $sqlQuery : $sqlQuery . ' WHERE ' . $sqlStatement;
 	}
-
-    /**
-     * {@inheritdoc}
-     */
-    public function join($sqlQuery, array $joins = [])
-    {
-        $sqlJoins = [];
-
-        foreach ($joins as $join) {
-            $sqlJoins[] = trim($join[2]) . ' JOIN' . ' ' . $join[0] . ' ON (' . trim($join[1]) . ')';
-        }
-
-        return empty($sqlJoins) ? $sqlQuery : $sqlQuery . implode(' ', $sqlJoins);
-    }
 
 	/**
 	 * {@inheritDoc}

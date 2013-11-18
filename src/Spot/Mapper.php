@@ -45,7 +45,7 @@ class Mapper
     }
 
     /**
-     * Set the adapter object
+     * Set the adapter name
      * @param string $adapterName
      * @return \Spot\Mapper
      */
@@ -56,12 +56,22 @@ class Mapper
     }
 
     /**
-     * Get the adapter
+     * Get the adapter name
      * @return string
      */
     public function getAdapterName()
     {
         return $this->adapterName;
+    }
+
+    /**
+     * Get the adapter based on mapper's adapter name
+     *
+     * @return \Spot\AdapterInterface
+     */
+    public function getAdapter()
+    {
+        return $this->di->getShared($this->adapterName);
     }
 
 /* ====================================================================================================== */
@@ -232,7 +242,7 @@ class Mapper
      */
     public function query($entityName, $sql, array $params = [])
     {
-        return ($result = $this->db->query($sql, $params)) ? $this->collection($entityName, $result) : false;
+        return ($result = $this->di->getShared($this->adapterName)->query($sql, $params)) ? $this->collection($entityName, $result) : false;
     }
 
     /**
@@ -377,7 +387,7 @@ class Mapper
         $data = $this->dumpEntity($entityName, $data);
 
         // Send to adapter
-        $result = $this->db->create($this->entityManager->getTable($entityName), $data, $options);
+        $result = $this->di->getShared($this->adapterName)->create($this->entityManager->getTable($entityName), $data, $options);
 
         // Update primary key on entity object
         $pkField = $this->entityManager->getPrimaryKeyField($entityName);
@@ -420,7 +430,7 @@ class Mapper
         // Handle with adapter
         if (count($data) > 0) {
             $data = $this->dumpEntity($entityName, $data);
-            $result = $this->db->update(
+            $result = $this->di->getShared($this->adapterName)->update(
                 $this->entityManager->getTable($entityName),
                 $data,
                 [$this->entityManager->getPrimaryKeyField($entityName) => $this->entityManager->getPrimaryKey($entity)]
@@ -476,7 +486,7 @@ class Mapper
 #                return false;
 #            }
 
-            $result = $this->db->delete($this->entityManager->getTable($entityName), $conditions, $options);
+            $result = $this->di->getShared($this->adapterName)->delete($this->entityManager->getTable($entityName), $conditions, $options);
 
             // Run afterUpdate
 #            $resultAfter = $this->eventsManager->triggerInstanceHook($entity, 'afterDelete', [$this, $result]);
@@ -486,7 +496,7 @@ class Mapper
 
         if (is_array($conditions)) {
             $conditions = [0 => ['conditions' => $conditions]];
-            return $this->db->delete($this->entityManager->getTable($entityName), $conditions, $options);
+            return $this->di->getShared($this->adapterName)->delete($this->entityManager->getTable($entityName), $conditions, $options);
         } else {
             throw new $this->exceptionClass(__METHOD__ . " conditions must be an array, given " . gettype($conditions) . "");
         }
@@ -572,7 +582,7 @@ class Mapper
      */
     public function transaction(\Closure $work, $entityName = null)
     {
-        $adapter = $this->db;
+        $adapter = $this->di->getShared($this->adapterName);
 
         try {
             $adapter->beginTransaction();

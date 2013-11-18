@@ -396,8 +396,8 @@ abstract class AbstractAdapter
     {
         $sqlQuery = $this->select(null, $query->getFields());
         $sqlQuery = $this->from($sqlQuery, $query->getTableName());
-        $sqlQuery = $this->where($sqlQuery, $query->getConditions());
         $sqlQuery = $this->join($sqlQuery, $query->getJoins());
+        $sqlQuery = $this->where($sqlQuery, $query->getConditions());
         $sqlQuery = $this->group($sqlQuery, $query->getGroupBy());
         $sqlQuery = $this->order($sqlQuery, $query->getOrderBy());
         $sqlQuery = $this->limit($sqlQuery, $query->getLimit());
