@@ -45,6 +45,25 @@ abstract class AbstractDialect
 		$this->adapter = $adapter;
 	}
 
+    /**
+     * {@inheritdoc}
+     */
+    public function insert($tableName, array $columns, array $binds, array $options)
+    {
+        // build the statement
+        return "INSERT INTO " . $tableName .
+            " (" . implode(', ', array_map([$this->adapter, 'escapeIdentifier'], array_keys($columns))) . ")" .
+            " VALUES (:" . implode(', :', array_keys($binds)) . ")";
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function update($tableName, array $placeholders, $conditions)
+    {
+        return "UPDATE $tableName SET " . implode(', ', $placeholders) . " WHERE " . $conditions;
+    }
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -115,7 +134,7 @@ abstract class AbstractDialect
 
                 if (count($columnData) > 2) {
                     $operator = array_pop($columnData);
-                    $columnData = array(implode(' ', $columnData), $operator);
+                    $columnData = [implode(' ', $columnData), $operator];
                 }
 
                 $columnName = $columnData[0];

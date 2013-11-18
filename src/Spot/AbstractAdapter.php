@@ -141,253 +141,29 @@ abstract class AbstractAdapter
         return $this->pdo->rollBack();
     }
 
-
-
-
-
-
-
-
-
-
     /**
      * {@inheritdoc}
      */
-    public function create($datasource, array $data, array $options = [])
+    public function lastInsertId($sequence = null)
     {
-        $binds = $this->getBinds($data);
-        $sql = $this->getInsertSql($datasource, $data, $binds, $options);
-
-        try {
-            // Prepare update query
-            $stmt = $this->pdo->prepare($sql);
-
-            if ($stmt) {
-                // Execute
-                if ($stmt->execute($binds)) {
-                    // Use 'id' if PK exists, otherwise returns true
-                    $id = $this->lastInsertId($options['sequence']);
-                    $result = $id ? $id : true;
-                } else {
-                    $result = false;
-                }
-            } else {
-                $result = false;
-            }
-        } catch(\PDOException $e) {
-            // Table does not exist
-            if ($e->getCode() == '42S02') {
-                throw new \Spot\Exception\Datasource\Missing("Table or datasource '" . $datasource . "' does not exist");
-            }
-
-            // Throw new Spot exception
-            throw new \Spot\Exception\Adapter(__METHOD__ . ': ' . $e->getMessage());
-        }
-
-        return $result;
+        return $this->pdo->lastInsertId($sequence);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function read(QueryInterface $query, array $options = [])
+    public function insert($tableName, array $columns, array $binds, array $options)
     {
-        $sqlQuery = $this->getSqlQuery($query);
-
-        $binds = $this->getBinds($query->getParameters());
-
-
-        // Unset any NULL values in binds (compared as "IS NULL" and "IS NOT NULL" in SQL instead)
-        if ($binds && count($binds) > 0) {
-            foreach ($binds as $field => $value) {
-                if (null === $value) {
-                    unset($binds[$field]);
-                }
-            }
-        }
-
-        // Prepare update query
-        if ($stmt = $this->pdo->prepare($sqlQuery)) {
-            // Execute
-            return ($stmt->execute($binds)) ? $this->toCollection($query, $stmt) : false;
-        }
-        return false;
+        return $this->dialect->insert($tableName, $columns, $binds, $options);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function update($datasource, array $data, array $where = [], array $options = [])
+    public function update($tableName, array $placeholders, $conditions)
     {
-        $dataBinds = $this->getBinds($data, 0);
-        $whereBinds = $this->getBinds($where, count($dataBinds));
-        $binds = array_merge($dataBinds, $whereBinds);
-        $placeholders = [];
-        $dataFields = array_combine(array_keys($data), array_keys($dataBinds));
-
-        // Placeholders and passed data
-        foreach ($dataFields as $field => $bindField) {
-            $placeholders[] = $this->escapeIdentifier($field) . " = :" . $bindField . "";
-        }
-
-        $conditions = $this->getConditionsSql($where, count($dataBinds));
-
-        // Ensure there are actually updated values on THIS table
-        if (count($binds) > 0) {
-            // Build the query
-            $sql = $this->getUpdateSql($datasource, $placeholders, $conditions);
-
-            try {
-                // Prepare update query
-                $stmt = $this->pdo->prepare($sql);
-
-                if ($stmt) {
-                    // Execute
-                    if ($stmt->execute($binds)) {
-                        $result = true;
-                    } else {
-                        $result = false;
-                    }
-                } else {
-                    $result = false;
-                }
-            } catch(\PDOException $e) {
-                // Table does not exist
-                if ($e->getCode() == '42S02') {
-                    throw new \Spot\Exception\Adapter("Table or datasource '" . $datasource . "' does not exist");
-                }
-
-                // Throw new Spot exception
-                throw new \Spot\Exception\Adapter(__METHOD__ . ': ' . $e->getMessage());
-            }
-        } else {
-            $result = false;
-        }
-
-        return $result;
+        return $this->dialect->update($tableName, $placeholders, $conditions);
     }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function delete($datasource, array $data, array $options = [])
-    {
-        $binds = $this->getBinds($data, 0);
-        $conditions = $this->getConditionsSql($data);
-
-        $sql = "DELETE FROM " . $datasource . "";
-        $sql .= ($conditions ? ' WHERE ' . $conditions : '');
-
-        try {
-            $stmt = $this->pdo->prepare($sql);
-            if ($stmt) {
-                // Execute
-                if ($stmt->execute($binds)) {
-                    $result = $stmt->rowCount();
-                } else {
-                    $result = false;
-                }
-            } else {
-                $result = false;
-            }
-            return $result;
-        } catch(\PDOException $e) {
-            // Table does not exist
-            if ($e->getCode() == '42S02') {
-                throw new \Spot\Exception\Adapter("Table or datasource '" . $datasource . "' does not exist");
-            }
-
-            // Throw new Spot exception
-            throw new \Spot\Exception\Adapter(__METHOD__ . ': ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function count(QueryInterface $query, array $options = [])
-    {
-        $conditions = $this->getConditionsSql($query->getConditions());
-        $binds = $this->getBinds($query->getparameters());
-
-        $sql = "
-            SELECT COUNT(*) AS count
-            FROM " . $query->getTableName() . "
-            " . ($conditions ? 'WHERE ' . $conditions : '') . "
-            " . ($query->getGroupBy() ? 'GROUP BY ' . implode(', ', $query->getGroupBy()) : '');
-
-        // Unset any NULL values in binds (compared as "IS NULL" and "IS NOT NULL" in SQL instead)
-        if ($binds && count($binds) > 0) {
-            foreach ($binds as $field => $value) {
-                if (null === $value) {
-                    unset($binds[$field]);
-                }
-            }
-        }
-
-        $result = false;
-        try {
-            // Prepare count query
-            $stmt = $this->pdo->prepare($sql);
-
-            // if prepared, execute
-            if ($stmt && $stmt->execute($binds)) {
-                //the count is returned in the first column
-                $result = (int) $stmt->fetchColumn();
-            } else {
-                $result = false;
-            }
-        } catch(\PDOException $e) {
-            // Table does not exist
-            if ($e->getCode() == '42S02') {
-                throw new \Spot\Exception\Adapter("Table or datasource '" . $query->getTableName() . "' does not exist");
-            }
-
-            // Throw new Spot exception
-            throw new \Spot\Exception\Adapter(__METHOD__ . ': ' . $e->getMessage());
-        }
-
-        return $result;
-    }
-
-
-
-
-
-
-
-
-
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getInsertSql($datasource, array $data, array $binds, array $options)
-    {
-        // build the statement
-        return "INSERT INTO " . $datasource .
-            " (" . implode(', ', array_map([$this, 'escapeIdentifier'], array_keys($data))) . ")" .
-            " VALUES (:" . implode(', :', array_keys($binds)) . ")";
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getUpdateSql($datasource, array $placeholders, $conditions)
-    {
-        // build the statement
-        return "UPDATE " . $datasource . " SET " . implode(', ', $placeholders) . " WHERE " . $conditions;
-    }
-
-
-
-
-
-
-
-
-
-
 
     /**
      * {@inheritDoc}
@@ -484,13 +260,222 @@ abstract class AbstractAdapter
 
 
 
+
+
     /**
-     * Return result set for current query
-     * @param \Spot\QueryInterface $query
-     * @param \PDOStatement $stmt
-     * @return \Spot\Entity\ResultSetInterface
+     * {@inheritdoc}
      */
-    public function toCollection(QueryInterface $query, \PDOStatement $stmt)
+    public function createEntity($datasource, array $data, array $options = [])
+    {
+        $binds = $this->getBinds($data);
+        $sql = $this->insert($datasource, $data, $binds, $options);
+
+        try {
+            // Prepare update query
+            $stmt = $this->pdo->prepare($sql);
+
+            if ($stmt) {
+                // Execute
+                if ($stmt->execute($binds)) {
+                    // Use 'id' if PK exists, otherwise returns true
+                    $id = $this->lastInsertId($options['sequence']);
+                    $result = $id ? $id : true;
+                } else {
+                    $result = false;
+                }
+            } else {
+                $result = false;
+            }
+        } catch(\PDOException $e) {
+            // Table does not exist
+            if ($e->getCode() == '42S02') {
+                throw new \Spot\Exception\Datasource\Missing("Table or datasource '" . $datasource . "' does not exist");
+            }
+
+            // Throw new Spot exception
+            throw new \Spot\Exception\Adapter(__METHOD__ . ': ' . $e->getMessage());
+        }
+
+        return $result;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function readEntity(QueryInterface $query, array $options = [])
+    {
+        $sqlQuery = $this->getSqlQuery($query);
+
+        $binds = $this->getBinds($query->getParameters());
+
+
+        // Unset any NULL values in binds (compared as "IS NULL" and "IS NOT NULL" in SQL instead)
+        if ($binds && count($binds) > 0) {
+            foreach ($binds as $field => $value) {
+                if (null === $value) {
+                    unset($binds[$field]);
+                }
+            }
+        }
+
+        // Prepare update query
+        if ($stmt = $this->pdo->prepare($sqlQuery)) {
+            // Execute
+            return ($stmt->execute($binds)) ? $this->getResultSet($query, $stmt) : false;
+        }
+        return false;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function updateEntity($datasource, array $data, array $where = [], array $options = [])
+    {
+        $dataBinds = $this->getBinds($data, 0);
+        $whereBinds = $this->getBinds($where, count($dataBinds));
+        $binds = array_merge($dataBinds, $whereBinds);
+        $placeholders = [];
+        $dataFields = array_combine(array_keys($data), array_keys($dataBinds));
+
+        // Placeholders and passed data
+        foreach ($dataFields as $field => $bindField) {
+            $placeholders[] = $this->escapeIdentifier($field) . " = :" . $bindField . "";
+        }
+
+        $conditions = $this->getConditionsSql($where, count($dataBinds));
+
+        // Ensure there are actually updated values on THIS table
+        if (count($binds) > 0) {
+            // Build the query
+            $sql = $this->update($datasource, $placeholders, $conditions);
+
+            try {
+                // Prepare update query
+                $stmt = $this->pdo->prepare($sql);
+
+                if ($stmt) {
+                    // Execute
+                    if ($stmt->execute($binds)) {
+                        $result = true;
+                    } else {
+                        $result = false;
+                    }
+                } else {
+                    $result = false;
+                }
+            } catch(\PDOException $e) {
+                // Table does not exist
+                if ($e->getCode() == '42S02') {
+                    throw new \Spot\Exception\Adapter("Table or datasource '" . $datasource . "' does not exist");
+                }
+
+                // Throw new Spot exception
+                throw new \Spot\Exception\Adapter(__METHOD__ . ': ' . $e->getMessage());
+            }
+        } else {
+            $result = false;
+        }
+
+        return $result;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function deleteEntity($datasource, array $data, array $options = [])
+    {
+        $binds = $this->getBinds($data, 0);
+        $conditions = $this->getConditionsSql($data);
+
+        $sql = "DELETE FROM " . $datasource . "";
+        $sql .= ($conditions ? ' WHERE ' . $conditions : '');
+
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            if ($stmt) {
+                // Execute
+                if ($stmt->execute($binds)) {
+                    $result = $stmt->rowCount();
+                } else {
+                    $result = false;
+                }
+            } else {
+                $result = false;
+            }
+            return $result;
+        } catch(\PDOException $e) {
+            // Table does not exist
+            if ($e->getCode() == '42S02') {
+                throw new \Spot\Exception\Adapter("Table or datasource '" . $datasource . "' does not exist");
+            }
+
+            // Throw new Spot exception
+            throw new \Spot\Exception\Adapter(__METHOD__ . ': ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function countEntity(QueryInterface $query, array $options = [])
+    {
+        $conditions = $this->getConditionsSql($query->getConditions());
+        $binds = $this->getBinds($query->getparameters());
+
+        $sql = "
+            SELECT COUNT(*) AS count
+            FROM " . $query->getTableName() . "
+            " . ($conditions ? 'WHERE ' . $conditions : '') . "
+            " . ($query->getGroupBy() ? 'GROUP BY ' . implode(', ', $query->getGroupBy()) : '');
+
+        // Unset any NULL values in binds (compared as "IS NULL" and "IS NOT NULL" in SQL instead)
+        if ($binds && count($binds) > 0) {
+            foreach ($binds as $field => $value) {
+                if (null === $value) {
+                    unset($binds[$field]);
+                }
+            }
+        }
+
+        $result = false;
+        try {
+            // Prepare count query
+            $stmt = $this->pdo->prepare($sql);
+
+            // if prepared, execute
+            if ($stmt && $stmt->execute($binds)) {
+                //the count is returned in the first column
+                $result = (int) $stmt->fetchColumn();
+            } else {
+                $result = false;
+            }
+        } catch(\PDOException $e) {
+            // Table does not exist
+            if ($e->getCode() == '42S02') {
+                throw new \Spot\Exception\Adapter("Table or datasource '" . $query->getTableName() . "' does not exist");
+            }
+
+            // Throw new Spot exception
+            throw new \Spot\Exception\Adapter(__METHOD__ . ': ' . $e->getMessage());
+        }
+
+        return $result;
+    }
+
+
+
+
+
+
+
+
+
+
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getResultSet(QueryInterface $query, \PDOStatement $stmt)
     {
         $mapper = $query->getMapper();
         $entityClass = $query->getEntityName();
@@ -509,14 +494,6 @@ abstract class AbstractAdapter
 
         // Just return an empty result set
         return $mapper->collection($entityClass);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function lastInsertId($sequence = null)
-    {
-        return $this->pdo->lastInsertId($sequence);
     }
 
     /**
@@ -561,7 +538,7 @@ abstract class AbstractAdapter
                     $operator = '=';
                     if (count($colData) > 2) {
                         $operator = array_pop($colData);
-                        $colData = array(implode(' ', $colData), $operator);
+                        $colData = [implode(' ', $colData), $operator];
                     }
                     $col = $colData[0];
 
@@ -587,6 +564,9 @@ abstract class AbstractAdapter
         return $binds;
     }
 
+
+
+
     /**
      * Bind array of field/value data to given statement
      *
@@ -594,12 +574,12 @@ abstract class AbstractAdapter
      * @param array $binds
      * @return bool
      */
-    protected function bindValues($stmt, array $binds)
+    /*protected function bindValues($stmt, array $binds)
     {
         // Bind each value to the given prepared statement
         foreach ($binds as $field => $value) {
             $stmt->bindValue($field, $value);
         }
         return true;
-    }
+    }*/
 }

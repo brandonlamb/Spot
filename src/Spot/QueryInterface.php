@@ -57,7 +57,7 @@ interface QueryInterface
      * @param string $setType Keyword that will separate the whole set of conditions - 'AND', 'OR'
      * @return $this
      */
-    public function where(array $conditions = array(), $type = 'AND', $setType = 'AND');
+    public function where(array $conditions = [], $type = 'AND', $setType = 'AND');
 
     /**
      * Convenience methods for WHERE conditions
@@ -66,20 +66,20 @@ interface QueryInterface
      * @param string $type Keyword that will separate each condition - 'AND', 'OR'
      * @return $this
      */
-    public function orWhere(array $conditions = array(), $type = 'AND');
-    public function andWhere(array $conditions = array(), $type = 'AND');
+    public function orWhere(array $conditions = [], $type = 'AND');
+    public function andWhere(array $conditions = [], $type = 'AND');
 
     /**
      * ORDER BY columns
      * @param array $fields
      */
-    public function order($fields = array());
+    public function order($fields = []);
 
     /**
      * GROUP BY columns
      * @param array $fields
      */
-    public function group(array $fields = array());
+    public function group(array $fields = []);
 
     /**
      * LIMIT query or result set
@@ -92,5 +92,5 @@ interface QueryInterface
      * HAVING query or result set
      * @param array $having
      */
-    public function having(array $having = array());
+    public function having(array $having = []);
 }

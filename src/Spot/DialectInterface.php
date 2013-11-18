@@ -25,6 +25,33 @@ interface DialectInterface
 	public function setAdapter(AdapterInterface $adapter);
 
 	/**
+	 * Creates an INSERT statement
+	 *
+	 * <code>
+	 * </code>
+	 *
+	 * @param string $tableName
+	 * @param array $columns
+	 * @param array $binds
+	 * @param array $options
+	 * @return string
+	 */
+	public function insert($tableName, array $data, array $binds, array $options);
+
+	/**
+	 * Creates an INSERT statement
+	 *
+	 * <code>
+	 * </code>
+	 *
+	 * @param string $tableName
+	 * @param array $placeholders
+	 * @param string $conditions
+	 * @return string
+	 */
+	public function update($tableName, array $placeholders, $conditions);
+
+	/**
 	 * Creates a SELECT statement
 	 *
 	 * <code>

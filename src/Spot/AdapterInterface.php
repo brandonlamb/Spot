@@ -78,83 +78,30 @@ interface AdapterInterface
      */
     public function rollback();
 
-
-
-
-
     /**
-     * Create new row object with set properties
-     * @param string $datasource
-     * @param array $data
-     * @param array $options
+     * Fetch the last insert id
+     * @param string $sequence
      * @return mixed
-     * @throws \Spot\Exception\Datasource\Missing|\Spot\Exception\Adapter
      */
-    public function create($datasource, array $data, array $options = []);
-
-    /**
-     * Build a select statement in SQL
-     * Can be overridden by adapters for custom syntax
-     *
-     * @param \Sbux\QueryInterface $query
-     * @param array $options
-     * @return bool|array
-     * @throws \Spot\Exception\Adapter
-     */
-    public function read(QueryInterface $query, array $options = []);
-
-    /**
-     * Update entity
-     * @param string $datasource
-     * @param array $data
-     * @param data $where
-     * @param array $options
-     * @throws \Spot\Exception\Adapter
-     */
-    public function update($datasource, array $data, array $where = [], array $options = []);
-
-    /**
-     * Delete entities matching given conditions
-     * @param string $datasource Name of data source
-     * @param array $data
-     * @param array $options
-     * @throws \Spot\Exception\Adapter
-     */
-    public function delete($datasource, array $data, array $options = []);
-
-    /**
-     * Count number of rows in source based on conditions
-     * @param \Spot\QueryInterface $query
-     * @param array $options
-     * @throws \Spot\Exception\Adapter
-     */
-    public function count(QueryInterface $query, array $options = []);
-
-
-
-
-
+    public function lastInsertId($sequence = null);
 
     /**
      * Return insert statement
-     * @param string $datasource
-     * @param array $data
+     * @param string $tableName
+     * @param array $columns
      * @param array $binds
      * @return string
      */
-    public function getInsertSql($datasource, array $data, array $binds, array $options);
+    public function insert($tableName, array $columns, array $binds, array $options);
 
     /**
      * Return update statement
-     * @param string $datasource
+     * @param string $tableName
      * @param array $placeholders
      * @param string $conditions
      * @return string
      */
-    public function getUpdateSql($datasource, array $placeholders, $conditions);
-
-
-
+    public function update($tableName, array $placeholders, $conditions);
 
     /**
      * Return a sql statement built by dialect
@@ -259,17 +206,71 @@ interface AdapterInterface
      */
     public function offset($sqlQuery, $number);
 
+
+
+
+
+
+    /**
+     * Create new row object with set properties
+     * @param string $datasource
+     * @param array $data
+     * @param array $options
+     * @return mixed
+     * @throws \Spot\Exception\Datasource\Missing|\Spot\Exception\Adapter
+     */
+    public function create($datasource, array $data, array $options = []);
+
+    /**
+     * Build a select statement in SQL
+     * Can be overridden by adapters for custom syntax
+     *
+     * @param \Sbux\QueryInterface $query
+     * @param array $options
+     * @return bool|array
+     * @throws \Spot\Exception\Adapter
+     */
+    public function read(QueryInterface $query, array $options = []);
+
+    /**
+     * Update entity
+     * @param string $datasource
+     * @param array $data
+     * @param data $where
+     * @param array $options
+     * @throws \Spot\Exception\Adapter
+     */
+    public function update($datasource, array $data, array $where = [], array $options = []);
+
+    /**
+     * Delete entities matching given conditions
+     * @param string $datasource Name of data source
+     * @param array $data
+     * @param array $options
+     * @throws \Spot\Exception\Adapter
+     */
+    public function delete($datasource, array $data, array $options = []);
+
+    /**
+     * Count number of rows in source based on conditions
+     * @param \Spot\QueryInterface $query
+     * @param array $options
+     * @throws \Spot\Exception\Adapter
+     */
+    public function count(QueryInterface $query, array $options = []);
+
+    /**
+     * Return result set for current query
+     * @param \Spot\QueryInterface $query
+     * @param \PDOStatement $stmt
+     * @return \Spot\Entity\ResultSetInterface
+     */
+    public function getResultSet(QueryInterface $query, \PDOStatement $stmt);
+
     /**
      * Returns array of binds to pass to query function
      * @param array $conditions
      * @param bool $ci
      */
     public function getBinds(array $conditions = [], $ci = false);
-
-    /**
-     * Fetch the last insert id
-     * @param string $sequence
-     * @return mixed
-     */
-    public function lastInsertId($sequence = null);
 }

@@ -373,7 +373,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
         }
 
         // Add join array
-        $this->joins[] = array(trim($table), $constraint, $type);
+        $this->joins[] = [trim($table), $constraint, $type];
 
         return $this;
     }
@@ -521,7 +521,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
      */
     public function having(array $having = [])
     {
-        $this->having[] = array('conditions' => $having);
+        $this->having[] = ['conditions' => $having];
         return $this;
     }
 
@@ -650,7 +650,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
      */
     public function execute()
     {
-        return $this->mapper->getDi()->get($this->mapper->getAdapterName())->read($this);
+        return $this->mapper->getDi()->get($this->mapper->getAdapterName())->readEntity($this);
     }
 
 

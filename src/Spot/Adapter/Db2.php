@@ -32,32 +32,6 @@ class Db2 extends AbstractAdapter implements AdapterInterface
     /**
      * {@inheritdoc}
      */
-    public function getInsertSql($datasource, array $data, array $binds, array $options)
-    {
-        // If calling insert directly, we probably were not passed pk or sequence
-        !isset($options['sequence']) && $options['sequence'] = false;
-
-        // build the statement
-        $sql = 'INSERT INTO ' . $datasource . ' (';
-
-        // If PK uses a sequence, add the PK column
-        $options['sequence'] && $sql .= $options['pk'] . ', ';
-
-        // Add the fields to list of columns to insert into
-        $sql .= implode(', ', array_map(array($this, 'escapeIdentifier'), array_keys($data))) . ') VALUES (';
-
-        // If PK uses a sequence, use NEXT VALUE FOR $sequence for the value
-        $options['sequence'] && $sql .= 'NEXT VALUE FOR ' . $options['sequence'] . ', ';
-
-        // Add the other values
-        $sql .= ':' . implode(', :', array_keys($binds)) . ')';
-
-        return $sql;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function lastInsertId($sequence = null)
     {
         // If a sequence was passed then pass it through to the PDO method
