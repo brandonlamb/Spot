@@ -219,7 +219,7 @@ interface AdapterInterface
      * @return mixed
      * @throws \Spot\Exception\Datasource\Missing|\Spot\Exception\Adapter
      */
-    public function create($datasource, array $data, array $options = []);
+    public function createEntity($datasource, array $data, array $options = []);
 
     /**
      * Build a select statement in SQL
@@ -230,7 +230,7 @@ interface AdapterInterface
      * @return bool|array
      * @throws \Spot\Exception\Adapter
      */
-    public function read(QueryInterface $query, array $options = []);
+    public function readEntity(QueryInterface $query, array $options = []);
 
     /**
      * Update entity
@@ -240,7 +240,7 @@ interface AdapterInterface
      * @param array $options
      * @throws \Spot\Exception\Adapter
      */
-    public function update($datasource, array $data, array $where = [], array $options = []);
+    public function updateEntity($datasource, array $data, array $where = [], array $options = []);
 
     /**
      * Delete entities matching given conditions
@@ -249,7 +249,7 @@ interface AdapterInterface
      * @param array $options
      * @throws \Spot\Exception\Adapter
      */
-    public function delete($datasource, array $data, array $options = []);
+    public function deleteEntity($datasource, array $data, array $options = []);
 
     /**
      * Count number of rows in source based on conditions
@@ -257,7 +257,7 @@ interface AdapterInterface
      * @param array $options
      * @throws \Spot\Exception\Adapter
      */
-    public function count(QueryInterface $query, array $options = []);
+    public function countEntity(QueryInterface $query, array $options = []);
 
     /**
      * Return result set for current query
