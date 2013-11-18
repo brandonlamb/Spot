@@ -156,7 +156,13 @@ interface AdapterInterface
 
 
 
-
+    /**
+     * Return a sql statement built by dialect
+     *
+     * @param \Spot\QueryInterface $query
+     * @return string
+     */
+    public function getSqlQuery(QueryInterface $query);
 
     /**
      * Build SELECT statement from fields

@@ -32,23 +32,6 @@ class Db2 extends AbstractAdapter implements AdapterInterface
     /**
      * {@inheritdoc}
      */
-    /*public function getLimitSql($limit, array $options = array())
-    {
-        $limit = (int) $limit;
-        return $limit ? 'FETCH FIRST ' . $limit . ' ROWS ONLY' : '';
-    }*/
-
-    /**
-     * {@inheritdoc}
-     */
-    /*public function getOffsetSql($offset, array $options = array())
-    {
-        return '';
-    }*/
-
-    /**
-     * {@inheritdoc}
-     */
     public function getInsertSql($datasource, array $data, array $binds, array $options)
     {
         // If calling insert directly, we probably were not passed pk or sequence

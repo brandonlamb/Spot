@@ -192,22 +192,10 @@ abstract class AbstractAdapter
      */
     public function read(QueryInterface $query, array $options = [])
     {
-        $sqlQuery = $this->select(null, $query->getFields());
-        $sqlQuery = $this->from($sqlQuery, $query->getTableName());
-        $sqlQuery = $this->where($sqlQuery, $query->getConditions());
-        $sqlQuery = $this->join($sqlQuery, $query->getJoins());
-        $sqlQuery = $this->group($sqlQuery, $query->getGroupBy());
-        $sqlQuery = $this->order($sqlQuery, $query->getOrderBy());
-        $sqlQuery = $this->limit($sqlQuery, $query->getLimit());
-        $sqlQuery = $this->offset($sqlQuery, $query->getOffset());
-
-        if ($query->getHaving()) {
-            $sqlQuery = $this->where($sqlQuery, $query->getHaving());
-        }
+        $sqlQuery = $this->getSqlQuery($query);
 
         $binds = $this->getBinds($query->getParameters());
 
-d($sqlQuery, $binds);
 
         // Unset any NULL values in binds (compared as "IS NULL" and "IS NOT NULL" in SQL instead)
         if ($binds && count($binds) > 0) {
@@ -221,12 +209,9 @@ d($sqlQuery, $binds);
         // Prepare update query
         if ($stmt = $this->pdo->prepare($sqlQuery)) {
             // Execute
-            $result = ($stmt->execute($binds)) ? $this->toCollection($query, $stmt) : false;
-        } else {
-            $result = false;
+            return ($stmt->execute($binds)) ? $this->toCollection($query, $stmt) : false;
         }
-
-        return $result;
+        return false;
     }
 
     /**
@@ -404,8 +389,26 @@ d($sqlQuery, $binds);
 
 
 
+    /**
+     * {@inheritDoc}
+     */
+    public function getSqlQuery(QueryInterface $query)
+    {
+        $sqlQuery = $this->select(null, $query->getFields());
+        $sqlQuery = $this->from($sqlQuery, $query->getTableName());
+        $sqlQuery = $this->where($sqlQuery, $query->getConditions());
+        $sqlQuery = $this->join($sqlQuery, $query->getJoins());
+        $sqlQuery = $this->group($sqlQuery, $query->getGroupBy());
+        $sqlQuery = $this->order($sqlQuery, $query->getOrderBy());
+        $sqlQuery = $this->limit($sqlQuery, $query->getLimit());
+        $sqlQuery = $this->offset($sqlQuery, $query->getOffset());
 
+        if ($query->getHaving()) {
+            $sqlQuery = $this->where($sqlQuery, $query->getHaving());
+        }
 
+        return $sqlQuery;
+    }
 
     /**
      * {@inheritdoc}
@@ -485,9 +488,9 @@ d($sqlQuery, $binds);
      * Return result set for current query
      * @param \Spot\QueryInterface $query
      * @param \PDOStatement $stmt
-     * @return array
+     * @return \Spot\Entity\ResultSetInterface
      */
-    public function toCollection(QueryInterface $query, $stmt)
+    public function toCollection(QueryInterface $query, \PDOStatement $stmt)
     {
         $mapper = $query->getMapper();
         $entityClass = $query->getEntityName();
@@ -496,16 +499,16 @@ d($sqlQuery, $binds);
             // Set PDO fetch mode
             $stmt->setFetchMode(\PDO::FETCH_ASSOC);
 
-            $collection = $mapper->collection($entityClass, $stmt);
+            $results = $mapper->collection($entityClass, $stmt);
 
             // Ensure statement is closed
             $stmt->closeCursor();
 
-            return $collection;
-        } else {
-#           $mapper->addError(__METHOD__ . " - Unable to execute query " . implode(' | ', $this->pdo->errorInfo()));
-            return [];
+            return $results;
         }
+
+        // Just return an empty result set
+        return $mapper->collection($entityClass);
     }
 
     /**

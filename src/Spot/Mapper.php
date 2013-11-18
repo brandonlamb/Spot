@@ -118,7 +118,7 @@ class Mapper
      * @param string $entityName
      * @param \PDOStatement|array $stmt
      * @param array $with
-     * @return \Spot\Entity\CollectionInterface
+     * @return \Spot\Entity\ResultSetInterface
      */
     public function collection($entityName, $stmt, $with = [])
     {

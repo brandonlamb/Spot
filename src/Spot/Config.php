@@ -10,8 +10,7 @@
 namespace Spot;
 
 use Spot\Di\DiInterface,
-    Spot\Di\InjectableTrait,
-    Spot\Adapter\AdapterInterface;
+    Spot\Di\InjectableTrait;
 
 class Config
 {
