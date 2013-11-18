@@ -153,7 +153,6 @@ interface AdapterInterface
      */
     public function join($sqlQuery, array $joins = []);
 
-
     /**
      * Appends GROUP BY clause to $sqlQuery argument
      *
