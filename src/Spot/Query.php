@@ -446,8 +446,8 @@ class Query implements Countable, IteratorAggregate, QueryInterface
         if (!empty($conditions)) {
             $where = [];
             $where['conditions'] = $conditions;
-            $where['type'] = $type;
-            $where['setType'] = $setType;
+            $where['type'] = strtoupper($type);
+            $where['setType'] = strtoupper($setType);
 
             $this->conditions[] = $where;
         }
@@ -650,7 +650,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
      */
     public function execute()
     {
-        return $this->mapper->getDi()->get($this->mapper->getAdapterName())->readEntity($this);
+        return $this->mapper->getAdapter()->readEntity($this);
     }
 
 

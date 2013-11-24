@@ -305,9 +305,7 @@ abstract class AbstractAdapter
     public function readEntity(QueryInterface $query, array $options = [])
     {
         $sqlQuery = $this->getSqlQuery($query);
-
         $binds = $this->getBinds($query->getParameters());
-
 
         // Unset any NULL values in binds (compared as "IS NULL" and "IS NOT NULL" in SQL instead)
         if ($binds && count($binds) > 0) {
