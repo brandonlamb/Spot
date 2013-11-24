@@ -100,12 +100,19 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
     }
 
     /**
-     * Return array of entity data
+     * Return array of entity data. While looping through data, if the value
+     * has a toArray() method, chain call this to recursively populate any other
+     * entity child objects
+     * @param bool $recurse Whether to recursively cal toArray()
      * @return array
      */
-    public function toArray()
+    public function toArray($recurse = false)
     {
-        return $this->getData();
+        $data = [];
+        foreach ($this->getData() as $key => $value) {
+            $data[$key] = $recurse && method_exists($value, 'toArray') ? $value->toArray() : $value;
+        }
+        return $data;
     }
 
     /**
@@ -240,6 +247,7 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
      */
     public function setData(array $data, $modified = true)
     {
+#        d(__METHOD__, $data);
         if (!is_object($data) && !is_array($data)) {
             throw new \InvalidArgumentException(__METHOD__ . " Expected array or object, " . gettype($data) . " given");
         }
