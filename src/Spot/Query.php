@@ -625,14 +625,12 @@ class Query implements Countable, IteratorAggregate, QueryInterface
 
     /**
      * Convenience function passthrough for ResultSet
-     * @param string $keyColumn
-     * @param string $valueColumn
      * @return array
      */
-    public function toArray($keyColumn = null, $valueColumn = null)
+    public function toArray()
     {
         $result = $this->execute();
-        return ($result !== false) ? $result->toArray($keyColumn, $valueColumn) : [];
+        return ($result !== false) ? $result->toArray() : [];
     }
 
     /**

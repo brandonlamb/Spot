@@ -100,6 +100,15 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
     }
 
     /**
+     * Return array of entity data
+     * @return array
+     */
+    public function toArray()
+    {
+        return $this->getData();
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function serialize()
