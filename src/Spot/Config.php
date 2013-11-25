@@ -32,28 +32,28 @@ class Config
 
         $this->typeHandlers = [
             'string'    => '\\Spot\\Type\\String',
-            'text'      => '\\Spot\\Type\\String',
-            'char'      => '\\Spot\\Type\\String',
-            'varchar'   => '\\Spot\\Type\\String',
+            #'text'      => '\\Spot\\Type\\String',
+            #'char'      => '\\Spot\\Type\\String',
+            #'varchar'   => '\\Spot\\Type\\String',
 
-            'int'       => '\\Spot\\Type\\Integer',
+            #'int'       => '\\Spot\\Type\\Integer',
             'integer'   => '\\Spot\\Type\\Integer',
-            'number'    => '\\Spot\\Type\\Integer',
-            'numeric'   => '\\Spot\\Type\\Integer',
+            #'number'    => '\\Spot\\Type\\Integer',
+            #'numeric'   => '\\Spot\\Type\\Integer',
 
             'float'     => '\\Spot\\Type\\Float',
-            'double'    => '\\Spot\\Type\\Float',
-            'decimal'   => '\\Spot\\Type\\Float',
+            #'double'    => '\\Spot\\Type\\Float',
+            #'decimal'   => '\\Spot\\Type\\Float',
 
-            'bool'      => '\\Spot\\Type\\Boolean',
+            #'bool'      => '\\Spot\\Type\\Boolean',
             'boolean'   => '\\Spot\\Type\\Boolean',
 
             'datetime'  => '\\Spot\\Type\\Datetime',
-            'date'      => '\\Spot\\Type\\Datetime',
-            'timestamp' => '\\Spot\\Type\\Integer',
-            'year'      => '\\Spot\\Type\\Integer',
-            'month'     => '\\Spot\\Type\\Integer',
-            'day'       => '\\Spot\\Type\\Integer',
+            'date'      => '\\Spot\\Type\\Date',
+            #'timestamp' => '\\Spot\\Type\\Integer',
+            #'year'      => '\\Spot\\Type\\Integer',
+            #'month'     => '\\Spot\\Type\\Integer',
+            #'day'       => '\\Spot\\Type\\Integer',
 
             'db2.date'  => '\\Spot\\Type\\Db2Date',
             'db2.timestamp' => '\\Spot\\Type\\Db2Timestamp',

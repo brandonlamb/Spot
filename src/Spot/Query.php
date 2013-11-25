@@ -288,19 +288,6 @@ class Query implements Countable, IteratorAggregate, QueryInterface
         return (array) $this->with;
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
     /**
      * The mapper's select() method chains to this method. Used to select
      * fields during the query.
@@ -586,9 +573,6 @@ class Query implements Countable, IteratorAggregate, QueryInterface
         return $this;
     }
 
-
-
-
     /**
      * SPL IteratorAggregate function
      * Called automatically when attribute is used in a 'foreach' loop
@@ -650,19 +634,6 @@ class Query implements Countable, IteratorAggregate, QueryInterface
     {
         return $this->mapper->getAdapter()->readEntity($this);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * SPL Countable function
@@ -736,33 +707,4 @@ class Query implements Countable, IteratorAggregate, QueryInterface
         }
         return $this;
     }
-
-    /**
-     * Reset the query back to its original state
-     * Called automatically after a 'foreach' loop
-     * @param $hardReset boolean Inidicate whether to reset the variables
-     *      to their initial state or just back to the snapshot() state
-     *
-     * @see getIterator
-     * @see snapshot
-     * @return Spot_Query_Set
-     */
-/*    public function reset($hardReset = false)
-    {
-        foreach ($this->snapshot as $field => $value) {
-            if ($hardReset) {
-                // TODO: Look at an actual 'initialize' type
-                // method that assigns all the defaults for
-                // conditions, etc
-                if (is_array($value)) {
-                    $this->$field = [];
-                } else {
-                    $this->$field = null;
-                }
-            } else {
-                $this->$field = $value;
-            }
-        }
-        return $this;
-    } */
 }

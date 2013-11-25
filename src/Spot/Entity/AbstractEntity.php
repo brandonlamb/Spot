@@ -187,32 +187,38 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
      */
     public function get($offset, $default = null)
     {
-        // Check if accessing a column alias
-        isset($this->aliases[$offset]) && $offset = $this->aliases[$offset];
-
         // Check for custom getter method (override)
         $getMethod = 'get' . $offset;
+
+        // Check if there
+        if (method_exists($this, $getMethod) && !array_key_exists($offset, $this->getterIgnore)) {
+            // Tell this function to ignore the overload on further calls for this variable
+            $this->getterIgnore[$offset] = 1;
+
+            // Call custom getter
+            $value = $this->$getMethod();
+
+            // Remove ignore rule
+            unset($this->getterIgnore[$offset]);
+
+            // Return the value
+            return $value;
+        }
+
+        // Check if accessing a column alias
+        isset($this->aliases[$offset]) && $offset = $this->aliases[$offset];
 
         // We can't use isset for dataModified because it returns false for NULL values
         if (array_key_exists($offset, $this->dataModified)) {
             return $this->dataModified[$offset];
         }
 
+        // If the offset exists in data, return it
         if (isset($this->data[$offset])) {
             return $this->data[$offset];
         }
 
-        if (method_exists($this, $getMethod) && !array_key_exists($offset, $this->getterIgnore)) {
-            // Tell this function to ignore the overload on further calls for this variable
-            $this->getterIgnore[$offset] = 1;
-
-            // Call custom getter
-            $default = $this->$getMethod();
-
-            // Remove ignore rule
-            unset($this->getterIgnore[$offset]);
-        }
-
+        // No getter method exists, and offset does not exist in data or modified data
         return $default;
     }
 
@@ -222,34 +228,34 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
      */
     public function set($offset, $value)
     {
+        // Check for custom setter method (override)
+        $setMethod = 'set' . $offset;
+
         // Check if accessing a column alias
         isset($this->aliases[$offset]) && $offset = $this->aliases[$offset];
-
-        // Check for custom setter method (override)
-        $setMethod = 'set' . $field;
 
         $fields = $this->getMetaData();
 
         // Run value through a filter call if set
-        if (isset($fields[$field]['filter'])) {
-            $value = call_user_func($fields[$field]['filter'], $value);
-        } else if (method_exists($this, $setMethod) && !array_key_exists($field, $this->setterIgnore)) {
+        if (isset($fields[$offset]['filter'])) {
+            $value = call_user_func($fields[$offset]['filter'], $value);
+        } else if (method_exists($this, $setMethod) && !array_key_exists($offset, $this->setterIgnore)) {
             // Tell this function to ignore the overload on further calls for this variable
-            $this->setterIgnore[$field] = 1;
+            $this->setterIgnore[$offset] = 1;
 
             // Call custom setter
             $value = $this->$setMethod($value);
 
             // Remove ignore rule
-            unset($this->setterIgnore[$field]);
-        } else if (isset($fields[$field])) {
+            unset($this->setterIgnore[$offset]);
+        } else if (isset($fields[$offset])) {
             // Ensure value is set with type handler
-            $typeHandler = Config::getTypeHandler($fields[$field]['type']);
-            $value = $typeHandler::set($this, $value);
+#            $typeHandler = Config::getTypeHandler($fields[$offset]['type']);
+#            $value = $typeHandler::set($this, $value);
         }
 
         // Set the data value
-        $this->dataModified[$field] = $value;
+        $this->dataModified[$offset] = $value;
 
         return $this;
     }
