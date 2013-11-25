@@ -52,9 +52,7 @@ class EntityManager
      */
     public function getTable($entityName)
     {
-        if (!isset($this->tables[$entityName])) {
-            $this->fields($entityName);
-        }
+        !isset($this->tables[$entityName]) && $this->fields($entityName);
         return (string) $this->tables[$entityName];
     }
 
@@ -66,9 +64,7 @@ class EntityManager
      */
     public function getPrimaryKeyField($entityName)
     {
-        if (!isset($this->primaryKeyFields[$entityName])) {
-            $this->fields($entityName);
-        }
+        !isset($this->primaryKeyFields[$entityName]) && $this->fields($entityName);
         return $this->primaryKeyFields[$entityName];
     }
 

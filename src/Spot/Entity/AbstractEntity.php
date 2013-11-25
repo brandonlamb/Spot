@@ -27,6 +27,11 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
     protected $dataModified = [];
 
     /**
+     * @var array, entity column aliases
+     */
+    protected $aliases = [];
+
+    /**
      * @var array, ignored getter properties. Add a field/column here to not
      * attempt calling its getter method. For example, given an entity with a
      * "name" property and a "getName()" method, where you do *not want to call
@@ -54,8 +59,8 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
      */
     public function __construct(array $data = [])
     {
-        $this->initFields();
-        $data && $this->setData($data, false);
+        $this->initialize();
+        !empty($data) && $this->setData($data, false);
     }
 
     /**
@@ -106,11 +111,14 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
      * @param bool $recurse Whether to recursively cal toArray()
      * @return array
      */
-    public function toArray($recurse = false)
+    public function & toArray($recurse = false)
     {
+        $aliases = array_flip($this->aliases);
         $data = [];
-        foreach ($this->getData() as $key => $value) {
-            $data[$key] = $recurse && method_exists($value, 'toArray') ? $value->toArray() : $value;
+        foreach ($this->getData() as $offset => $value) {
+            // Check if a column alias is defined and use as the offset
+            isset($aliases[$offset]) && $offset = $aliases[$offset];
+            $data[$offset] = $recurse && method_exists($value, 'toArray') ? $value->toArray() : $value;
         }
         return $data;
     }
@@ -179,6 +187,9 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
      */
     public function get($offset, $default = null)
     {
+        // Check if accessing a column alias
+        isset($this->aliases[$offset]) && $offset = $this->aliases[$offset];
+
         // Check for custom getter method (override)
         $getMethod = 'get' . $offset;
 
@@ -211,6 +222,9 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
      */
     public function set($offset, $value)
     {
+        // Check if accessing a column alias
+        isset($this->aliases[$offset]) && $offset = $this->aliases[$offset];
+
         // Check for custom setter method (override)
         $setMethod = 'set' . $field;
 
@@ -276,16 +290,18 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
      */
     public function getData()
     {
+        #$data = array_merge($this->getUnmodified(), $this->getModified());
+        #return $data;
         return array_merge($this->getUnmodified(), $this->getModified());
     }
 
     /**
      * {@inheritDoc}
      */
-    public function getModified($field = null)
+    public function & getModified($field = null)
     {
         if (null !== $field) {
-            return isset($this->dataModified[$field]) ? $this->dataModified[$field] : null;
+            return isset($this->dataModified[$field]) ? $this->dataModified[$field] : $this->dataModified;
         }
         return $this->dataModified;
     }
@@ -293,10 +309,10 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
     /**
      * {@inheritDoc}
      */
-    public function getUnmodified($field = null)
+    public function & getUnmodified($field = null)
     {
         if (null !== $field) {
-            return isset($this->data[$field]) ? $this->data[$field] : null;
+            return isset($this->data[$field]) ? $this->data[$field] : $this->data;
         }
         return $this->data;
     }
@@ -364,21 +380,19 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
 
 
 
-
-
-
     /**
      * Set all field values to their defualts or null
-     * @return $this
+     * @return EntityInterface
      */
-    protected function initFields()
+    protected function initialize()
     {
         $fields = static::getMetaData();
-        foreach ($fields as $field => $opts) {
-            if (!isset($this->data[$field])) {
-                $this->data[$field] = isset($opts['default']) ? $opts['default'] : null;
-            }
+
+        foreach ($fields as $field => $options) {
+            $this->data[$field] = isset($options['default']) ? $options['default'] : null;
+            isset($options['alias']) && $this->aliases[(string) $options['alias']] = $field;
         }
+
         return $this;
     }
 
