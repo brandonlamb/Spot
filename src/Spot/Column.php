@@ -11,6 +11,9 @@ namespace Spot;
 
 class Column
 {
+	/**
+	 * @var int Entity column types
+	 */
 	const TYPE_DATE		= 1;
 	const TYPE_DATETIME	= 2;
 	const TYPE_VARCHAR	= 3;
@@ -22,6 +25,9 @@ class Column
 	const TYPE_BOOLEAN	= 9;
 	const TYPE_DOUBLE	= 10;
 
+	/**
+	 * @var int Entity column bind data types
+	 */
 	const BIND_PARAM_NULL		= 1;
 	const BIND_PARAM_INT		= 2;
 	const BIND_PARAM_STR	 	= 3;
