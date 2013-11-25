@@ -234,9 +234,10 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
         // Check if accessing a column alias
         isset($this->aliases[$offset]) && $offset = $this->aliases[$offset];
 
-        $fields = $this->getMetaData();
+        $columns = static::getMetaData();
 
         // Run value through a filter call if set
+        if (this->container[$alias] instanceof \Closure)
         if (isset($fields[$offset]['filter'])) {
             $value = call_user_func($fields[$offset]['filter'], $value);
         } else if (method_exists($this, $setMethod) && !array_key_exists($offset, $this->setterIgnore)) {
@@ -392,12 +393,23 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
      */
     protected function initialize()
     {
+        /*
         $fields = static::getMetaData();
 
         foreach ($fields as $field => $options) {
             $this->data[$field] = isset($options['default']) ? $options['default'] : null;
             isset($options['alias']) && $this->aliases[(string) $options['alias']] = $field;
         }
+        */
+#d(__METHOD__, $this);
+
+        $columns = static::getMetaData();
+
+        foreach ($columns as $column) {
+            $this->data[$column->getName()] = $column->getDefault();
+            !empty($column->getAlias()) && $this->aliases[$column->getAlias()] = $column->getName();
+        }
+#d(__METHOD__, $this);
 
         return $this;
     }
