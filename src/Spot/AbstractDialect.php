@@ -24,7 +24,7 @@ abstract class AbstractDialect
 	 */
 	protected $escapeChar;
 
-	public function __construct(\Spot\AdapterInterface $adapter)
+	public function __construct(AdapterInterface $adapter)
 	{
 		$this->setAdapter($adapter);
 	}
@@ -216,10 +216,7 @@ abstract class AbstractDialect
 	 */
 	public function limit($sqlQuery, $number = null)
 	{
-		if (is_numeric(number)) {
-			return $sqlQuery . ' LIMIT ' . number;
-		}
-		return $sqlQuery;
+		return is_numeric($number) ? $sqlQuery . ' LIMIT ' . $number : $sqlQuery;
 	}
 
 	/**
@@ -227,10 +224,7 @@ abstract class AbstractDialect
 	 */
 	public function offset($sqlQuery, $number = null)
 	{
-		if (is_numeric(number)) {
-			return $sqlQuery . ' OFFSET ' . number;
-		}
-		return $sqlQuery;
+		return is_numeric($number) ? $sqlQuery . ' OFFSET ' . $number : $sqlQuery;
 	}
 
 	/**

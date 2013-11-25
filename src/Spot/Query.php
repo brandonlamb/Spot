@@ -232,20 +232,20 @@ class Query implements Countable, IteratorAggregate, QueryInterface
 
     /**
      * Get LIMIT
-     * @return int
+     * @return int|null
      */
     public function getLimit()
     {
-        return (int) $this->limit;
+        return (!is_numeric($this->limit)) ? null : (int) $this->limit;
     }
 
     /**
      * Get OFFSET
-     * @return int
+     * @return int|null
      */
     public function getOffset()
     {
-        return (int) $this->offset;
+        return (!is_numeric($this->offset)) ? null : (int) $this->offset;
     }
 
     /**
