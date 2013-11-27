@@ -12,10 +12,40 @@
 
 namespace Spot\Entity;
 
-use Serializable, ArrayAccess;
+use Spot\Column, Serializable, ArrayAccess;
 
 abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterface
 {
+    /**
+     * @var \Spot\Entity\MetaData
+     */
+    protected static $metaData;
+
+    /**
+     * @var string
+     */
+    #private static $table;
+
+    /**
+     * @var string
+     */
+    #private static $sequence;
+
+    /**
+     * @var array
+     */
+    #private static $columns;
+
+    /**
+     * @var array
+     */
+    #private static $relations;
+
+    /**
+     * @var array, entity column aliases
+     */
+    #protected static $aliases;
+
     /**
      * @var array, Entity data storage
      */
@@ -25,11 +55,6 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
      * @var array, Entity modified data storage
      */
     protected $dataModified = [];
-
-    /**
-     * @var array, entity column aliases
-     */
-    protected $aliases = [];
 
     /**
      * @var array, ignored getter properties. Add a field/column here to not
@@ -237,8 +262,9 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
         $columns = static::getMetaData();
 
         // Run value through a filter call if set
-        if (this->container[$alias] instanceof \Closure)
-        if (isset($fields[$offset]['filter'])) {
+        if ($this->container[$alias] instanceof \Closure) {
+            $value = $this->container[$alias]($value);
+        } else if (isset($fields[$offset]['filter'])) {
             $value = call_user_func($fields[$offset]['filter'], $value);
         } else if (method_exists($this, $setMethod) && !array_key_exists($offset, $this->setterIgnore)) {
             // Tell this function to ignore the overload on further calls for this variable
@@ -356,7 +382,7 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
      */
     public static function getTable()
     {
-        return '';
+        return (string) static::$table;
     }
 
     /**
@@ -364,7 +390,7 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
      */
     public static function getSequence()
     {
-        return '';
+        return (string) static::$sequence;
     }
 
     /**
@@ -383,9 +409,16 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
         return [];
     }
 
-
-
-
+    /**
+     * {@inheritDoc}
+     */
+    public static function getMetaData()
+    {
+        if (null === static::$metaData) {
+            static::$metaData = new MetaData(static::metaData());
+        }
+        return static::$metaData;
+    }
 
     /**
      * Set all field values to their defualts or null
@@ -393,23 +426,12 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
      */
     protected function initialize()
     {
-        /*
-        $fields = static::getMetaData();
+        $metaData = static::getMetaData();
 
-        foreach ($fields as $field => $options) {
-            $this->data[$field] = isset($options['default']) ? $options['default'] : null;
-            isset($options['alias']) && $this->aliases[(string) $options['alias']] = $field;
-        }
-        */
-#d(__METHOD__, $this);
-
-        $columns = static::getMetaData();
-
-        foreach ($columns as $column) {
+        // Loop through each defined column and set any default initial values
+        foreach ($metaData->getColumns() as $column) {
             $this->data[$column->getName()] = $column->getDefault();
-            !empty($column->getAlias()) && $this->aliases[$column->getAlias()] = $column->getName();
         }
-#d(__METHOD__, $this);
 
         return $this;
     }

@@ -12,22 +12,28 @@ namespace Spot\Entity;
 interface EntityInterface
 {
     /**
+     * Get the parsed meta data
+     * @return \Spot\Entity\MetaData
+     */
+    public static function getMetaData();
+
+    /**
      * Get entity meta data, containing information on columns
      * @return array
      */
-    public static function getMetaData();
+    public static function metaData();
 
     /**
      * Get the table name for the entity.
      * @return string
      */
-    public static function getTable();
+    #public static function getTable();
 
     /**
      * Get the sequence name for the entity.
      * @return string
      */
-    public static function getSequence();
+    #public static function getSequence();
 
     /**
      * Return defined hooks of the entity
@@ -39,7 +45,13 @@ interface EntityInterface
      * Return defined fields of the entity
      * @return array
      */
-    public static function getRelations();
+    #public static function getRelations();
+
+    /**
+     * Return the columns definitions
+     * @return array
+     */
+    #public static function getColumns();
 
     /**
      * Getter for field properties

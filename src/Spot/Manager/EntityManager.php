@@ -105,7 +105,7 @@ class EntityManager
         }
 
         // Datasource info
-        $entityDatasource = $entityName::getTable();
+        $entityDatasource = $entityName::getMetaData()->getTable();
 
         if (null === $entityDatasource || !is_string($entityDatasource)) {
             throw new \InvalidArgumentException("Entity must have a datasource defined. Please define a protected property named 'datasource' on your '" . $entityName . "' entity class.");

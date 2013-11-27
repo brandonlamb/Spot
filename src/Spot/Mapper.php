@@ -106,7 +106,7 @@ class Mapper
     public function hydrateEntity($entityName, array $data)
     {
         $loadedData = [];
-        $fields = $entityName::getMetaData();
+        $fields = $entityName::getMetaData()->getColumns();
 
         foreach ($data as $field => $value) {
             // Skip type checking if dynamic field
@@ -325,11 +325,11 @@ class Mapper
                 // Check if PK is using a sequence
                 if ($options['sequence'] === true) {
                     // Try fetching sequence from the Entity defined getSequence() method
-                    $options['sequence'] = $entityName::sequence();
+                    $options['sequence'] = $entityName::getMetaData()->getSequence();
 
                     // If the Entity did not define a sequence, automatically generate an assumed sequence name
                     if (empty($options['sequence'])) {
-                        $options['sequence'] = $entityName->getTable() . '_' . $pkField . '_seq';
+                        $options['sequence'] = $entityName::getMetaData()->getTable() . '_' . $pkField . '_seq';
                     }
                 }
 
