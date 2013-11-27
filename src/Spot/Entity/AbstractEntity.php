@@ -231,7 +231,7 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
         }
 
         // Check if accessing a column alias
-        isset($this->aliases[$offset]) && $offset = $this->aliases[$offset];
+        ($alias = static::getMetaData()->getColumnMap($offset)) && $offset = $alias;
 
         // We can't use isset for dataModified because it returns false for NULL values
         if (array_key_exists($offset, $this->dataModified)) {
@@ -257,7 +257,7 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
         $setMethod = 'set' . $offset;
 
         // Check if accessing a column alias
-        isset($this->aliases[$offset]) && $offset = $this->aliases[$offset];
+        ($alias = static::getMetaData()->getColumnMap($offset)) && $offset = $alias;
 
         $columns = static::getMetaData();
 
@@ -380,9 +380,20 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
     /**
      * {@inheritDoc}
      */
+    public static function getMetaData()
+    {
+        if (null === static::$metaData) {
+            static::$metaData = new MetaData(static::metaData());
+        }
+        return static::$metaData;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public static function getTable()
     {
-        return (string) static::$table;
+        return static::getMetaData()->getTable();
     }
 
     /**
@@ -390,7 +401,15 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
      */
     public static function getSequence()
     {
-        return (string) static::$sequence;
+        return static::getMetaData()->getSequence();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public static function getRelations()
+    {
+        return static::getMetaData()->getRelations();
     }
 
     /**
@@ -399,25 +418,6 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
     public static function getHooks()
     {
         return [];
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public static function getRelations()
-    {
-        return [];
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public static function getMetaData()
-    {
-        if (null === static::$metaData) {
-            static::$metaData = new MetaData(static::metaData());
-        }
-        return static::$metaData;
     }
 
     /**

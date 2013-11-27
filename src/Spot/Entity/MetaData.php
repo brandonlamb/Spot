@@ -34,6 +34,11 @@ class MetaData
 	private $columnMap;
 
 	/**
+	 * @var array
+	 */
+	private $relations;
+
+	/**
 	 * Constructor
 	 * @param array $definition
 	 */
@@ -42,9 +47,7 @@ class MetaData
 		isset($definition['table']) && $this->setTable($definition['table']);
 		isset($definition['sequence']) && $this->setSequence($definition['sequence']);
 		isset($definition['columns']) && $this->setColumns($definition['columns']);
-		#isset($definition['columns']) && $this->setColumns($definition['columns']);
-
-
+		isset($definition['relations']) && $this->setRelations($definition['relations']);
 	}
 
 	/**
@@ -97,12 +100,27 @@ class MetaData
 	}
 
 	/**
+	 * Get a single column
+	 * @param string $offset
+	 * @return \Spot\Column|bool
+	 */
+	public function getColumn($offset)
+	{
+		($alias = $this->getColumnMap($offset)) && $offset = $alias;
+		return isset($this->columns[$offset]) ? $this->columns[$offset] : false;
+	}
+
+	/**
 	 * Set the columns data
 	 * @param array
 	 * @return MetaData
 	 */
 	public function setColumns(array $columns)
 	{
+        if (!is_array($columns)) {
+            throw new \InvalidArgumentException("Column definitons must be formatted as an array.");
+        }
+
 		!is_array($this->columns) && $this->columns = [];
 
         foreach ($columns as $column) {
@@ -115,6 +133,15 @@ class MetaData
         }
 
         return $this;
+	}
+
+	/**
+	 * Get column if a mapping exists
+	 * @return string|bool
+	 */
+	public function getColumnMap($offset)
+	{
+		return isset($this->columnMap[$offset]) ? $this->columnMap[$offset] : false;
 	}
 
 	/**
@@ -137,6 +164,29 @@ class MetaData
 	public function removeColumnMap($offset)
 	{
     	unset($this->columnMap[(string) $offset]);
+		return $this;
+	}
+
+	/**
+	 * Get relations definitions
+	 * @return array
+	 */
+	public function getRelations()
+	{
+		return (array) $this->relations;
+	}
+
+	/**
+	 * Set entity relations
+	 * @param array $relations
+	 * @return MetaData
+	 */
+	public function setRelations(array $relations)
+	{
+        if (!is_array($relations)) {
+            throw new \InvalidArgumentException("Relation definitons must be formatted as an array.");
+        }
+		$this->relations = (array) $relations;
 		return $this;
 	}
 }

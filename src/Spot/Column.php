@@ -56,7 +56,7 @@ class Column
 	protected $size = 4096;
 
 	/**
-	 * @var bool
+	 * @var bool Also determins if column is required (is null is then optional)
 	 */
 	protected $isNotNull = false;
 
@@ -64,6 +64,11 @@ class Column
 	 * @var bool
 	 */
 	protected $isPrimary = false;
+
+	/**
+	 * @var bool
+	 */
+	protected $isRelation = false;
 
 	/**
 	 * @var int
@@ -91,6 +96,7 @@ class Column
 		isset($definition['alias']) && $this->alias = (string) $definition['alias'];
 		isset($definition['notNull']) && $this->isNotNull = (bool) $definition['notNull'];
 		isset($definition['primary']) && $this->isPrimary = (bool) $definition['primary'];
+		isset($definition['relation']) && $this->isRelation = (bool) $definition['relation'];
 		isset($definition['bindType']) && $this->bindType = (int) $definition['bindType'];
 		isset($definition['default']) && $this->default = $definition['default'];
 		isset($definition['filter']) && $this->filter = $definition['filter'];
@@ -157,6 +163,15 @@ class Column
 	public function isPrimary()
 	{
 		return (bool) $this->isPrimary;
+	}
+
+	/**
+	 * Is column a relation property?
+	 * @return bool
+	 */
+	public function isRelation()
+	{
+		return (bool) $this->isRelation;
 	}
 
 	/**

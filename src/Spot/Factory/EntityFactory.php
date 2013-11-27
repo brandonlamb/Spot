@@ -51,14 +51,6 @@ class EntityFactory
             $this->relationManager->loadRelations($entity);
         }
 
-        // Set default values if entity not loaded
-        if (!$this->entityManager->getPrimaryKey($entity)) {
-            $entityDefaultValues = $this->entityManager->fieldDefaultValues($entityClass);
-            if (count($entityDefaultValues) > 0) {
-                $entity->data($entityDefaultValues);
-            }
-        }
-
         return $entity;
     }
 }
