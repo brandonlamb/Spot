@@ -11,7 +11,8 @@
 namespace Spot\Factory;
 
 use Spot\Di as DiContainer,
-    Spot\Di\InjectableTrait;
+    Spot\Di\InjectableTrait,
+    Spot\Mapper;
 
 class EntityFactory
 {
@@ -30,9 +31,10 @@ class EntityFactory
      * Get a new entity object, or an existing entity from identifiers
      * @param string $entityClass Name of the entity class
      * @param mixed $identifier Primary key or array of key/values
+     * @param \Spot\Mapper $mapper
      * @return mixed Depends on input false If $identifier is scalar and no entity exists
      */
-    public function create($entityClass, $identifier = false)
+    public function create($entityClass, $identifier = false, Mapper $mapper = null)
     {
         if (false === $identifier) {
             // No parameter passed, create a new empty entity object
@@ -48,7 +50,7 @@ class EntityFactory
             if (!$entity) {
                 return false;
             }
-            $this->relationManager->loadRelations($entity);
+            null !== $mapper && $this->relationManager->loadRelations($entity, $mapper);
         }
 
         return $entity;

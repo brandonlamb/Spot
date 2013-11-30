@@ -4,6 +4,7 @@
  * Entity Manager for storing information about entities
  *
  * @package Spot\Manager
+ * @author Brandon Lamb <brandon@brandonlamb.com>
  */
 
 namespace Spot\Manager;
@@ -95,7 +96,7 @@ class EntityManager
         }
 
         $metaData = $entityName::getMetaData();
-        return null === $column ? $metaData()->getColumns() : $metaData->getColumn($column);
+        return null === $column ? $metaData->getColumns() : $metaData->getColumn($column);
     }
 
     /**

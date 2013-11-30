@@ -10,7 +10,8 @@ namespace Spot\Manager;
 
 use Spot\Di\DiInterface,
     Spot\Di\InjectableTrait,
-    Spot\Entity\CollectionInterface;
+    Spot\Entity\ResultSetInterface,
+    Spot\Mapper;
 
 class RelationManager
 {
@@ -27,25 +28,21 @@ class RelationManager
 
     /**
      * Load defined relations
-     * @param \Spot\Entity|\Spot\Entity\CollectionInterface
+     * @param \Spot\Entity|\Spot\Entity\ResultSetInterface
+     * @param \Spot\Entity|\Spot\Mapper $mapper
      * @param bool $reload
-     * @return array
      * @throws \InvalidArgumentException
      */
-    public function loadRelations($entity, $reload = false)
+    public function loadRelations($entity, Mapper $mapper, $reload = false)
     {
-        $entityName = $entity instanceof CollectionInterface ? $entity->entityName() : $entity->toString();
-        if (!$entityName) {
+        $entityName = $entity instanceof ResultSetInterface ? $entity->entityName() : $entity->toString();
+        if (empty($entityName)) {
             throw new \InvalidArgumentException("Cannot load relation with a null \$entityName");
         }
 
-        $relations = [];
-        $rels = $this->entityManager->relations($entityName);
-        foreach ($rels as $field => $relation) {
-            $relations[$field] = $this->loadRelation($entity, $field, $reload);
+        foreach ($this->entityManager->getRelations($entityName) as $field => $relation) {
+            $this->loadRelation($entity, $field, $mapper, $reload);
         }
-
-        return $relations;
     }
 
     /**
@@ -53,34 +50,35 @@ class RelationManager
      * @param \Spot\Entity
      * @param string $name
      * @param bool $reload
-     * @return \Spot\Relation\AbstractRelation
      * @throws \InvalidArgumentException
      */
-    public function loadRelation($entity, $name, $reload = false)
+    public function loadRelation($entity, $name, Mapper $mapper, $reload = false)
     {
-        $entityName = $entity instanceof \Spot\Entity\CollectionInterface ? $entity->entityName() : $entity->toString();
-        if (!$entityName) {
+        $entityName = $entity instanceof ResultSetInterface ? $entity->entityName() : $entity->toString();
+        if (empty($entityName)) {
             throw new \InvalidArgumentException("Cannot load relation with a null \$entityName");
         }
 
-		$rels = $this->entityManager->relations($entityName);
-        if (isset($rels[$name])) {
-            return $this->getRelationObject($entity, $name, $rels[$name]);
+		$relations = $this->entityManager->getRelations($entityName);
+        if (isset($relations[$name])) {
+            $this->loadRelationObject($entity, $name, $relations[$name], $mapper);
         }
     }
 
     /**
+     * Load an entity relation object into the entity object
+     *
      * @param \Spot\Entity $entity
      * @param string $field
      * @param \Spot\Relation\AbstractRelation
+     * @param \Spot\Mapper $mapper
      * @param bool $reload
-     * @return \Spot\Relation\AbstractRelation
      * @throws \InvalidArgumentException
      */
-    protected function getRelationObject($entity, $field, $relation, $reload = false)
+    protected function loadRelationObject($entity, $field, $relation, Mapper $mapper, $reload = false)
     {
-        $entityName = $entity instanceof \Spot\Entity\CollectionInterface ? $entity->entityName() : $entity->toString();
-        if (!$entityName) {
+        $entityName = $entity instanceof ResultSetInterface ? $entity->entityName() : $entity->toString();
+        if (empty($entityName)) {
             throw new \InvalidArgumentException("Cannot load relation with a null \$entityName");
         }
 
@@ -100,7 +98,9 @@ class RelationManager
         $relationClass = '\\Spot\\Relation\\' . $relation['type'];
 
         // Set field equal to relation class instance
-        $relationObj = new $relationClass($this, $entity, $relation);
-        return $entity->$field = $relationObj;
+        $relation = new $relationClass($mapper, $entity, $relation);
+
+        // Inject relation object into entit property
+        $entity->set($field, $relation);
     }
 }

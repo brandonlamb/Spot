@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Table column class
+ * Defines a table column's properties
  *
  * @package Spot
  * @author Brandon Lamb <brandon@brandonlamb.com>

@@ -99,7 +99,7 @@ abstract class AbstractRelation
      */
     public function entityName()
     {
-        d($this->entityName);
+d(__METHOD__, $this->entityName);
         if ($this->entityName !== ':self') {
             return $this->entityName;
         }

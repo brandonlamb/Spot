@@ -61,7 +61,7 @@ class Mapper
      */
     public function getAdapterName()
     {
-        return $this->adapterName;
+        return (string) $this->adapterName;
     }
 
     /**
@@ -94,31 +94,18 @@ class Mapper
      */
     public function createEntity($entityClass, array $data)
     {
-        return $this->entityFactory->create($entityClass, $data);
+        return $this->entityFactory->create($entityClass, $this, $data);
     }
 
     /**
      * Hydrate an entity from an array of data.
-     * @param string $entityName
+     * @param string|EntityInterface $entityName
      * @param array $data
-     * @return array
+     * @return EntityInterface
      */
     public function hydrateEntity($entityName, array $data)
     {
-        $loadedData = [];
-        $fields = $entityName::getMetaData()->getColumns();
-
-        foreach ($data as $field => $value) {
-            // Skip type checking if dynamic field
-            if (isset($fields[$field])) {
-                $typeHandler = $this->config->getTypeHandler($fields[$field]['type']);
-                $loadedData[$field] = $typeHandler::loadInternal($value);
-            } else {
-                $loadedData[$field] = $value;
-            }
-        }
-
-        return $loadedData;
+        return is_string($entityName) ? new $entityName($data) : $entityName->setData($data);
     }
 
 /* ====================================================================================================== */
@@ -143,16 +130,18 @@ class Mapper
 
         // Fetch all results into new entity class
         // @todo Move this to collection class so entities will be lazy-loaded by Collection iteration
+        $entityFields = $this->entityManager->getColumns($entityName);
         foreach ($stmt as $data) {
             // Entity with data set
-#            $entity = $this->relationManager->hydrateEntity(new $entityName($data), $data);
-            $entity = $this->hydrateEntity(new $entityName($data), $data);
+            $data = array_intersect_key($data, $entityFields);
 
+#            $entity = $this->relationManager->hydrateEntity(new $entityName($data), $data);
             // Entity with data set
-            $entity = new $entityName($data);
+            $entity = $this->hydrateEntity($entityName, $data);
 
             // Load relation objects
-            $this->relationManager->loadRelations($entity);
+            $this->relationManager->loadRelations($entity, $this);
+d(__METHOD__, $entity);
 
             // Store in array for Collection
             $results[] = $entity;
@@ -190,7 +179,7 @@ class Mapper
                 continue;
             }
 
-            $relationObj = $this->relationManager->loadRelation($collection, $relationName);
+            $relationObj = $this->relationManager->loadRelation($collection, $relationName, $this);
 
             // double execute() to make sure we get the \Spot\Entity\CollectionInterface back (and not just the \Spot\Query)
             $relatedEntities = $relationObj->execute()->limit(null)->execute();
@@ -394,7 +383,7 @@ class Mapper
         $entity->$pkField = $result;
 
         // Load relations on new entity
-        $this->relationManager->loadRelations($entity);
+        $this->relationManager->loadRelations($entity, $this);
 
         // Run afterInsert
 #        $resultAfter = $this->eventsManager->triggerInstanceHook($entity, 'afterInsert', [$this, $result]);
