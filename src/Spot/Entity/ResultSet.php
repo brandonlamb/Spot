@@ -68,7 +68,8 @@ class ResultSet implements ResultSetInterface
     {
         foreach ($collection as $entity) {
             if ($onlyUnique && in_array($entity, $this->results)) {
-                continue; // Skip - entity already exists in collection
+                // Skip - entity already exists in collection
+                continue;
             }
             $this->add($entity);
         }
@@ -92,21 +93,21 @@ class ResultSet implements ResultSetInterface
     {
         // Both empty
         if (null === $keyColumn && null === $valueColumn) {
-            $return = array();
+            $return = [];
             foreach ($this->results as $row) {
                 $return[] = $row->toArray();
             }
 
         // Key column name
-        } elseif (null !== $keyColumn && null === $valueColumn) {
-            $return = array();
+        } else if (null !== $keyColumn && null === $valueColumn) {
+            $return = [];
             foreach ($this->results as $row) {
                 $return[] = $row->$keyColumn;
             }
 
         // Both key and valud columns filled in
         } else {
-            $return = array();
+            $return = [];
             foreach ($this->results as $row) {
                 $return[$row->$keyColumn] = $row->$valueColumn;
             }
@@ -120,7 +121,7 @@ class ResultSet implements ResultSetInterface
      */
     public function run($callback)
     {
-         return call_user_func_array($callback, array($this->results));
+         return call_user_func_array($callback, [$this->results]);
     }
 
     /**
@@ -200,7 +201,7 @@ class ResultSet implements ResultSetInterface
 
     public function valid()
     {
-        return (current($this->results) !== FALSE);
+        return (current($this->results) !== false);
     }
 
     public function offsetExists($key)

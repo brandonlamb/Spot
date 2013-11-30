@@ -141,19 +141,25 @@ class Mapper
 
             // Load relation objects
             $this->relationManager->loadRelations($entity, $this);
-d(__METHOD__, $entity);
 
             // Store in array for Collection
             $results[] = $entity;
 
             // Store primary key of each unique record in set
-            $pk = $this->entityManager->getPrimaryKey($entity);
-            if (!in_array($pk, $resultsIdentities) && !empty($pk)) {
-                $resultsIdentities[] = $pk;
+            $primaryKeys = $this->entityManager->getPrimaryKeysValue($entity);
+            $fingerprint = md5(json_encode($primaryKeys));
+
+            // Entity may have composite key PK, loop through each to set a "PK"
+            #if (!isset($resultsIdentities[$entityName][$fingerprint]) && !empty($primaryKeys)) {
+            if (!isset($resultsIdentities[$fingerprint]) && !empty($primaryKeys)) {
+                #$resultsIdentities[$entityName][$fingerprint] = $primaryKeys;
+                $resultsIdentities[$fingerprint] = $primaryKeys;
             }
         }
 
+        // Create ResultSet
         $collection = $this->resultSetFactory->create($results, $resultsIdentities, $entityName);
+
         return $this->with($collection, $entityName, $with);
     }
 
@@ -166,11 +172,12 @@ d(__METHOD__, $entity);
      */
     public function with($collection, $entityName, $with = [])
     {
-#        $return = $this->eventsManager->triggerStaticHook($entityName, 'beforeWith', [$collection, $with, $this]);
         $return = true;
+        #$return = $this->eventsManager->triggerStaticHook($entityName, 'beforeWith', [$collection, $with, $this]);
         if (false === $return) {
             return $collection;
         }
+#d(__METHOD__, $with);
 
         foreach ($with as $relationName) {
 #            $return = $this->eventsManager->triggerStaticHook($entityName, 'loadWith', [$collection, $relationName, $this]);

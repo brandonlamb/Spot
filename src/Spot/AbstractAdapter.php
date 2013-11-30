@@ -316,6 +316,8 @@ abstract class AbstractAdapter
             }
         }
 
+#d(__METHOD__);
+
         // Prepare update query
         if ($stmt = $this->pdo->prepare($sqlQuery)) {
             // Execute

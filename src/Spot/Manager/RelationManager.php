@@ -98,7 +98,7 @@ class RelationManager
         $relationClass = '\\Spot\\Relation\\' . $relation['type'];
 
         // Set field equal to relation class instance
-        $relation = new $relationClass($mapper, $entity, $relation);
+        $relation = new $relationClass($mapper, $this->entityManager, $entity, $relation);
 
         // Inject relation object into entit property
         $entity->set($field, $relation);

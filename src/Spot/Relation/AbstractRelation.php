@@ -1,22 +1,30 @@
 <?php
 
-namespace Spot\Relation;
-
-use Spot\Mapper,
-    Spot\Entity\EntityInterface;
-
 /**
  * Abstract class for relations
  *
- * @package Spot
- * @link http://spot.os.ly
+ * @package Spot\Relation
+ * @author Brandon Lamb <brandon@brandonlamb.com>
  */
+
+namespace Spot\Relation;
+
+use Spot\Mapper,
+    Spot\Entity\EntityInterface,
+    Spot\Entity\ResultSetInterface,
+    Spot\Manager\EntityManager;
+
 abstract class AbstractRelation
 {
     /**
      * @var \Spot\Mapper
      */
     protected $mapper;
+
+    /**
+     * @var \Spot\Manager\EntityManager
+     */
+    protected $entityManager;
 
     /**
      * @var \Spot\Entity\EntityInterface, the source entity to find relation(s) for
@@ -39,12 +47,22 @@ abstract class AbstractRelation
     protected $conditions;
 
     /**
+     * @var array, join conditions to find relations
+     */
+    protected $joins;
+
+    /**
+     * @var array, select columns when finding relations
+     */
+    protected $selects;
+
+    /**
      * @var array
      */
     protected $relationData;
 
     /**
-     * @var \Spot\Entity\CollectionInterface
+     * @var \Spot\Entity\ResultSetInterface
      */
     protected $collection;
 
@@ -61,21 +79,19 @@ abstract class AbstractRelation
      * @param array $resultsIdentities Array of key values for given result set primary key
      * @throws \InvalidArgumentException
      */
-    public function __construct(Mapper $mapper, EntityInterface $entity, array $relationData = array())
+    public function __construct(Mapper $mapper, EntityManager $entityManager, $entity, array $relationData = [])
     {
-        $entityType = null;
-        if ($entity instanceof \Spot\Entity\EntityInterface) {
-            $entityType = $entity->toString();
-        } elseif ($entity instanceof \Spot\Entity\CollectionInterface) {
-            $entityType = $entity->entityName();
-        } else {
+        if ($entity instanceof EntityInterface && $entity instanceof ResultSetInterface) {
             throw new \InvalidArgumentException("Entity or collection must be an instance of \\Spot\\Entity\\EntityInterface or \\Spot\\Entity\\Colletion");
         }
 
         $this->mapper = $mapper;
+        $this->entityManager = $entityManager;
         $this->sourceEntity = $entity;
         $this->entityName = isset($relationData['entity']) ? $relationData['entity'] : null;
-        $this->conditions = isset($relationData['where']) ? $relationData['where'] : array();
+        $this->selects = isset($relationData['select']) ? $relationData['select'] : ['*'];
+        $this->joins = isset($relationData['join']) ? $relationData['join'] : [];
+        $this->conditions = isset($relationData['where']) ? $relationData['where'] : [];
         $this->relationData = $relationData;
 
         // Checks ...
@@ -99,25 +115,24 @@ abstract class AbstractRelation
      */
     public function entityName()
     {
-d(__METHOD__, $this->entityName);
         if ($this->entityName !== ':self') {
             return $this->entityName;
         }
 
-        if ($this->sourceEntity() instanceof \Spot\Entity\CollectionInterface) {
+        if ($this->sourceEntity() instanceof ResultSetInterface) {
             return $this->sourceEntity()->entityName();
         } else {
             return get_class($this->sourceEntity());
         }
 
-#        return ($this->entityName === ':self') ? ($this->sourceEntity() instanceof \Spot\Entity\CollectionInterface ? $this->sourceEntity()->entityName() : get_class($this->sourceEntity())) : $this->entityName;
+#        return ($this->entityName === ':self') ? ($this->sourceEntity() instanceof \Spot\Entity\ResultSetInterface ? $this->sourceEntity()->entityName() : get_class($this->sourceEntity())) : $this->entityName;
     }
 
     /**
      * Get mapper instance
      * @return \Spot\Mapper
      */
-    public function mapper()
+    public function getMapper()
     {
         return $this->mapper;
     }
@@ -132,12 +147,104 @@ d(__METHOD__, $this->entityName);
     }
 
     /**
-     * Get foreign key relations
+     * Get WHERE conditions
      * @return array
      */
     public function conditions()
     {
         return $this->resolveEntityConditions($this->sourceEntity(), $this->conditions);
+    }
+
+    /**
+     * Replace entity value placeholders on relation definitions
+     * Currently replaces ':entity.[col]' with the field value from the passed entity object
+     * @param \Spot\Entity\EntityInterface $entity
+     * @param array $selects
+     * @param string $replace
+     * @return array
+     */
+    public function resolveEntitySelects(EntityInterface $entity, array $selects, $replace = ':entity.')
+    {
+        $sourceTable = $this->entityManager->getTable($this->sourceEntity());
+        $relationTable = $this->entityManager->getTable($this->relationEntityName());
+
+        // Load foreign keys with data from current row
+        // Replace ':entity.[col]' with the field value from the passed entity object
+        for ($i = 0, $c = count($selects); $i < $c; $i++) {
+            $select = $selects[$i];
+
+            // Replace :relation in table definition with $relationTable
+            if (is_string($select)) {
+                if (false !== strpos($select, ':relation.')) {
+                    $select = str_replace(':relation.', $relationTable . '.', $select);
+                }
+
+                if (false !== strpos($select, ':entity.')) {
+                    $select = str_replace(':entity.', $sourceTable . '.', $select);
+                }
+            }
+
+            $selects[$i] = $select;
+        }
+
+        return $selects;
+    }
+
+    /**
+     * Replace entity value placeholders on relation definitions
+     * Currently replaces ':entity.[col]' with the field value from the passed entity object
+     * @param \Spot\Entity\EntityInterface $entity
+     * @param array $joins
+     * @param string $replace
+     * @return array
+     */
+    public function resolveEntityJoins(EntityInterface $entity, array $joins, $replace = ':entity.')
+    {
+        $sourceTable = $this->entityManager->getTable($this->sourceEntity());
+        $relationTable = $this->entityManager->getTable($this->relationEntityName());
+
+        // Load foreign keys with data from current row
+        // Replace ':entity.[col]' with the field value from the passed entity object
+        for ($i = 0, $c = count($joins); $i < $c; $i++) {
+            $definition = $joins[$i];
+
+            if (!isset($definition[2])) {
+                throw new \InvalidArgumentException(
+                    __METHOD__ . ': Entity relation joins must include table, predicate and join type'
+                );
+            }
+
+            // Replace :relation in table definition with $relationTable
+            if (is_string($definition[0])) {
+                if (false !== strpos($definition[0], ':relation')) {
+                    $definition[0] = str_replace(':relation', $relationTable, $definition[0]);
+                }
+                if (false !== strpos($definition[0], ':entity')) {
+                    $definition[0] = str_replace(':entity', $sourceTable, $definition[0]);
+                }
+            }
+
+            // Replace :relation.column with $relationTable.column
+            if (is_string($definition[1])) {
+                if (false !== strpos($definition[1], ':relation.')) {
+                    $definition[1] = str_replace(':relation.', $relationTable . '.', $definition[1]);
+                }
+
+                if (false !== strpos($definition[1], $replace)) {
+                    $definition[1] = str_replace($replace, $sourceTable . '.', $definition[1]);
+                    /*
+                    if ($entity instanceof EntityInterface) {
+                        $joins[$relationCol] = $entity->$col;
+                    } else if($entity instanceof ResultSetInterface) {
+                        $joins[$relationCol] = $entity->toArray($col);
+                    }
+                    */
+                }
+                $joins[$i] = $definition;
+            }
+        }
+
+        return $joins;
     }
 
     /**
@@ -153,17 +260,25 @@ d(__METHOD__, $this->entityName);
         // Load foreign keys with data from current row
         // Replace ':entity.[col]' with the field value from the passed entity object
         if ($conditions) {
+            $relationTable = $this->entityManager->getTable($this->relationEntityName());
+
             foreach ($conditions as $relationCol => $col) {
+                if (is_string($relationCol) && false !== strpos($relationCol, ':relation.')) {
+                    unset($conditions[$relationCol]);
+                    $relationCol = str_replace(':relation.', $relationTable . '.', $relationCol);
+                }
+
                 if (is_string($col) && false !== strpos($col, $replace)) {
                     $col = str_replace($replace, '', $col);
-                    if ($entity instanceof \Spot\Entity\EntityInterface) {
+                    if ($entity instanceof EntityInterface) {
                         $conditions[$relationCol] = $entity->$col;
-                    } else if($entity instanceof \Spot\Entity\CollectionInterface) {
+                    } else if ($entity instanceof ResultSetInterface) {
                         $conditions[$relationCol] = $entity->toArray($col);
                     }
                 }
             }
         }
+
         return $conditions;
     }
 
@@ -173,8 +288,16 @@ d(__METHOD__, $this->entityName);
      */
     public function relationOrder()
     {
-        $sorting = isset($this->relationData['order']) ? $this->relationData['order'] : array();
-        return $sorting;
+        return isset($this->relationData['order']) ? $this->relationData['order'] : [];
+    }
+
+    /**
+     * Get entity name of relation class
+     * @return array
+     */
+    public function relationEntityName()
+    {
+        return isset($this->relationData['entity']) ? $this->relationData['entity'] : null;
     }
 
     /**
@@ -190,7 +313,7 @@ d(__METHOD__, $this->entityName);
 
     /**
      * Fetch and cache returned query object from internal toQuery() method
-     * @param \Spot\Entity\CollectionInterface
+     * @param \Spot\Entity\ResultSetInterface
      */
     public function execute()
     {
@@ -206,7 +329,7 @@ d(__METHOD__, $this->entityName);
     public function __call($func, $args)
     {
         $obj = $this->execute();
-        return (is_object($obj)) ? call_user_func_array(array($obj, $func), $args) : $obj;
+        return (is_object($obj)) ? call_user_func_array([$obj, $func], $args) : $obj;
     }
 
     /**
@@ -234,9 +357,9 @@ d(__METHOD__, $this->entityName);
         $this->execute();
 
         if ($key === null) {
-            return $this->collection[] = $value;
+            $this->collection[] = $value;
         } else {
-            return $this->collection[$key] = $value;
+            $this->collection[$key] = $value;
         }
     }
 

@@ -19,7 +19,7 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
     /**
      * @var \Spot\Entity\MetaData
      */
-    protected static $metaData;
+    protected static $metaData = [];
 
     /**
      * @var string
@@ -382,10 +382,11 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
      */
     public static function getMetaData()
     {
-        if (null === static::$metaData) {
-            static::$metaData = new MetaData(static::metaData());
+        $class = get_called_class();
+        if (!isset(static::$metaData[$class])) {
+            static::$metaData[$class] = new MetaData(static::metaData());
         }
-        return static::$metaData;
+        return static::$metaData[$class];
     }
 
     /**
