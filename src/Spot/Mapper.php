@@ -146,7 +146,7 @@ class Mapper
             $results[] = $entity;
 
             // Store primary key of each unique record in set
-            $primaryKeys = $this->entityManager->getPrimaryKeysValue($entity);
+            $primaryKeys = $this->entityManager->getPrimaryKeyValues($entity);
             $fingerprint = md5(json_encode($primaryKeys));
 
             // Entity may have composite key PK, loop through each to set a "PK"
@@ -202,7 +202,7 @@ class Mapper
                     foreach ($resolvedConditions as $key => $value) {
                         if ($relatedEntity->$key == $value) {
                             // Store primary key of each unique record in set
-                            $primaryKeys = $this->entityManager->getPrimaryKeysValue($relatedEntity);
+                            $primaryKeys = $this->entityManager->getPrimaryKeyValues($relatedEntity);
                             $fingerprint = md5(json_encode($primaryKeys));
 
                             // Entity may have composite key PK, loop through each to set a "PK"
@@ -289,58 +289,70 @@ class Mapper
      */
     public function save(EntityInterface $entity, array $options = [])
     {
-        // Get the entity class name
-        $entityName = $entity->toString();
-
-        // Get the primary key field for the entity class
-        $pkField = $this->entityManager->getPrimaryKeyField($entityName);
-
-        // Get field options for primary key, merge with overrides (if any) passed
-        $options = array_merge($this->entityManager->fields($entityName, $pkField), $options);
-
         // Run beforeSave to know whether or not we can continue
 #        if (false === $this->eventsManager->triggerInstanceHook($entity, 'beforeSave', $this)) {
 #            return false;
 #        }
 
         // Run validation
-        if ($this->validate($entity)) {
-            $pkField = $this->entityManager->getPrimaryKeyField($entity->toString());
-            $pk = $this->entityManager->getPrimaryKey($entity);
-            $attributes = $this->entityManager->fields($entity->toString(), $pkField);
+        if (!$this->validate($entity)) {
+            return false;
+        }
 
-            // Do an update if pk is specified
-            $isNew = empty($pkField) || (empty($pk) && ($attributes['identity'] | $attributes['serial'] | $attributes['sequence']));
+        // Get the entity class name
+        $entityName = $entity->toString();
 
-            // If the pk value is empty and the pk is set to an autoincremented type (identity, sequence, serial)
-            if ($isNew) {
-                // Autogenerate sequence if sequence is empty
-                $options['pk'] = $pkField;
+        // Get the primary key field for the entity class
+        $primaryKeys = $this->entityManager->getPrimaryKeys($entityName);
 
-                // Check if PK is using a sequence
-                if ($options['sequence'] === true) {
-                    // Try fetching sequence from the Entity defined getSequence() method
-                    $options['sequence'] = $entityName::getMetaData()->getSequence();
+        // Default to always update
+        $isCreate = false;
 
-                    // If the Entity did not define a sequence, automatically generate an assumed sequence name
-                    if (empty($options['sequence'])) {
-                        $options['sequence'] = $entityName::getMetaData()->getTable() . '_' . $pkField . '_seq';
-                    }
-                }
+        // Figure out if the PKs are empty and whether to do an insert or update
+        // If there are 0 or >1 PKs defined, try doing an upsert as we cant really figure
+        // out easily whether to insert or update
+        $numPrimaryKeys = count($primaryKeys);
+        if ($numPrimaryKeys == 0 || $numPrimaryKeys > 1) {
+            return $this->upsert($entity);
+        }
 
-                // No primary key, insert
-                $result = $this->insert($entity, $options);
-            } else {
-                // Has primary key, update
-                $result = $this->update($entity);
+        // Get the primary key values
+        $primaryKeyValues = $this->entityManager->getPrimaryKeyValues($entity);
+
+        foreach ($primaryKeyValues as $key => $value) {
+            if (null === $value) {
+                $isCreate = true;
+                break;
             }
+        }
+
+        // If the pk value is empty and the pk is set to an autoincremented type (identity, sequence, serial)
+        if ($isCreate) {
+/*
+            // Autogenerate sequence if sequence is empty
+            $options['pk'] = $pkField;
+
+            // Check if PK is using a sequence
+            if ($options['sequence'] === true) {
+                // Try fetching sequence from the Entity defined getSequence() method
+                $options['sequence'] = $entityName::getMetaData()->getSequence();
+
+                // If the Entity did not define a sequence, automatically generate an assumed sequence name
+                if (empty($options['sequence'])) {
+                    $options['sequence'] = $entityName::getMetaData()->getTable() . '_' . $pkField . '_seq';
+                }
+            }
+*/
+            // No primary key, insert
+            $result = $this->insert($entity);
         } else {
-            $result = false;
+            // Has primary key, update
+            $result = $this->update($entity);
         }
 
         // Use return value from 'afterSave' method if not null
-#        $resultAfter = $this->eventsManager->triggerInstanceHook($entity, 'afterSave', [$this, $result]);
         $resultAfter = null;
+        #$resultAfter = $this->eventsManager->triggerInstanceHook($entity, 'afterSave', [$this, $result]);
         return (null !== $resultAfter) ? $resultAfter : $result;
     }
 
@@ -357,11 +369,11 @@ class Mapper
         // Get the entity class name
         $entityName = $entity->toString();
 
-        // Get the primary key field for the entity class
-        $pkField = $this->entityManager->getPrimaryKeyField($entityName);
-
         // Get field options for primary key, merge with overrides (if any) passed
-        $options = array_merge($this->entityManager->fields($entityName, $pkField), $options);
+        $columns = $this->entityManager->getColumns($entityName);
+
+        // Get the primary key field for the entity class
+        $primaryKeys = $this->entityManager->getPrimaryKeys($entityName);
 
         // Run beforeInsert to know whether or not we can continue
         $resultAfter = null;
@@ -369,20 +381,26 @@ class Mapper
 #            return false;
 #        }
 
+        // Get identity/sequence columns
+        $exceptColumns = [];
+        foreach ($primaryKeys as $pk) {
+            ($columns[$pk]->isIdentity() || $columns[$pk]->isSequence()) && $exceptColumns[] = $pk;
+        }
+
         // If the primary key is a sequence, serial or identity column, exclude the PK from the array of columns to insert
-        $data = ($options['sequence'] | $options['serial'] | $options['identity'] === true) ? $entity->dataExcept([$pkField]) : $entity->data();
+        $data = (!empty($exceptColumns)) ? $entity->getDataExcept($exceptColumns) : $entity->data();
         if (count($data) <= 0) {
             return false;
         }
 
         // Save only known, defined fields
-        $entityFields = $this->entityManager->fields($entityName);
-        $data = array_intersect_key($data, $entityFields);
-
-        $data = $this->dumpEntity($entityName, $data);
+        #$entityFields = $this->entityManager->fields($entityName);
+        $data = array_intersect_key($data, $columns);
 
         // Send to adapter
         $result = $this->getAdapter()->createEntity($this->entityManager->getTable($entityName), $data, $options);
+
+d(__METHOD__, $result);
 
         // Update primary key on entity object
         $pkField = $this->entityManager->getPrimaryKeyField($entityName);
@@ -527,6 +545,7 @@ class Mapper
      */
     public function validate(EntityInterface $entity)
     {
+return true;
         $entityName = $entity->toString();
 
         $v = new \Valitron\Validator($entity->data());

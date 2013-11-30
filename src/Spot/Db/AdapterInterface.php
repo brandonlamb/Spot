@@ -271,7 +271,7 @@ interface AdapterInterface
     /**
      * Returns array of binds to pass to query function
      * @param \Spot\QueryInterface $query
-     * @param bool $ci
+     * @param bool $ci Use column incrementing
      */
-    public function getBinds(QueryInterface $query, $ci = false);
+    public function getQueryBinds(QueryInterface $query, $ci = false);
 }

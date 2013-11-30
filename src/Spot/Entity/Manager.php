@@ -67,7 +67,7 @@ class Manager
      * @param \Spot\Entity\EntityInterface $entity Instance of an entity to find the primary key of
      * @return mixed
      */
-    public function getPrimaryKeysValue(EntityInterface $entity)
+    public function getPrimaryKeyValues(EntityInterface $entity)
     {
         $values = [];
         foreach ($this->getPrimaryKeys($entity->toString()) as $pk) {

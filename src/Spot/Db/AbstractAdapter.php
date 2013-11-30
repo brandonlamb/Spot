@@ -269,8 +269,9 @@ abstract class AbstractAdapter
      */
     public function createEntity($datasource, array $data, array $options = [])
     {
-        $binds = $this->getBinds($data);
+        #$binds = $this->getQueryBinds($data);
         $sql = $this->insert($datasource, $data, $binds, $options);
+d(__METHOD__, $sql);
 
         try {
             // Prepare update query
@@ -308,8 +309,7 @@ echo __LINE__ . ": $sql\n";
     public function readEntity(QueryInterface $query, array $options = [])
     {
         $sqlQuery = $this->getSqlQuery($query);
-        $binds = $this->getBinds($query);
-#d(__METHOD__, $sqlQuery, $binds);
+        $binds = $this->getQueryBinds($query);
 
         // Unset any NULL values in binds (compared as "IS NULL" and "IS NOT NULL" in SQL instead)
         if ($binds && count($binds) > 0) {
@@ -507,13 +507,12 @@ echo __LINE__ . ": $sql\n";
     /**
      * {@inheritdoc}
      */
-    public function getBinds(QueryInterface $query, $ci = false)
+    public function getQueryBinds(QueryInterface $query, $ci = true)
     {
         $params = [];
-        $ci = 0;
+        $ci !== false && $ci = 0;
 
         // WHERE + HAVING
-        #$conditions = array_merge($this->conditions, $this->having);
         $conditions = $query->getparameters();
 
         foreach ($conditions as $i => $data) {
@@ -537,7 +536,7 @@ echo __LINE__ . ": $sql\n";
                             $x++;
                         }
                     }
-                    $ci++;
+                    $ci !== false && $ci++;
                 }
             }
         }
@@ -551,7 +550,6 @@ echo __LINE__ . ": $sql\n";
         $ci = false;
         $binds = [];
         $loopOnce = false;
-#d(__METHOD__, $conditions);
 
         foreach ($conditions as $condition) {
             if (is_array($condition) && isset($condition['conditions'])) {
@@ -609,8 +607,6 @@ echo __LINE__ . ": $sql\n";
                 break;
             }
         }
-
-#d(__METHOD__, $binds);
 
         return $binds;
     }

@@ -68,6 +68,11 @@ class Column
 	/**
 	 * @var bool
 	 */
+	protected $isIdentity = false;
+
+	/**
+	 * @var bool
+	 */
 	protected $isRelation = false;
 
 	/**
@@ -96,6 +101,7 @@ class Column
 		isset($definition['alias']) && $this->alias = (string) $definition['alias'];
 		isset($definition['notNull']) && $this->isNotNull = (bool) $definition['notNull'];
 		isset($definition['primary']) && $this->isPrimary = (bool) $definition['primary'];
+		isset($definition['identity']) && $this->isIdentity = (bool) $definition['identity'];
 		isset($definition['relation']) && $this->isRelation = (bool) $definition['relation'];
 		isset($definition['bindType']) && $this->bindType = (int) $definition['bindType'];
 		isset($definition['default']) && $this->default = $definition['default'];
@@ -163,6 +169,24 @@ class Column
 	public function isPrimary()
 	{
 		return (bool) $this->isPrimary;
+	}
+
+	/**
+	 * Is column an auto-incrementing identity column?
+	 * @return bool
+	 */
+	public function isIdentity()
+	{
+		return (bool) $this->isIdentity;
+	}
+
+	/**
+	 * Is column a primary key using a sequence?
+	 * @return bool
+	 */
+	public function isSequence()
+	{
+		return $this->isPrimary && !$this->isIdentity;
 	}
 
 	/**

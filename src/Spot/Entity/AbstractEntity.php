@@ -318,6 +318,19 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
     }
 
     /**
+     * Return array of field data with data from the field names listed removed.
+     * Essentially if your entity has fields id, first_name, last_name and you call
+     * this method passing array('first_name'), you will be returned an array WITHOUT
+     * the first_name field returned.
+     * @param array $except, List of field names to exclude in data list returned
+     * @return array
+     */
+    public function getDataExcept(array $except)
+    {
+        return array_diff_key($this->getData(), array_flip($except));
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function & getModified($field = null)
@@ -425,30 +438,6 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
 
         return $this;
     }
-
-
-
-
-
-
-
-
-    /**
-     * Return array of field data with data from the field names listed removed.
-     * Essentially if your entity has fields id, first_name, last_name and you call
-     * this method passing array('first_name'), you will be returned an array WITHOUT
-     * the first_name field returned.
-     * @param array $except, List of field names to exclude in data list returned
-     * @return array
-     */
-    public function dataExcept(array $except)
-    {
-        return array_diff_key($this->getData(), array_flip($except));
-    }
-
-
-
-
 
 
 
