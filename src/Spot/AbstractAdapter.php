@@ -272,6 +272,7 @@ abstract class AbstractAdapter
 
         try {
             // Prepare update query
+echo __LINE__ . ": $sql\n";
             $stmt = $this->pdo->prepare($sql);
 
             if ($stmt) {
@@ -319,6 +320,7 @@ abstract class AbstractAdapter
 #d(__METHOD__);
 
         // Prepare update query
+echo __LINE__ . ": $sqlQuery\n";
         if ($stmt = $this->pdo->prepare($sqlQuery)) {
             // Execute
             return ($stmt->execute($binds)) ? $this->getResultSet($query, $stmt) : false;
@@ -351,6 +353,7 @@ abstract class AbstractAdapter
 
             try {
                 // Prepare update query
+echo __LINE__ . ":$sql\n";
                 $stmt = $this->pdo->prepare($sql);
 
                 if ($stmt) {
@@ -391,6 +394,7 @@ abstract class AbstractAdapter
         $sql .= ($conditions ? ' WHERE ' . $conditions : '');
 
         try {
+echo __LINE__ . ": $sql\n";
             $stmt = $this->pdo->prepare($sql);
             if ($stmt) {
                 // Execute
@@ -440,6 +444,7 @@ abstract class AbstractAdapter
         $result = false;
         try {
             // Prepare count query
+echo __LINE__ . ": $sql\n";
             $stmt = $this->pdo->prepare($sql);
 
             // if prepared, execute
@@ -484,7 +489,7 @@ abstract class AbstractAdapter
             // Set PDO fetch mode
             $stmt->setFetchMode(\PDO::FETCH_ASSOC);
 
-            $results = $mapper->collection($entityClass, $stmt);
+            $results = $mapper->collection($entityClass, $stmt, $query->getWith());
 
             // Ensure statement is closed
             $stmt->closeCursor();

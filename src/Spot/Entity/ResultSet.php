@@ -171,6 +171,15 @@ class ResultSet implements ResultSetInterface
     }
 
     /**
+     * Get entity name of collection
+     * @return string
+     */
+    public function getEntityName()
+    {
+        return (string) $this->entityName;
+    }
+
+    /**
      * SPL Countable, Iterator, ArrayAccess functions
      */
 

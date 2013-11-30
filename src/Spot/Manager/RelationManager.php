@@ -31,11 +31,12 @@ class RelationManager
      * @param \Spot\Entity|\Spot\Entity\ResultSetInterface
      * @param \Spot\Entity|\Spot\Mapper $mapper
      * @param bool $reload
+     * @return \Spot\Entity\EntityInterface
      * @throws \InvalidArgumentException
      */
     public function loadRelations($entity, Mapper $mapper, $reload = false)
     {
-        $entityName = $entity instanceof ResultSetInterface ? $entity->entityName() : $entity->toString();
+        $entityName = $entity instanceof ResultSetInterface ? $entity->getEntityName() : $entity->toString();
         if (empty($entityName)) {
             throw new \InvalidArgumentException("Cannot load relation with a null \$entityName");
         }
@@ -43,6 +44,8 @@ class RelationManager
         foreach ($this->entityManager->getRelations($entityName) as $field => $relation) {
             $this->loadRelation($entity, $field, $mapper, $reload);
         }
+
+        return $entity;
     }
 
     /**
@@ -50,19 +53,22 @@ class RelationManager
      * @param \Spot\Entity
      * @param string $name
      * @param bool $reload
+     * @return \Spot\Entity\EntityInterface
      * @throws \InvalidArgumentException
      */
     public function loadRelation($entity, $name, Mapper $mapper, $reload = false)
     {
-        $entityName = $entity instanceof ResultSetInterface ? $entity->entityName() : $entity->toString();
+        $entityName = $entity instanceof ResultSetInterface ? $entity->getEntityName() : $entity->toString();
         if (empty($entityName)) {
             throw new \InvalidArgumentException("Cannot load relation with a null \$entityName");
         }
 
 		$relations = $this->entityManager->getRelations($entityName);
         if (isset($relations[$name])) {
-            $this->loadRelationObject($entity, $name, $relations[$name], $mapper);
+            return $this->loadRelationObject($entity, $name, $relations[$name], $mapper);
         }
+
+        return $entity;
     }
 
     /**
@@ -73,11 +79,12 @@ class RelationManager
      * @param \Spot\Relation\AbstractRelation
      * @param \Spot\Mapper $mapper
      * @param bool $reload
+     * @return \Spot\Entity\EntityInterface
      * @throws \InvalidArgumentException
      */
     protected function loadRelationObject($entity, $field, $relation, Mapper $mapper, $reload = false)
     {
-        $entityName = $entity instanceof ResultSetInterface ? $entity->entityName() : $entity->toString();
+        $entityName = $entity instanceof ResultSetInterface ? $entity->getEntityName() : $entity->toString();
         if (empty($entityName)) {
             throw new \InvalidArgumentException("Cannot load relation with a null \$entityName");
         }
@@ -100,7 +107,12 @@ class RelationManager
         // Set field equal to relation class instance
         $relation = new $relationClass($mapper, $this->entityManager, $entity, $relation);
 
-        // Inject relation object into entit property
-        $entity->set($field, $relation);
+        // Inject relation object into entity property
+        if (!$entity instanceof ResultSetInterface) {
+            $entity->set($field, $relation);
+        }
+
+        #return $entity;
+        return $relation;
     }
 }

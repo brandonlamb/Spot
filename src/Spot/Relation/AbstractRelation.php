@@ -37,9 +37,9 @@ abstract class AbstractRelation
     protected $entityName;
 
     /**
-     * @var array, the foreign keys
+     * @var array, select columns when finding relations
      */
-    protected $foreignKeys;
+    protected $selects;
 
     /**
      * @var array, conditions to find relations
@@ -50,11 +50,6 @@ abstract class AbstractRelation
      * @var array, join conditions to find relations
      */
     protected $joins;
-
-    /**
-     * @var array, select columns when finding relations
-     */
-    protected $selects;
 
     /**
      * @var array
@@ -69,7 +64,7 @@ abstract class AbstractRelation
     /**
      * @var int
      */
-    protected $relationRowCount;
+    #protected $relationRowCount;
 
     /**
      * Constructor function
@@ -158,12 +153,12 @@ abstract class AbstractRelation
     /**
      * Replace entity value placeholders on relation definitions
      * Currently replaces ':entity.[col]' with the field value from the passed entity object
-     * @param \Spot\Entity\EntityInterface $entity
+     * @param \Spot\Entity\EntityInterface|\Spot\Entity\ResultSetInterface $entity
      * @param array $selects
      * @param string $replace
      * @return array
      */
-    public function resolveEntitySelects(EntityInterface $entity, array $selects, $replace = ':entity.')
+    public function resolveEntitySelects($entity, array $selects, $replace = ':entity.')
     {
         $sourceTable = $this->entityManager->getTable($this->sourceEntity());
         $relationTable = $this->entityManager->getTable($this->relationEntityName());
@@ -193,12 +188,12 @@ abstract class AbstractRelation
     /**
      * Replace entity value placeholders on relation definitions
      * Currently replaces ':entity.[col]' with the field value from the passed entity object
-     * @param \Spot\Entity\EntityInterface $entity
+     * @param \Spot\Entity\EntityInterface|\Spot\Entity\ResultSetInterface $entity
      * @param array $joins
      * @param string $replace
      * @return array
      */
-    public function resolveEntityJoins(EntityInterface $entity, array $joins, $replace = ':entity.')
+    public function resolveEntityJoins($entity, array $joins, $replace = ':entity.')
     {
         $sourceTable = $this->entityManager->getTable($this->sourceEntity());
         $relationTable = $this->entityManager->getTable($this->relationEntityName());
@@ -250,16 +245,17 @@ abstract class AbstractRelation
     /**
      * Replace entity value placeholders on relation definitions
      * Currently replaces ':entity.[col]' with the field value from the passed entity object
-     * @param \Spot\Entity\EntityInterface $entity
+     * @param \Spot\Entity\EntityInterface|\Spot\Entity\ResultSetInterface $entity
      * @param array $conditions
      * @param string $replace
      * @return array
      */
-    public function resolveEntityConditions(EntityInterface $entity, array $conditions, $replace = ':entity.')
+    public function resolveEntityConditions($entity, array $conditions, $replace = ':entity.')
     {
         // Load foreign keys with data from current row
         // Replace ':entity.[col]' with the field value from the passed entity object
         if ($conditions) {
+            $sourceTable = $this->entityManager->getTable($this->sourceEntity());
             $relationTable = $this->entityManager->getTable($this->relationEntityName());
 
             foreach ($conditions as $relationCol => $col) {
@@ -273,7 +269,7 @@ abstract class AbstractRelation
                     if ($entity instanceof EntityInterface) {
                         $conditions[$relationCol] = $entity->$col;
                     } else if ($entity instanceof ResultSetInterface) {
-                        $conditions[$relationCol] = $entity->toArray($col);
+                        $conditions[$relationCol] = array_unique($entity->toArray($col));
                     }
                 }
             }
@@ -319,6 +315,17 @@ abstract class AbstractRelation
     {
         !$this->collection && $this->collection = $this->toQuery();
         return $this->collection;
+    }
+
+    /**
+     * Manually assign a collection to prevent execute() from firing
+     * @param array $collection
+     * @return AbstractRelation
+     */
+    public function setCollection($collection)
+    {
+        $this->collection = $collection;
+        return $this;
     }
 
     /**

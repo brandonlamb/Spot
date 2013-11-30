@@ -8,7 +8,9 @@
 
 namespace Spot\Relation;
 
-use Countable,
+use Spot\Query,
+    Spot\Entity\EntityInterface,
+    Countable,
     IteratorAggregate,
     ArrayAccess;
 
@@ -21,8 +23,22 @@ class HasMany extends AbstractRelation implements Countable, IteratorAggregate, 
      */
     protected function toQuery()
     {
-        $query = $this->mapper()->all($this->entityName(), $this->conditions())->order($this->relationOrder());
+        $query = $this->mapper()
+            ->all($this->entityName(), $this->conditions())
+            ->order($this->relationOrder());
+
+        // Add any defined selects to the query builder
+        foreach ($this->resolveEntitySelects($this->sourceEntity(), $this->selects) as $select) {
+            $query->select($select);
+        }
+
+        // Add any defined joins to the query builder
+        foreach ($this->resolveEntityJoins($this->sourceEntity(), $this->joins) as $join) {
+            $query->join($join[0], $join[1], $join[2]);
+        }
+
         $query->snapshot();
+
         return $query;
     }
 
@@ -57,7 +73,6 @@ class HasMany extends AbstractRelation implements Countable, IteratorAggregate, 
     public function getIterator()
     {
         // Load related records for current row
-        $data = $this->execute();
-        return $data ? $data : [];
+        return ($data = $this->execute()) ? $data : [];
     }
 }

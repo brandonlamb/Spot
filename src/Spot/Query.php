@@ -546,14 +546,16 @@ class Query implements Countable, IteratorAggregate, QueryInterface
     {
         if (is_null($relations)) {
             return $this->with;
-        } elseif (is_bool($relations) && !$relations) {
+        } else if (is_bool($relations) && !$relations) {
             $this->with = [];
+        } else if (is_string($relations)) {
+            $relations = [$relations];
         }
 
-        $entityName = $this->entityName();
-        $entityRelations = array_keys($entityName::relations());
+        $entityName = $this->getEntityName();
+        $entityRelations = array_keys($entityName::getMetaData()->getRelations());
 
-        foreach ((array) $relations as $idx => $relation) {
+        foreach ($relations as $idx => $relation) {
             $add = true;
             if (!is_numeric($idx) && isset($this->with[$idx])) {
                 $add = $relation;
@@ -562,7 +564,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
 
             if ($add && in_array($relation, $entityRelations)) {
                 $this->with[] = $relation;
-            } elseif (!$add) {
+            } else if (!$add) {
                 foreach (array_keys($this->with, $relation, true) as $key) {
                     unset($this->with[$key]);
                 }

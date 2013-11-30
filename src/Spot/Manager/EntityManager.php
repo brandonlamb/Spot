@@ -11,7 +11,8 @@ namespace Spot\Manager;
 
 use Spot\Di\DiInterface,
     Spot\Di\InjectableTrait,
-    Spot\Entity\EntityInterface;
+    Spot\Entity\EntityInterface,
+    Spot\Entity\ResultSetInterface;
 
 class EntityManager
 {
@@ -38,6 +39,7 @@ class EntityManager
      */
     public function getTable($entityName)
     {
+        $entityName instanceof ResultSetInterface && $entityName = $entityName->getEntityName();
         return $entityName::getMetaData()->getTable();
     }
 

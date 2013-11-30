@@ -135,7 +135,6 @@ class Mapper
             // Entity with data set
             $data = array_intersect_key($data, $entityFields);
 
-#            $entity = $this->relationManager->hydrateEntity(new $entityName($data), $data);
             // Entity with data set
             $entity = $this->hydrateEntity($entityName, $data);
 
@@ -177,7 +176,6 @@ class Mapper
         if (false === $return) {
             return $collection;
         }
-#d(__METHOD__, $with);
 
         foreach ($with as $relationName) {
 #            $return = $this->eventsManager->triggerStaticHook($entityName, 'loadWith', [$collection, $relationName, $this]);
@@ -195,17 +193,22 @@ class Mapper
             foreach ($collection as $entity) {
                 $collectedEntities = [];
                 $collectedIdentities = [];
+
                 foreach ($relatedEntities as $relatedEntity) {
                     $resolvedConditions = $relationObj->resolveEntityConditions($entity, $relationObj->unresolvedConditions());
 
                     // @todo this is awkward, but $resolvedConditions['where'] is returned as an array
                     foreach ($resolvedConditions as $key => $value) {
                         if ($relatedEntity->$key == $value) {
-                            $pk = $this->entityManager->getPrimaryKey($relatedEntity);
-                            if (!in_array($pk, $collectedIdentities) && !empty($pk)) {
-                                $collectedIdentities[] = $pk;
+                            // Store primary key of each unique record in set
+                            $primaryKeys = $this->entityManager->getPrimaryKeysValue($entity);
+                            $fingerprint = md5(json_encode($primaryKeys));
+
+                            // Entity may have composite key PK, loop through each to set a "PK"
+                            if (!isset($collectedEntities[$fingerprint]) && !empty($primaryKeys)) {
+                                #$resultsIdentities[$entityName][$fingerprint] = $primaryKeys;
+                                $collectedEntities[$fingerprint] = $relatedEntity;
                             }
-                            $collectedEntities[] = $relatedEntity;
                         }
                     }
                 }
@@ -218,7 +221,10 @@ class Mapper
                     );
                 }
 
-                $entity->$relationName->assignCollection($relationCollection);
+#d(__METHOD__, __LINE__, $entity);
+
+                $entity->$relationName->setCollection($relationCollection);
+#                d(__METHOD__, __LINE__, $entity);
             }
         }
 
