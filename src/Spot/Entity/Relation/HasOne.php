@@ -11,9 +11,10 @@ namespace Spot\Entity\Relation;
 
 use Spot\Query,
     Spot\Entity\AbstractRelation,
+    Spot\Entity\RelationInterface,
     Spot\Entity\EntityInterface;
 
-class HasOne extends AbstractRelation
+class HasOne extends AbstractRelation implements RelationInterface
 {
     /**
      * Load query object with current relation data

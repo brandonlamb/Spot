@@ -11,12 +11,15 @@ namespace Spot\Entity\Relation;
 
 use Spot\Query,
     Spot\Entity\AbstractRelation,
+    Spot\Entity\RelationInterface,
     Spot\Entity\EntityInterface,
     Countable,
     IteratorAggregate,
     ArrayAccess;
 
-class HasMany extends AbstractRelation implements Countable, IteratorAggregate, ArrayAccess
+class HasMany
+    extends AbstractRelation
+    implements Countable, IteratorAggregate, ArrayAccess, RelationInterface
 {
     /**
      * Load query object with current relation data

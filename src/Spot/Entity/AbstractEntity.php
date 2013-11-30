@@ -212,6 +212,18 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
 
         // We can't use isset for dataModified because it returns false for NULL values
         if (array_key_exists($offset, $this->dataModified)) {
+            if ($this->dataModified[$offset] instanceof RelationInterface) {
+                $relation = $this->dataModified[$offset];
+                if ($relation instanceof \Spot\Entity\Relation\HasOne) {
+                    #$this->dataModified[$offset] = $relation->execute()->getIterator()[0];
+                } else {
+                    #$this->dataModified[$offset] = $relation->execute()->getIterator();
+                    #$this->dataModified[$offset] = $this->resultsetFactory->create(
+                    #    $collectedEntities, $collectedIdentities, $entity->$relationName->entityName()
+                    #);
+                }
+
+            }
             return $this->dataModified[$offset];
         }
 

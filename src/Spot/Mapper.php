@@ -220,16 +220,13 @@ class Mapper
                     $relationResultset = $this->resultsetFactory->create(
                         $collectedEntities, $collectedIdentities, $entity->$relationName->entityName()
                     );
-
-                    #$relationResultset = new \Spot\Entity\Resultset(
-                    #    $collectedEntities, $collectedIdentities, $entity->$relationName->entityName()
-                    #);
+                   #$entity->$relationName->setResultset($relationResultset);
                 }
 
 #d(__METHOD__, __LINE__, $entity);
 
                 $entity->$relationName->setResultset($relationResultset);
-#                d(__METHOD__, __LINE__, $entity);
+#d(__METHOD__, __LINE__, $entity);
             }
         }
 
