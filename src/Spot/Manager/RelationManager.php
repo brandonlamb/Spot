@@ -112,7 +112,6 @@ class RelationManager
             $entity->set($field, $relation);
         }
 
-        #return $entity;
         return $relation;
     }
 }

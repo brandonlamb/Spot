@@ -23,7 +23,7 @@ class HasMany extends AbstractRelation implements Countable, IteratorAggregate, 
      */
     protected function toQuery()
     {
-        $query = $this->mapper()
+        $query = $this->getMapper()
             ->all($this->entityName(), $this->conditions())
             ->order($this->relationOrder());
 

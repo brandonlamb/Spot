@@ -216,9 +216,13 @@ class Mapper
                 if ($relationObj instanceof \Spot\Relation\HasOne) {
                     $relationCollection = array_shift($collectedEntities);
                 } else {
-                    $relationCollection = new \Spot\Entity\Collection(
+                    $relationCollection = $this->resultSetFactory->create(
                         $collectedEntities, $collectedIdentities, $entity->$relationName->entityName()
                     );
+
+                    #$relationCollection = new \Spot\Entity\Collection(
+                    #    $collectedEntities, $collectedIdentities, $entity->$relationName->entityName()
+                    #);
                 }
 
 #d(__METHOD__, __LINE__, $entity);
