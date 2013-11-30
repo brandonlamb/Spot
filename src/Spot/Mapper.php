@@ -118,7 +118,6 @@ class Mapper
      * @return \Spot\Entity\ResultsetInterface
      * @todo Move resultset hydration to resultset class
      */
-    #public function collection($entityName, $stmt, $with = [])
     public function getResultset($entityName, $stmt, $with = [])
     {
         $results = [];

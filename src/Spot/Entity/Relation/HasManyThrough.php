@@ -95,13 +95,11 @@ class HasManyThrough extends AbstractRelation implements Countable, IteratorAggr
      * SPL IteratorAggregate function
      * Called automatically when attribute is used in a 'foreach' loop
      *
-     * @return \Spot\Entity\CollectionInterface
+     * @return \Spot\Entity\ResultsetInterface
      */
     public function getIterator()
     {
         // Load related records for current row
-        $data = $this->execute();
-        $collectionClass = $this->mapper()->collectionClass();
-        return $data ? $data : new $collectionClass();
+        return ($data = $this->execute()) ? $data : [];
     }
 }

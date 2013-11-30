@@ -48,11 +48,11 @@ class ResultsetFactory
 	}
 
 	/**
-	 * Create an entity collection
+	 * Create an entity resultset
 	 * @param array $results
 	 * @param array $resultsIdentities
 	 * @param string $entityName
-	 * @return \Spot\Entity\CollectionInterface
+	 * @return \Spot\Entity\ResultsetInterface
 	 */
 	public function create($results, $resultsIdentities, $entityName)
 	{

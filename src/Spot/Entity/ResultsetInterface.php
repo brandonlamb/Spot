@@ -17,20 +17,19 @@ use Spot\Entity\EntityInterface,
 interface ResultsetInterface extends Iterator, Countable, ArrayAccess
 {
     /**
-    * Add a single entity to the collection
+    * Add a single entity to the resultset
     * @param \Spot\Entity $entity to add
     */
     public function add(EntityInterface $entity);
 
     /**
-    * Merge another collection into this collections set of entities
-    * This will only add entitys that don't already exist in the current
-    * collection
-    * @param \Spot\Entity\ResultsetInterface $collection
+    * Merge another resultset into this resultsets set of entities
+    * This will only add entitys that don't already exist in the current resultset
+    * @param \Spot\Entity\ResultsetInterface $resultset
     * @return \Spot\Entity\ResultsetInterface
     * @todo Implement faster uniqueness checking by hash, entity manager, primary key field, etc.
     */
-    public function merge(ResultsetInterface $collection, $onlyUnique = true);
+    public function merge(ResultsetInterface $resultset, $onlyUnique = true);
 
     /**
      * Return an array representation of the ResultSet.

@@ -64,11 +64,11 @@ class Resultset implements ResultsetInterface
      * {@inherit}
      * @todo Implement faster uniqueness checking by hash, entity manager, primary key field, etc.
      */
-    public function merge(ResultsetInterface $collection, $onlyUnique = true)
+    public function merge(ResultsetInterface $resultset, $onlyUnique = true)
     {
-        foreach ($collection as $entity) {
+        foreach ($resultset as $entity) {
             if ($onlyUnique && in_array($entity, $this->results)) {
-                // Skip - entity already exists in collection
+                // Skip - entity already exists in resultset
                 continue;
             }
             $this->add($entity);
@@ -77,7 +77,7 @@ class Resultset implements ResultsetInterface
     }
 
     /**
-     * Return an array representation of the Collection.
+     * Return an array representation of the Resultset.
      *
      * {@inherit}
      * @return array If $keyColumn and $valueColumn are not set, or are both null
@@ -160,9 +160,8 @@ class Resultset implements ResultsetInterface
     }
 
     /**
-     * Provides a string representation of the class
-     * Brackets contain the number of elements contained
-     * in the collection
+     * Provides a string representation of the class.
+     * Brackets contain the number of elements contained in the resultset
      * @return string
      */
     public function toString()
@@ -171,7 +170,7 @@ class Resultset implements ResultsetInterface
     }
 
     /**
-     * Get entity name of collection
+     * Get entity name of resultset
      * @return string
      */
     public function getEntityName()
