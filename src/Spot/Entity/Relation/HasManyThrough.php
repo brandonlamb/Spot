@@ -1,7 +1,7 @@
 <?php
 
 /**
- * DataMapper class for 'has many' relations
+ * DataMapper class for 'has many through' relations
  *
  * @package Spot\Entity\Relation
  * @author Brandon Lamb <brandon@brandonlamb.com>

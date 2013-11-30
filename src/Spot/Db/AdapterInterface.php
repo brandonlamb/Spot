@@ -37,7 +37,7 @@ interface AdapterInterface
      *
      *<code>
      *  $escapedTable = $connection->escapeIdentifier('blog_post');
-     *  $escapedTable = $connection->escapeIdentifier(array('blog_post', 'id'));
+     *  $escapedTable = $connection->escapeIdentifier(['blog_post', 'id']);
      *</code>
      *
      * @param string|array $identifier
@@ -270,8 +270,8 @@ interface AdapterInterface
 
     /**
      * Returns array of binds to pass to query function
-     * @param array $conditions
+     * @param \Spot\QueryInterface $query
      * @param bool $ci
      */
-    public function getBinds(array $conditions = [], $ci = false);
+    public function getBinds(QueryInterface $query, $ci = false);
 }

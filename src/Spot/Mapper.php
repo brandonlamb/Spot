@@ -202,7 +202,6 @@ class Mapper
                     foreach ($resolvedConditions as $key => $value) {
                         if ($relatedEntity->$key == $value) {
                             // Store primary key of each unique record in set
-                            #$primaryKeys = $this->entityManager->getPrimaryKeysValue($entity);
                             $primaryKeys = $this->entityManager->getPrimaryKeysValue($relatedEntity);
                             $fingerprint = md5(json_encode($primaryKeys));
 

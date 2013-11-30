@@ -39,10 +39,6 @@ class HasOne extends AbstractRelation implements RelationInterface
      */
     public function __get($offset)
     {
-        $entity = $this->entity();
-        if (!$entity instanceof EntityInterface) {
-d(__METHOD__, $entity);
-        }
         return $this->entity()->get($offset);
     }
 
@@ -53,7 +49,7 @@ d(__METHOD__, $entity);
      */
     public function __set($offset, $value)
     {
-        $this->entity() && $this->entity()->set($offset, $value);
+        $this->entity()->set($offset, $value);
     }
 
     /**

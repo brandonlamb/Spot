@@ -141,13 +141,18 @@ abstract class AbstractDialect
 				$operator = $this->getOperator($operator, $value);
 
                 if (is_array($value)) {
-#                    $value = '(' . join(', ', array_fill(0, count($value), '?')) . ')'
-                    $valueIn = '';
+                    $colParam = preg_replace('/\W+/', '_', $columnName) . $ci;
+                    #$value = '(' . join(', ', array_fill(0, count($value), '?')) . ')'
+                    $valueIn = [];
+                    $x = 0;
                     foreach ($value as $val) {
-                        $valueIn .= $this->adapter->quote($val) . ',';
+                        #$valueIn .= $this->adapter->quote($val) . ',';
+                        $valueIn[] = ':' . $colParam . $x;
+                        $x++;
                     }
 
-                    $sqlWhere[] = "$columnName $operator (" . trim($valueIn, ',') . ')';
+                    #$sqlWhere[] = "$columnName $operator (" . trim($valueIn, ',') . ')';
+                    $sqlWhere[] = "$columnName $operator (" . implode(', ', $valueIn) . ')';
                 } else if (is_null($value)) {
                     $sqlWhere[] = $columnName . ' ' . $operator;
                 } else {

@@ -259,29 +259,8 @@ class Query implements Countable, IteratorAggregate, QueryInterface
      */
     public function getParameters()
     {
-        $params = [];
-        $ci = 0;
-
         // WHERE + HAVING
-        $conditions = array_merge($this->conditions, $this->having);
-
-        foreach ($conditions as $i => $data) {
-            if (isset($data['conditions']) && is_array($data['conditions'])) {
-                foreach ($data['conditions'] as $field => $value) {
-                    // Column name with comparison operator
-                    $columnData = explode(' ', $field);
-                    $operator = '=';
-                    if (count($columnData) > 2) {
-                        $operator = array_pop($columnData);
-                        $columnData = array(implode(' ', $columnData), $operator);
-                    }
-                    $field = $columnData[0];
-                    $params[$field . $ci] = $value;
-                    $ci++;
-                }
-            }
-        }
-        return $params;
+        return array_merge($this->conditions, $this->having);
     }
 
     /**
@@ -330,13 +309,13 @@ class Query implements Countable, IteratorAggregate, QueryInterface
 
     /**
      * Add a table join (INNER, LEFT OUTER, RIGHT OUTER, FULL OUTER, CROSS)
-     * array('user.id', '=', 'profile.user_id') will compile to ON `user`.`id` = `profile`.`user_id`
+     * ['user.id', '=', 'profile.user_id'] will compile to ON `user`.`id` = `profile`.`user_id`
      *
      * @param string|array $table, should be the name of the table to join to
      * @param string|array $constraint, may be either a string or an array with three elements. If it
      * is a string, it will be compiled into the query as-is, with no escaping. The
      * recommended way to supply the constraint is as an array with three elements:
-     * array(column1, operator, column2)
+     * [column1, operator, column2]
      * @param string $type, will be prepended to JOIN
      * @return \Spot\QueryInterface
      */

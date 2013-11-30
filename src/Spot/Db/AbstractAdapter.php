@@ -308,7 +308,8 @@ echo __LINE__ . ": $sql\n";
     public function readEntity(QueryInterface $query, array $options = [])
     {
         $sqlQuery = $this->getSqlQuery($query);
-        $binds = $this->getBinds($query->getParameters());
+        $binds = $this->getBinds($query);
+#d(__METHOD__, $sqlQuery, $binds);
 
         // Unset any NULL values in binds (compared as "IS NULL" and "IS NOT NULL" in SQL instead)
         if ($binds && count($binds) > 0) {
@@ -506,12 +507,51 @@ echo __LINE__ . ": $sql\n";
     /**
      * {@inheritdoc}
      */
-    public function getBinds(array $conditions = [], $ci = false)
+    public function getBinds(QueryInterface $query, $ci = false)
     {
-        if (count($conditions) === 0) { return; }
+        $params = [];
+        $ci = 0;
 
+        // WHERE + HAVING
+        #$conditions = array_merge($this->conditions, $this->having);
+        $conditions = $query->getparameters();
+
+        foreach ($conditions as $i => $data) {
+            if (isset($data['conditions']) && is_array($data['conditions'])) {
+                foreach ($data['conditions'] as $field => $value) {
+                    // Column name with comparison operator
+                    $columnData = explode(' ', $field);
+                    $operator = '=';
+                    if (count($columnData) > 2) {
+                        $operator = array_pop($columnData);
+                        $columnData = [implode(' ', $columnData), $operator];
+                    }
+                    $field = $columnData[0];
+
+                    if (!is_array($value)) {
+                        $params[$field . $ci] = $value;
+                    } else {
+                        $x = 0;
+                        foreach ($value as $subValue) {
+                            $params[$field . $ci . $x] = $subValue;
+                            $x++;
+                        }
+                    }
+                    $ci++;
+                }
+            }
+        }
+        unset($x, $field, $ci, $subValue, $value, $i, $data);
+
+        if (count($params) === 0) {
+            return;
+        }
+
+        $conditions = $params;
+        $ci = false;
         $binds = [];
         $loopOnce = false;
+#d(__METHOD__, $conditions);
 
         foreach ($conditions as $condition) {
             if (is_array($condition) && isset($condition['conditions'])) {
@@ -530,11 +570,12 @@ echo __LINE__ . ": $sql\n";
                         // @todo Need to take into account column type for date formatting
                         $bindValue = (string) $value->format($this->dateTimeFormat());
                     } else {
-                        $bindValue = (string) $value; // Attempt cast of object to string (calls object's __toString method)
+                        // Attempt cast of object to string (calls object's __toString method)
+                        $bindValue = (string) $value;
                     }
-                } elseif (is_bool($value)) {
+                } else if (is_bool($value)) {
                     $bindValue = (int) $value; // Cast boolean to integer (false = 0, true = 1)
-                } elseif (!is_array($value)) {
+                } else if (!is_array($value)) {
                     $bindValue = $value;
                 }
 
@@ -558,9 +599,9 @@ echo __LINE__ . ": $sql\n";
                     // Add to binds array and add to WHERE clause
                     $binds[$colParam] = $bindValue;
                 }
+
                 // Increment ensures column name distinction
-                // We need to do this whether it was used or not
-                // to maintain compatibility with getConditionsSql()
+                // We need to do this whether it was used or not to maintain compatibility with getConditionsSql()
                 $ci++;
             }
 
@@ -568,6 +609,9 @@ echo __LINE__ . ": $sql\n";
                 break;
             }
         }
+
+#d(__METHOD__, $binds);
+
         return $binds;
     }
 
