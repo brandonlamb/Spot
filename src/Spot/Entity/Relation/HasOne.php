@@ -12,7 +12,8 @@ namespace Spot\Entity\Relation;
 use Spot\Query,
     Spot\Entity\AbstractRelation,
     Spot\Entity\RelationInterface,
-    Spot\Entity\EntityInterface;
+    Spot\Entity\EntityInterface,
+    Spot\Entity\ResultsetInterface;
 
 class HasOne extends AbstractRelation implements RelationInterface
 {
@@ -89,6 +90,8 @@ d(__METHOD__, $entity);
         if (null === $this->entity) {
             $this->entity = $this->execute();
             if ($this->entity instanceof Query) {
+                $this->entity = $this->entity->first();
+            } else if ($this->entity instanceof ResultsetInterface) {
                 $this->entity = $this->entity->first();
             }
         }

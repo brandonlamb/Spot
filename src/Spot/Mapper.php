@@ -202,31 +202,23 @@ class Mapper
                     foreach ($resolvedConditions as $key => $value) {
                         if ($relatedEntity->$key == $value) {
                             // Store primary key of each unique record in set
-                            $primaryKeys = $this->entityManager->getPrimaryKeysValue($entity);
+                            #$primaryKeys = $this->entityManager->getPrimaryKeysValue($entity);
+                            $primaryKeys = $this->entityManager->getPrimaryKeysValue($relatedEntity);
                             $fingerprint = md5(json_encode($primaryKeys));
 
                             // Entity may have composite key PK, loop through each to set a "PK"
                             if (!isset($collectedEntities[$fingerprint]) && !empty($primaryKeys)) {
-                                #$resultsIdentities[$entityName][$fingerprint] = $primaryKeys;
                                 $collectedEntities[$fingerprint] = $relatedEntity;
                             }
                         }
                     }
                 }
 
-                if ($relationObj instanceof \Spot\Entity\Relation\HasOne) {
-                    $relationResultset = array_shift($collectedEntities);
-                } else {
-                    $relationResultset = $this->resultsetFactory->create(
-                        $collectedEntities, $collectedIdentities, $entity->$relationName->entityName()
-                    );
-                   #$entity->$relationName->setResultset($relationResultset);
-                }
-
-#d(__METHOD__, __LINE__, $entity);
+                $relationResultset = $this->resultsetFactory->create(
+                    $collectedEntities, $collectedIdentities, $entity->$relationName->entityName()
+                );
 
                 $entity->$relationName->setResultset($relationResultset);
-#d(__METHOD__, __LINE__, $entity);
             }
         }
 
