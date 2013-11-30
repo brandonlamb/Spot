@@ -105,6 +105,11 @@ class Query implements Countable, IteratorAggregate, QueryInterface
     protected $snapshot = [];
 
     /**
+     * @var array
+     */
+    protected $cache = [];
+
+    /**
      *  Constructor Method
      *  @param \Spot\Mapper
      *  @param string $entityName Name of the entity to query on/for
@@ -142,7 +147,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
             array_unshift($args, $this);
 
             return call_user_func_array($callback, $args);
-        } else if (method_exists('\\Spot\\Entity\\ResultSet', $method)) {
+        } else if (method_exists('\\Spot\\Entity\\Resultset', $method)) {
             return $this->execute()->$method($args[0]);
         } else {
             throw new \BadMethodCallException("Method '" . __METHOD__ . "' not found");
@@ -579,7 +584,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
      * SPL IteratorAggregate function
      * Called automatically when attribute is used in a 'foreach' loop
      *
-     * @return \Spot\Entity\ResultSetInterface
+     * @return \Spot\Entity\ResultsetInterface
      */
     public function getIterator()
     {
@@ -629,7 +634,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
     }
 
     /**
-     * Execute and return query as a collection
+     * Execute and return query as a resultset
      * @return mixed ResultSet object on success, boolean false on failure
      */
     public function execute()
@@ -643,6 +648,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
      * Caches results when there are no query changes
      *
      * @return int
+     * @todo - this is broken
      */
     public function count()
     {
@@ -662,7 +668,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
         };
 
         $cacheKey = sha1(var_export($cacheParams(), true)) . "_count";
-        $cacheResult = isset($this->_cache[$cacheKey]) ? $this->_cache[$cacheKey] : false;
+        $cacheResult = isset($this->cache[$cacheKey]) ? $this->cache[$cacheKey] : false;
 
         // Check cache
         if ($cacheResult) {

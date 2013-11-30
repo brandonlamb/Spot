@@ -7,7 +7,7 @@
  * @author Brandon Lamb <brandon@brandonlamb.com>
  */
 
-namespace Spot;
+namespace Spot\Db\Column;
 
 use Spot\Di\DiInterface,
     Spot\Di\InjectableTrait;
@@ -31,32 +31,32 @@ class Config
         $this->setDI($di);
 
         $this->typeHandlers = [
-            'string'    => '\\Spot\\Type\\String',
-            #'text'      => '\\Spot\\Type\\String',
-            #'char'      => '\\Spot\\Type\\String',
-            #'varchar'   => '\\Spot\\Type\\String',
+            'string'    => '\\Spot\\Db\\Column\\Type\\String',
+            #'text'      => '\\Spot\\Db\\Column\\Type\\String',
+            #'char'      => '\\Spot\\Db\\Column\\Type\\String',
+            #'varchar'   => '\\Spot\\Db\\Column\\Type\\String',
 
-            #'int'       => '\\Spot\\Type\\Integer',
-            'integer'   => '\\Spot\\Type\\Integer',
-            #'number'    => '\\Spot\\Type\\Integer',
-            #'numeric'   => '\\Spot\\Type\\Integer',
+            #'int'       => '\\Spot\\Db\\Column\\Type\\Integer',
+            'integer'   => '\\Spot\\Db\\Column\\Type\\Integer',
+            #'number'    => '\\Spot\\Db\\Column\\Type\\Integer',
+            #'numeric'   => '\\Spot\\Db\\Column\\Type\\Integer',
 
-            'float'     => '\\Spot\\Type\\Float',
-            #'double'    => '\\Spot\\Type\\Float',
-            #'decimal'   => '\\Spot\\Type\\Float',
+            'float'     => '\\Spot\\Db\\Column\\Type\\Float',
+            #'double'    => '\\Spot\\Db\\Column\\Type\\Float',
+            #'decimal'   => '\\Spot\\Db\\Column\\Type\\Float',
 
-            #'bool'      => '\\Spot\\Type\\Boolean',
-            'boolean'   => '\\Spot\\Type\\Boolean',
+            #'bool'      => '\\Spot\\Db\\Column\\Type\\Boolean',
+            'boolean'   => '\\Spot\\Db\\Column\\Type\\Boolean',
 
-            'datetime'  => '\\Spot\\Type\\Datetime',
-            'date'      => '\\Spot\\Type\\Date',
-            #'timestamp' => '\\Spot\\Type\\Integer',
-            #'year'      => '\\Spot\\Type\\Integer',
-            #'month'     => '\\Spot\\Type\\Integer',
-            #'day'       => '\\Spot\\Type\\Integer',
+            'datetime'  => '\\Spot\\Db\\Column\\Type\\Datetime',
+            'date'      => '\\Spot\\Db\\Column\\Type\\Date',
+            #'timestamp' => '\\Spot\\Db\\Column\\Type\\Integer',
+            #'year'      => '\\Spot\\Db\\Column\\Type\\Integer',
+            #'month'     => '\\Spot\\Db\\Column\\Type\\Integer',
+            #'day'       => '\\Spot\\Db\\Column\\Type\\Integer',
 
-            'db2.date'  => '\\Spot\\Type\\Db2Date',
-            'db2.timestamp' => '\\Spot\\Type\\Db2Timestamp',
+            'db2.date'  => '\\Spot\\Db\\Column\\Type\\Db2Date',
+            'db2.timestamp' => '\\Spot\\Db\\Column\\Type\\Db2Timestamp',
         ];
     }
 

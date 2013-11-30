@@ -3,16 +3,16 @@
 /**
  * Abstract class for relations
  *
- * @package Spot\Relation
+ * @package Spot\Entity
  * @author Brandon Lamb <brandon@brandonlamb.com>
  */
 
-namespace Spot\Relation;
+namespace Spot\Entity;
 
 use Spot\Mapper,
     Spot\Entity\EntityInterface,
-    Spot\Entity\ResultSetInterface,
-    Spot\Manager\EntityManager;
+    Spot\Entity\ResultsetInterface,
+    Spot\Entity\Manager as EntityManager;
 
 abstract class AbstractRelation
 {
@@ -22,7 +22,7 @@ abstract class AbstractRelation
     protected $mapper;
 
     /**
-     * @var \Spot\Manager\EntityManager
+     * @var \Spot\Entity\Manager
      */
     protected $entityManager;
 
@@ -57,9 +57,9 @@ abstract class AbstractRelation
     protected $relationData;
 
     /**
-     * @var \Spot\Entity\ResultSetInterface
+     * @var \Spot\Entity\ResultsetInterface
      */
-    protected $collection;
+    protected $resultset;
 
     /**
      * @var int
@@ -76,8 +76,8 @@ abstract class AbstractRelation
      */
     public function __construct(Mapper $mapper, EntityManager $entityManager, $entity, array $relationData = [])
     {
-        if ($entity instanceof EntityInterface && $entity instanceof ResultSetInterface) {
-            throw new \InvalidArgumentException("Entity or collection must be an instance of \\Spot\\Entity\\EntityInterface or \\Spot\\Entity\\Colletion");
+        if ($entity instanceof EntityInterface && $entity instanceof ResultsetInterface) {
+            throw new \InvalidArgumentException("Entity or resultset must be an instance of \\Spot\\Entity\\EntityInterface or \\Spot\\Entity\\Colletion");
         }
 
         $this->mapper = $mapper;
@@ -114,13 +114,13 @@ abstract class AbstractRelation
             return $this->entityName;
         }
 
-        if ($this->sourceEntity() instanceof ResultSetInterface) {
+        if ($this->sourceEntity() instanceof ResultsetInterface) {
             return $this->sourceEntity()->entityName();
         } else {
             return get_class($this->sourceEntity());
         }
 
-#        return ($this->entityName === ':self') ? ($this->sourceEntity() instanceof \Spot\Entity\ResultSetInterface ? $this->sourceEntity()->entityName() : get_class($this->sourceEntity())) : $this->entityName;
+#        return ($this->entityName === ':self') ? ($this->sourceEntity() instanceof \Spot\Entity\ResultsetInterface ? $this->sourceEntity()->entityName() : get_class($this->sourceEntity())) : $this->entityName;
     }
 
     /**
@@ -153,7 +153,7 @@ abstract class AbstractRelation
     /**
      * Replace entity value placeholders on relation definitions
      * Currently replaces ':entity.[col]' with the field value from the passed entity object
-     * @param \Spot\Entity\EntityInterface|\Spot\Entity\ResultSetInterface $entity
+     * @param \Spot\Entity\EntityInterface|\Spot\Entity\ResultsetInterface $entity
      * @param array $selects
      * @param string $replace
      * @return array
@@ -188,7 +188,7 @@ abstract class AbstractRelation
     /**
      * Replace entity value placeholders on relation definitions
      * Currently replaces ':entity.[col]' with the field value from the passed entity object
-     * @param \Spot\Entity\EntityInterface|\Spot\Entity\ResultSetInterface $entity
+     * @param \Spot\Entity\EntityInterface|\Spot\Entity\ResultsetInterface $entity
      * @param array $joins
      * @param string $replace
      * @return array
@@ -230,7 +230,7 @@ abstract class AbstractRelation
                     /*
                     if ($entity instanceof EntityInterface) {
                         $joins[$relationCol] = $entity->$col;
-                    } else if($entity instanceof ResultSetInterface) {
+                    } else if($entity instanceof ResultsetInterface) {
                         $joins[$relationCol] = $entity->toArray($col);
                     }
                     */
@@ -245,7 +245,7 @@ abstract class AbstractRelation
     /**
      * Replace entity value placeholders on relation definitions
      * Currently replaces ':entity.[col]' with the field value from the passed entity object
-     * @param \Spot\Entity\EntityInterface|\Spot\Entity\ResultSetInterface $entity
+     * @param \Spot\Entity\EntityInterface|\Spot\Entity\ResultsetInterface $entity
      * @param array $conditions
      * @param string $replace
      * @return array
@@ -268,7 +268,7 @@ abstract class AbstractRelation
                     $col = str_replace($replace, '', $col);
                     if ($entity instanceof EntityInterface) {
                         $conditions[$relationCol] = $entity->$col;
-                    } else if ($entity instanceof ResultSetInterface) {
+                    } else if ($entity instanceof ResultsetInterface) {
                         $conditions[$relationCol] = array_unique($entity->toArray($col));
                     }
                 }
@@ -309,22 +309,22 @@ abstract class AbstractRelation
 
     /**
      * Fetch and cache returned query object from internal toQuery() method
-     * @param \Spot\Entity\ResultSetInterface
+     * @param \Spot\Entity\ResultsetInterface
      */
     public function execute()
     {
-        !$this->collection && $this->collection = $this->toQuery();
-        return $this->collection;
+        !$this->resultset && $this->resultset = $this->toQuery();
+        return $this->resultset;
     }
 
     /**
-     * Manually assign a collection to prevent execute() from firing
-     * @param array $collection
+     * Manually assign a resultset to prevent execute() from firing
+     * @param array $resultset
      * @return AbstractRelation
      */
-    public function setCollection($collection)
+    public function setResultset($resultset)
     {
-        $this->collection = $collection;
+        $this->resultset = $resultset;
         return $this;
     }
 
@@ -350,13 +350,13 @@ abstract class AbstractRelation
     public function offsetExists($key)
     {
         $this->execute();
-        return isset($this->collection[$key]);
+        return isset($this->resultset[$key]);
     }
 
     public function offsetGet($key)
     {
         $this->execute();
-        return $this->collection[$key];
+        return $this->resultset[$key];
     }
 
     public function offsetSet($key, $value)
@@ -364,15 +364,15 @@ abstract class AbstractRelation
         $this->execute();
 
         if ($key === null) {
-            $this->collection[] = $value;
+            $this->resultset[] = $value;
         } else {
-            $this->collection[$key] = $value;
+            $this->resultset[$key] = $value;
         }
     }
 
     public function offsetUnset($key)
     {
         $this->execute();
-        unset($this->collection[$key]);
+        unset($this->resultset[$key]);
     }
 }

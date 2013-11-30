@@ -9,7 +9,7 @@
 
 namespace Spot\Entity;
 
-use Spot\Column;
+use Spot\Db\Column;
 
 class MetaData
 {
@@ -102,7 +102,7 @@ class MetaData
 	/**
 	 * Get a single column
 	 * @param string $offset
-	 * @return \Spot\Column|bool
+	 * @return \Spot\Db\Column|bool
 	 */
 	public function getColumn($offset)
 	{

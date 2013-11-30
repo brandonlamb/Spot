@@ -7,10 +7,10 @@
  * @author Brandon Lamb <brandon@brandonlamb.com>
  */
 
-namespace Spot\Adapter;
+namespace Spot\Db\Adapter;
 
-use Spot\AbstractAdapter,
-    Spot\AdapterInterface;
+use Spot\Db\AbstractAdapter,
+    Spot\Db\AdapterInterface;
 
 class Db2 extends AbstractAdapter implements AdapterInterface
 {

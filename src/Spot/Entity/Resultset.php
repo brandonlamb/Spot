@@ -9,10 +9,10 @@
 
 namespace Spot\Entity;
 
-use Spot\Entity\ResultSetInterface,
+use Spot\Entity\ResultsetInterface,
     Spot\Entity\EntityInterface;
 
-class ResultSet implements ResultSetInterface
+class Resultset implements ResultsetInterface
 {
     /**
      * @var array
@@ -64,7 +64,7 @@ class ResultSet implements ResultSetInterface
      * {@inherit}
      * @todo Implement faster uniqueness checking by hash, entity manager, primary key field, etc.
      */
-    public function merge(ResultSetInterface $collection, $onlyUnique = true)
+    public function merge(ResultsetInterface $collection, $onlyUnique = true)
     {
         foreach ($collection as $entity) {
             if ($onlyUnique && in_array($entity, $this->results)) {

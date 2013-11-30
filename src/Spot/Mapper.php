@@ -67,7 +67,7 @@ class Mapper
     /**
      * Get the adapter based on mapper's adapter name
      *
-     * @return \Spot\AdapterInterface
+     * @return \Spot\Db\AdapterInterface
      */
     public function getAdapter()
     {
@@ -90,7 +90,7 @@ class Mapper
      * Get a new entity object and set given data on it
      * @param string $entityClass Name of the entity class
      * @param array $data array of key/values to set on new Entity instance
-     * @return \Spot\Entity, Instance of $entityClass with $data set on it
+     * @return \Spot\Entity\EntityInterface, Instance of $entityClass with $data set on it
      */
     public function createEntity($entityClass, array $data)
     {
@@ -111,13 +111,15 @@ class Mapper
 /* ====================================================================================================== */
 
     /**
-     * Create collection of entities.
+     * Create collection of entities as a resultset.
      * @param string $entityName
      * @param \PDOStatement|array $stmt
      * @param array $with
-     * @return \Spot\Entity\ResultSetInterface
+     * @return \Spot\Entity\ResultsetInterface
+     * @todo Move resultset hydration to resultset class
      */
-    public function collection($entityName, $stmt, $with = [])
+    #public function collection($entityName, $stmt, $with = [])
+    public function getResultset($entityName, $stmt, $with = [])
     {
         $results = [];
         $resultsIdentities = [];
@@ -129,7 +131,7 @@ class Mapper
         }
 
         // Fetch all results into new entity class
-        // @todo Move this to collection class so entities will be lazy-loaded by Collection iteration
+        // @todo Move this to resultset class so entities will be lazy-loaded by Resultset iteration
         $entityFields = $this->entityManager->getColumns($entityName);
         foreach ($stmt as $data) {
             // Entity with data set
@@ -141,7 +143,7 @@ class Mapper
             // Load relation objects
             $this->relationManager->loadRelations($entity, $this);
 
-            // Store in array for Collection
+            // Store in array for Resultset
             $results[] = $entity;
 
             // Store primary key of each unique record in set
@@ -157,40 +159,40 @@ class Mapper
         }
 
         // Create ResultSet
-        $collection = $this->resultSetFactory->create($results, $resultsIdentities, $entityName);
+        $resultset = $this->resultsetFactory->create($results, $resultsIdentities, $entityName);
 
-        return $this->with($collection, $entityName, $with);
+        return $this->with($resultset, $entityName, $with);
     }
 
     /**
-     * Pre-emtively load associations for an entire collection
-     * @param \Spot\Entity\CollectionInterface $collection
+     * Pre-emtively load associations for an entire resultset
+     * @param \Spot\Entity\ResultsetInterface $resultset
      * @param string $entityName
      * @param array $with
-     * @return \Spot\Entity\CollectionInterface
+     * @return \Spot\Entity\ResultsetInterface
      */
-    public function with($collection, $entityName, $with = [])
+    public function with($resultset, $entityName, $with = [])
     {
         $return = true;
-        #$return = $this->eventsManager->triggerStaticHook($entityName, 'beforeWith', [$collection, $with, $this]);
+        #$return = $this->eventsManager->triggerStaticHook($entityName, 'beforeWith', [$resultset, $with, $this]);
         if (false === $return) {
-            return $collection;
+            return $resultset;
         }
 
         foreach ($with as $relationName) {
-#            $return = $this->eventsManager->triggerStaticHook($entityName, 'loadWith', [$collection, $relationName, $this]);
+#            $return = $this->eventsManager->triggerStaticHook($entityName, 'loadWith', [$resultset, $relationName, $this]);
             $return = true;
             if (false === $return) {
                 continue;
             }
 
-            $relationObj = $this->relationManager->loadRelation($collection, $relationName, $this);
+            $relationObj = $this->relationManager->loadRelation($resultset, $relationName, $this);
 
-            // double execute() to make sure we get the \Spot\Entity\CollectionInterface back (and not just the \Spot\Query)
+            // double execute() to make sure we get the \Spot\Entity\ResultsetInterface back (and not just the \Spot\Query)
             $relatedEntities = $relationObj->execute()->limit(null)->execute();
 
-            // Load all entities related to the collection
-            foreach ($collection as $entity) {
+            // Load all entities related to the resultset
+            foreach ($resultset as $entity) {
                 $collectedEntities = [];
                 $collectedIdentities = [];
 
@@ -213,28 +215,28 @@ class Mapper
                     }
                 }
 
-                if ($relationObj instanceof \Spot\Relation\HasOne) {
-                    $relationCollection = array_shift($collectedEntities);
+                if ($relationObj instanceof \Spot\Entity\Relation\HasOne) {
+                    $relationResultset = array_shift($collectedEntities);
                 } else {
-                    $relationCollection = $this->resultSetFactory->create(
+                    $relationResultset = $this->resultsetFactory->create(
                         $collectedEntities, $collectedIdentities, $entity->$relationName->entityName()
                     );
 
-                    #$relationCollection = new \Spot\Entity\Collection(
+                    #$relationResultset = new \Spot\Entity\Resultset(
                     #    $collectedEntities, $collectedIdentities, $entity->$relationName->entityName()
                     #);
                 }
 
 #d(__METHOD__, __LINE__, $entity);
 
-                $entity->$relationName->setCollection($relationCollection);
+                $entity->$relationName->setResultset($relationResultset);
 #                d(__METHOD__, __LINE__, $entity);
             }
         }
 
-#        $this->eventsManager->triggerStaticHook($entityName, 'afterWith', [$collection, $with, $this]);
+#        $this->eventsManager->triggerStaticHook($entityName, 'afterWith', [$resultset, $with, $this]);
 
-        return $collection;
+        return $resultset;
     }
 
 /* ====================================================================================================== */
@@ -244,22 +246,22 @@ class Mapper
      * @param string $entityName Name of the entity class
      * @param string $sql Raw query or SQL to run against the datastore
      * @param array Optional $conditions Array of binds in column => value pairs to use for prepared statement
-     * @return \Spot\Entity\CollectionInterface|bool
+     * @return \Spot\Entity\ResultsetInterface|bool
      */
     public function query($entityName, $sql, array $params = [])
     {
-        return ($result = $this->getAdapter()->query($sql, $params)) ? $this->collection($entityName, $result) : false;
+        return ($result = $this->getAdapter()->query($sql, $params)) ? $this->getResultset($entityName, $result) : false;
     }
 
     /**
      * Find first record matching given conditions
      * @param string $entityName Name of the entity class
      * @param array $conditions Array of conditions in column => value pairs
-     * @return \Spot\Entity|bool
+     * @return \Spot\Entity\EntityInterface|bool
      */
     public function first($entityName, array $conditions = [])
     {
-        return ($collection = $this->select($entityName)->where($conditions)->limit(1)->execute()) ? $collection->first() : false;
+        return ($resultset = $this->select($entityName)->where($conditions)->limit(1)->execute()) ? $resultset->first() : false;
     }
 
     /**
@@ -456,7 +458,7 @@ class Mapper
      * Upsert save entity - insert or update on duplicate key
      * @param string $entityClass, Name of the entity class
      * @param array $data, array of key/values to set on new Entity instance
-     * @return \Spot\Entity, Instance of $entityClass with $data set on it
+     * @return \Spot\Entity\EntityInterface, Instance of $entityClass with $data set on it
      */
     public function upsert($entityClass, array $data)
     {

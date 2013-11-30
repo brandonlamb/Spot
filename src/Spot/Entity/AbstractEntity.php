@@ -12,39 +12,16 @@
 
 namespace Spot\Entity;
 
-use Spot\Column, Serializable, ArrayAccess;
+use Spot\Column,
+    Serializable,
+    ArrayAccess;
 
 abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterface
 {
     /**
-     * @var \Spot\Entity\MetaData
+     * @var array, contains a \Spot\Entity\MetaData for each entity
      */
     protected static $metaData = [];
-
-    /**
-     * @var string
-     */
-    #private static $table;
-
-    /**
-     * @var string
-     */
-    #private static $sequence;
-
-    /**
-     * @var array
-     */
-    #private static $columns;
-
-    /**
-     * @var array
-     */
-    #private static $relations;
-
-    /**
-     * @var array, entity column aliases
-     */
-    #protected static $aliases;
 
     /**
      * @var array, Entity data storage

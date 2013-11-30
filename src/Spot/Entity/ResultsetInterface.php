@@ -14,7 +14,7 @@ use Spot\Entity\EntityInterface,
     Countable,
     ArrayAccess;
 
-interface ResultSetInterface extends Iterator, Countable, ArrayAccess
+interface ResultsetInterface extends Iterator, Countable, ArrayAccess
 {
     /**
     * Add a single entity to the collection
@@ -26,11 +26,11 @@ interface ResultSetInterface extends Iterator, Countable, ArrayAccess
     * Merge another collection into this collections set of entities
     * This will only add entitys that don't already exist in the current
     * collection
-    * @param \Spot\Entity\ResultSetInterface $collection
-    * @return \Spot\Entity\ResultSetInterface
+    * @param \Spot\Entity\ResultsetInterface $collection
+    * @return \Spot\Entity\ResultsetInterface
     * @todo Implement faster uniqueness checking by hash, entity manager, primary key field, etc.
     */
-    public function merge(ResultSetInterface $collection, $onlyUnique = true);
+    public function merge(ResultsetInterface $collection, $onlyUnique = true);
 
     /**
      * Return an array representation of the ResultSet.

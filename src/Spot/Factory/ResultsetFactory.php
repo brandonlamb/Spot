@@ -11,12 +11,12 @@ namespace Spot\Factory;
 
 use Spot\Mapper;
 
-class ResultSetFactory
+class ResultsetFactory
 {
 	/**
 	 * @var string, name of query class to instantiate
 	 */
-	protected $className = '\\Spot\\Entity\\ResultSet';
+	protected $className = '\\Spot\\Entity\\Resultset';
 
 	/**
 	 * Constructor

@@ -9,13 +9,13 @@
 
 namespace Spot\Di;
 
-use Spot\Config,
+use Spot\Db\Column\Config,
 	Spot\Factory\EntityFactory,
 	Spot\Factory\CollectionFactory,
 	Spot\Factory\QueryFactory,
-	Spot\Manager\EntityManager,
-	Spot\Manager\EventsManager,
-	Spot\Manager\RelationManager;
+	Spot\Events\Manager as EventsManager,
+	Spot\Entity\Manager as EntityManager,
+	Spot\Entity\Relation\Manager as RelationManager;
 
 class FactoryDefault Extends Container implements DiInterface
 {
@@ -45,8 +45,8 @@ class FactoryDefault Extends Container implements DiInterface
 		});
 
 		$this->set('entityFactory', '\\Spot\\Factory\\EntityFactory');
-		$this->set('collectionFactory', '\\Spot\\Factory\\ResultSetFactory');
-		$this->set('resultSetFactory', '\\Spot\\Factory\\ResultSetFactory');
+		#$this->set('collectionFactory', '\\Spot\\Factory\\ResultsetFactory');
+		$this->set('resultsetFactory', '\\Spot\\Factory\\ResultsetFactory');
 		$this->set('queryFactory', '\\Spot\\Factory\\QueryFactory');
 	}
 }

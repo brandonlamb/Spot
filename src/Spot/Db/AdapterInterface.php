@@ -7,7 +7,9 @@
  * @author Brandon Lamb <brandon@brandonlamb.com>
  */
 
-namespace Spot;
+namespace Spot\Db;
+
+use Spot\QueryInterface;
 
 interface AdapterInterface
 {
@@ -262,7 +264,7 @@ interface AdapterInterface
      * Return result set for current query
      * @param \Spot\QueryInterface $query
      * @param \PDOStatement $stmt
-     * @return \Spot\Entity\ResultSetInterface
+     * @return \Spot\Entity\ResultsetInterface
      */
     public function getResultSet(QueryInterface $query, \PDOStatement $stmt);
 

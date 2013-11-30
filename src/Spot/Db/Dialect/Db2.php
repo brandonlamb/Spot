@@ -7,10 +7,10 @@
  * @author Brandon Lamb <brandon@brandonlamb.com>
  */
 
-namespace Spot\Dialect;
+namespace Spot\Db\Dialect;
 
-use Spot\AbstractDialect,
-	Spot\DialectInterface;
+use Spot\Db\AbstractDialect,
+	Spot\Db\DialectInterface;
 
 class Db2 extends AbstractDialect implements DialectInterface
 {

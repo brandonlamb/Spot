@@ -3,13 +3,14 @@
 /**
  * DataMapper class for 'has one' relations
  *
- * @package Spot\Relation
+ * @package Spot\Entity\Relation
  * @author Brandon Lamb <brandon@brandonlamb.com>
  */
 
-namespace Spot\Relation;
+namespace Spot\Entity\Relation;
 
 use Spot\Query,
+    Spot\Entity\AbstractRelation,
     Spot\Entity\EntityInterface;
 
 class HasOne extends AbstractRelation
@@ -36,6 +37,10 @@ class HasOne extends AbstractRelation
      */
     public function __get($offset)
     {
+        $entity = $this->entity();
+        if (!$entity instanceof EntityInterface) {
+d(__METHOD__, $entity);
+        }
         return $this->entity()->get($offset);
     }
 

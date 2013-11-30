@@ -3,12 +3,14 @@
 /**
  * DataMapper class for 'has many' relations
  *
- * @package Spot\Relation
+ * @package Spot\Entity\Relation
+ * @author Brandon Lamb <brandon@brandonlamb.com>
  */
 
-namespace Spot\Relation;
+namespace Spot\Entity\Relation;
 
 use Spot\Query,
+    Spot\Entity\AbstractRelation,
     Spot\Entity\EntityInterface,
     Countable,
     IteratorAggregate,
@@ -45,7 +47,7 @@ class HasMany extends AbstractRelation implements Countable, IteratorAggregate, 
     /**
      * Find first entity in the set
      *
-     * @return \Spot\Entity
+     * @return \Spot\Entity\EntityInterface
      */
     public function first()
     {
@@ -68,7 +70,7 @@ class HasMany extends AbstractRelation implements Countable, IteratorAggregate, 
      * SPL IteratorAggregate function
      * Called automatically when attribute is used in a 'foreach' loop
      *
-     * @return \Spot\Entity\CollectionInterface
+     * @return \Spot\Entity\ResultsetInterface
      */
     public function getIterator()
     {

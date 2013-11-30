@@ -3,18 +3,16 @@
 /**
  * Entity Manager for storing information about entities
  *
- * @package Spot\Manager
+ * @package Spot\Entity
  * @author Brandon Lamb <brandon@brandonlamb.com>
  */
 
-namespace Spot\Manager;
+namespace Spot\Entity;
 
 use Spot\Di\DiInterface,
-    Spot\Di\InjectableTrait,
-    Spot\Entity\EntityInterface,
-    Spot\Entity\ResultSetInterface;
+    Spot\Di\InjectableTrait;
 
-class EntityManager
+class Manager
 {
     use InjectableTrait;
 
@@ -39,7 +37,7 @@ class EntityManager
      */
     public function getTable($entityName)
     {
-        $entityName instanceof ResultSetInterface && $entityName = $entityName->getEntityName();
+        $entityName instanceof ResultsetInterface && $entityName = $entityName->getEntityName();
         return $entityName::getMetaData()->getTable();
     }
 
@@ -85,16 +83,16 @@ class EntityManager
      * @param string $entityName Name of the entity class
      * @param string $column Name of the field to return attributes for
      * @return array Defined columns plus all defaults for full array of all possible options
-     * @throws \Spot\Exception\Manager|\InvalidArgumentException
+     * @throws \Spot\Exception|\InvalidArgumentException
      */
     public function getColumns($entityName, $column = null)
     {
         if (!is_string($entityName)) {
-            throw new \Spot\Exception\Manager(__METHOD__ . " only accepts a string. Given (" . gettype($entityName) . ")");
+            throw new \Spot\Exception(__METHOD__ . " only accepts a string. Given (" . gettype($entityName) . ")");
         }
 
         if (!is_subclass_of($entityName, '\\Spot\\Entity\\EntityInterface')) {
-            throw new \Spot\Exception\Manager(__METHOD__ . ": $entityName must be subclass of '\Spot\Entity\EntityInterface'.");
+            throw new \Spot\Exception(__METHOD__ . ": $entityName must be subclass of '\Spot\Entity\EntityInterface'.");
         }
 
         $metaData = $entityName::getMetaData();

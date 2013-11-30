@@ -7,7 +7,7 @@
  * @author Brandon Lamb <brandon@brandonlamb.com>
  */
 
-namespace Spot;
+namespace Spot\Db;
 
 class Column
 {

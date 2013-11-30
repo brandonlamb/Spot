@@ -7,7 +7,9 @@
  * @author Brandon Lamb <brandon@brandonlamb.com>
  */
 
-namespace Spot;
+namespace Spot\Db;
+
+use Spot\QueryInterface;
 
 abstract class AbstractAdapter
 {
@@ -22,7 +24,7 @@ abstract class AbstractAdapter
     protected $dialectType;
 
     /**
-     * @var \Spot\DialectInterface The dialect to use
+     * @var \Spot\Db\DialectInterface The dialect to use
      */
     protected $dialect;
 
@@ -38,7 +40,7 @@ abstract class AbstractAdapter
     {
         $this->pdo = $pdo;
 
-        $dialectClass = '\\Spot\\Dialect\\' . $this->dialectType;
+        $dialectClass = '\\Spot\\Db\\Dialect\\' . $this->dialectType;
         $this->dialect = new $dialectClass($this);
     }
 
@@ -60,7 +62,7 @@ abstract class AbstractAdapter
 
     /**
      * Gets the dialect used to produce the SQL
-     * @return \Spot\DialectInterface
+     * @return \Spot\Db\DialectInterface
      */
     public function getDialect()
     {
@@ -69,7 +71,7 @@ abstract class AbstractAdapter
 
     /**
      * Sets the dialect used to produce the SQL
-     * @param \Spot\DialectInterface
+     * @param \Spot\Db\DialectInterface
      */
     public function setDialect(DialectInterface $dialect)
     {
@@ -489,7 +491,7 @@ echo __LINE__ . ": $sql\n";
             // Set PDO fetch mode
             $stmt->setFetchMode(\PDO::FETCH_ASSOC);
 
-            $results = $mapper->collection($entityClass, $stmt, $query->getWith());
+            $results = $mapper->getResultset($entityClass, $stmt, $query->getWith());
 
             // Ensure statement is closed
             $stmt->closeCursor();
@@ -498,7 +500,7 @@ echo __LINE__ . ": $sql\n";
         }
 
         // Just return an empty result set
-        return $mapper->collection($entityClass);
+        return $mapper->getResultset($entityClass);
     }
 
     /**

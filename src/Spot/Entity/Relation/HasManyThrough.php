@@ -1,14 +1,22 @@
 <?php
 
-namespace Spot\Relation;
-
 /**
  * DataMapper class for 'has many' relations
  *
- * @package Spot
- * @link http://spot.os.ly
+ * @package Spot\Entity\Relation
+ * @author Brandon Lamb <brandon@brandonlamb.com>
  */
-class HasManyThrough extends AbstractRelation implements \Countable, \IteratorAggregate, \ArrayAccess
+
+namespace Spot\Entity\Relation;
+
+use Spot\Query,
+    Spot\Entity\AbstractRelation,
+    Spot\Entity\EntityInterface,
+    Countable,
+    IteratorAggregate,
+    ArrayAccess;
+
+class HasManyThrough extends AbstractRelation implements Countable, IteratorAggregate, ArrayAccess
 {
     /**
      * Load query object with current relation data

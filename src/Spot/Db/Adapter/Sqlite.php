@@ -1,10 +1,14 @@
 <?php
 
-namespace Spot\Adapter;
-
 /**
  * Sqlite Database Adapter
  */
+
+namespace Spot\Db\Adapter;
+
+use Spot\Db\AbstractAdapter,
+	Spot\Db\AdapterInterface;
+
 class Sqlite extends AbstractAdapter implements AdapterInterface
 {
     /**

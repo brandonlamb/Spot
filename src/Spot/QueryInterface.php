@@ -1,14 +1,16 @@
 <?php
 
-namespace Spot;
-
 /**
  * Query interface
  *
  * @package Spot
- * @link http://spot.os.ly
- * @link http://github.com/actridge/Spot
+ * @author Brandon Lamb <brandon@brandonlamb.com>
  */
+
+namespace Spot;
+
+use Spot\Mapper;
+
 interface QueryInterface
 {
     /**
@@ -17,7 +19,7 @@ interface QueryInterface
      * @param object $adapter
      * @return string
      */
-    public function __construct(\Spot\Mapper $mapper, $entityName);
+    public function __construct(Mapper $mapper, $entityName);
 
     /**
      * Called from mapper's select() function

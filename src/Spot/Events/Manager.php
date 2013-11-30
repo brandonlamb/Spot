@@ -13,7 +13,7 @@ use Spot\Di\DiInterface,
     Spot\Di\InjectableTrait,
     ArrayAccess;
 
-class EventsManager implements ArrayAccess
+class Manager implements ArrayAccess
 {
 	use InjectableTrait;
 

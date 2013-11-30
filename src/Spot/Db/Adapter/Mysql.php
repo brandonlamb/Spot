@@ -1,13 +1,14 @@
 <?php
 
-namespace Spot\Adapter;
-
 /**
  * Mysql Database Adapter
  *
- * @package Spot
- * @link http://spot.os.ly
+ * @package Spot\Db\Adapter
+ * @author Brandon Lamb <brandon@brandonlamb.com>
  */
+
+namespace Spot\Db\Adapter;
+
 class Mysql extends AbstractAdapter implements AdapterInterface
 {
     // Driver-Specific settings
