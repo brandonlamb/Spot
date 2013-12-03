@@ -50,6 +50,7 @@ abstract class AbstractDialect
      */
     public function insert($tableName, array $columns, array $binds, array $options)
     {
+d(__METHOD__, __LINE__);
         // build the statement
         return "INSERT INTO " . $tableName .
             " (" . implode(', ', array_map([$this->adapter, 'escapeIdentifier'], array_keys($columns))) . ")" .

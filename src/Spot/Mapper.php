@@ -400,7 +400,7 @@ class Mapper
         // Send to adapter
         $result = $this->getAdapter()->createEntity($this->entityManager->getTable($entityName), $data, $options);
 
-d(__METHOD__, $result);
+d(__METHOD__, __LINE__, $result);
 
         // Update primary key on entity object
         $pkField = $this->entityManager->getPrimaryKeyField($entityName);

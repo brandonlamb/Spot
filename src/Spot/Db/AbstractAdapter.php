@@ -267,11 +267,12 @@ abstract class AbstractAdapter
     /**
      * {@inheritdoc}
      */
-    public function createEntity($datasource, array $data, array $options = [])
+    public function createEntity($tableName, array $data, array $options = [])
     {
         #$binds = $this->getQueryBinds($data);
-        $sql = $this->insert($datasource, $data, $binds, $options);
-d(__METHOD__, $sql);
+        $binds = [];
+d(__METHOD__, $sql, $data);
+        $sql = $this->insert($tableName, $data, $binds, $options);
 
         try {
             // Prepare update query
@@ -293,7 +294,7 @@ echo __LINE__ . ": $sql\n";
         } catch(\PDOException $e) {
             // Table does not exist
             if ($e->getCode() == '42S02') {
-                throw new \Spot\Exception\Datasource\Missing("Table or datasource '" . $datasource . "' does not exist");
+                throw new \Spot\Exception\Datasource\Missing("Table or datasource '" . $tableName . "' does not exist");
             }
 
             // Throw new Spot exception
@@ -334,7 +335,7 @@ echo __LINE__ . ": $sqlQuery\n";
     /**
      * {@inheritdoc}
      */
-    public function updateEntity($datasource, array $data, array $where = [], array $options = [])
+    public function updateEntity($tableName, array $data, array $where = [], array $options = [])
     {
         $dataBinds = $this->getBinds($data, 0);
         $whereBinds = $this->getBinds($where, count($dataBinds));
@@ -352,7 +353,7 @@ echo __LINE__ . ": $sqlQuery\n";
         // Ensure there are actually updated values on THIS table
         if (count($binds) > 0) {
             // Build the query
-            $sql = $this->update($datasource, $placeholders, $conditions);
+            $sql = $this->update($tableName, $placeholders, $conditions);
 
             try {
                 // Prepare update query
@@ -372,7 +373,7 @@ echo __LINE__ . ":$sql\n";
             } catch(\PDOException $e) {
                 // Table does not exist
                 if ($e->getCode() == '42S02') {
-                    throw new \Spot\Exception\Adapter("Table or datasource '" . $datasource . "' does not exist");
+                    throw new \Spot\Exception\Adapter("Table or datasource '" . $tableName . "' does not exist");
                 }
 
                 // Throw new Spot exception
@@ -388,12 +389,12 @@ echo __LINE__ . ":$sql\n";
     /**
      * {@inheritdoc}
      */
-    public function deleteEntity($datasource, array $data, array $options = [])
+    public function deleteEntity($tableName, array $data, array $options = [])
     {
         $binds = $this->getBinds($data, 0);
         $conditions = $this->getConditionsSql($data);
 
-        $sql = "DELETE FROM " . $datasource . "";
+        $sql = "DELETE FROM " . $tableName . "";
         $sql .= ($conditions ? ' WHERE ' . $conditions : '');
 
         try {
@@ -413,7 +414,7 @@ echo __LINE__ . ": $sql\n";
         } catch(\PDOException $e) {
             // Table does not exist
             if ($e->getCode() == '42S02') {
-                throw new \Spot\Exception\Adapter("Table or datasource '" . $datasource . "' does not exist");
+                throw new \Spot\Exception\Adapter("Table or datasource '" . $tableName . "' does not exist");
             }
 
             // Throw new Spot exception

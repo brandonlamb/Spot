@@ -214,13 +214,13 @@ interface AdapterInterface
 
     /**
      * Create new row object with set properties
-     * @param string $datasource
+     * @param string $tableName
      * @param array $data
      * @param array $options
      * @return mixed
      * @throws \Spot\Exception\Datasource\Missing|\Spot\Exception\Adapter
      */
-    public function createEntity($datasource, array $data, array $options = []);
+    public function createEntity($tableName, array $data, array $options = []);
 
     /**
      * Build a select statement in SQL
@@ -235,22 +235,22 @@ interface AdapterInterface
 
     /**
      * Update entity
-     * @param string $datasource
+     * @param string $tableName
      * @param array $data
      * @param data $where
      * @param array $options
      * @throws \Spot\Exception\Adapter
      */
-    public function updateEntity($datasource, array $data, array $where = [], array $options = []);
+    public function updateEntity($tableName, array $data, array $where = [], array $options = []);
 
     /**
      * Delete entities matching given conditions
-     * @param string $datasource Name of data source
+     * @param string $tableName The name of the table
      * @param array $data
      * @param array $options
      * @throws \Spot\Exception\Adapter
      */
-    public function deleteEntity($datasource, array $data, array $options = []);
+    public function deleteEntity($tableName, array $data, array $options = []);
 
     /**
      * Count number of rows in source based on conditions
