@@ -193,11 +193,10 @@ abstract class AbstractAdapter
      */
     public function getDeleteSql(QueryInterface $query)
     {
-        $sqlQuery = $this->select(null, $query->getFields());
+        $sqlQuery = 'DELETE';
         $sqlQuery = $this->from($sqlQuery, $query->getTableName());
         $sqlQuery = $this->join($sqlQuery, $query->getJoins());
         $sqlQuery = $this->where($sqlQuery, $query->getConditions());
-        $sqlQuery = $this->group($sqlQuery, $query->getGroupBy());
         $sqlQuery = $this->order($sqlQuery, $query->getOrderBy());
         $sqlQuery = $this->limit($sqlQuery, $query->getLimit());
         $sqlQuery = $this->offset($sqlQuery, $query->getOffset());
@@ -435,6 +434,29 @@ abstract class AbstractAdapter
      */
     public function deleteEntity($tableName, array $data, array $options = [])
     {
+        $sqlQuery = $this->getDeleteSql($query);
+        $binds = $this->getQueryBinds($query);
+
+        // Unset any NULL values in binds (compared as "IS NULL" and "IS NOT NULL" in SQL instead)
+        if ($binds && count($binds) > 0) {
+            foreach ($binds as $field => $value) {
+                if (null === $value) {
+                    unset($binds[$field]);
+                }
+            }
+        }
+
+        // Prepare update query
+        if ($stmt = $this->pdo->prepare($sqlQuery)) {
+            // Execute
+            return ($stmt->execute($binds)) ? $this->getResultSet($query, $stmt) : false;
+        }
+        return false;
+
+
+
+
+
         $binds = $this->getBinds($data, 0);
         $conditions = $this->getConditionsSql($data);
 
