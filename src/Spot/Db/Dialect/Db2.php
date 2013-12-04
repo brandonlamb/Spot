@@ -25,19 +25,19 @@ class Db2 extends AbstractDialect implements DialectInterface
         !isset($options['sequence']) && $options['sequence'] = false;
 
         // build the statement
-        $sqlQuery = 'INSERT INTO ' . $tableName . ' (';
+        $sqlQuery = "INSERT INTO $tableName (";
 
         // If PK uses a sequence, add the PK column
-        $options['sequence'] && $sqlQuery .= $options['pk'] . ', ';
+        $options['sequence'] && $sqlQuery .= $options['primaryKey'] . ', ';
 
         // Add the fields to list of columns to insert into
-        $sqlQuery .= implode(', ', array_map(array($this->adapter, 'escapeIdentifier'), array_keys($columns))) . ') VALUES (';
+        $sqlQuery .= implode(', ', array_map(array($this->adapter, 'escapeIdentifier'), $columns)) . ') VALUES (';
 
         // If PK uses a sequence, use NEXT VALUE FOR $sequence for the value
         $options['sequence'] && $sqlQuery .= 'NEXT VALUE FOR ' . $options['sequence'] . ', ';
 
         // Add the other values
-        return $sqlQuery . ':' . implode(', :', array_keys($binds)) . ')';
+        return $sqlQuery . implode(', ', $binds) . ')';
     }
 
 	/**

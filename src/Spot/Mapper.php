@@ -328,21 +328,6 @@ class Mapper
 
         // If the pk value is empty and the pk is set to an autoincremented type (identity, sequence, serial)
         if ($isCreate) {
-/*
-            // Autogenerate sequence if sequence is empty
-            $options['pk'] = $pkField;
-
-            // Check if PK is using a sequence
-            if ($options['sequence'] === true) {
-                // Try fetching sequence from the Entity defined getSequence() method
-                $options['sequence'] = $entityName::getMetaData()->getSequence();
-
-                // If the Entity did not define a sequence, automatically generate an assumed sequence name
-                if (empty($options['sequence'])) {
-                    $options['sequence'] = $entityName::getMetaData()->getTable() . '_' . $pkField . '_seq';
-                }
-            }
-*/
             // No primary key, insert
             $result = $this->insert($entity);
         } else {
@@ -358,33 +343,27 @@ class Mapper
 
     /**
      * Insert record using entity object
-     * You can override the entity's primary key options by passing the respective
-     * option in the options array (second parameter)
      * @param \Spot\Entity\EntityInterface $entity, Entity object already populated to be inserted
-     * @param array $options, override default PK field options
      * @return bool
      */
-    public function insert(EntityInterface $entity, array $options = [])
+    public function insert(EntityInterface $entity)
     {
+        // Run beforeInsert to know whether or not we can continue
+        $resultAfter = null;
+        #if (false === $this->eventsManager->triggerInstanceHook($entity, 'beforeInsert', $this)) {
+        #    return false;
+        #}
+
         // Get the entity class name
         $entityName = $entity->toString();
 
         // Get field options for primary key, merge with overrides (if any) passed
         $columns = $this->entityManager->getColumns($entityName);
 
-        // Get the primary key field for the entity class
-        $primaryKeys = $this->entityManager->getPrimaryKeys($entityName);
-
-        // Run beforeInsert to know whether or not we can continue
-        $resultAfter = null;
-#        if (false === $this->eventsManager->triggerInstanceHook($entity, 'beforeInsert', $this)) {
-#            return false;
-#        }
-
         // Get identity/sequence columns
         $exceptColumns = [];
-        foreach ($primaryKeys as $pk) {
-            ($columns[$pk]->isIdentity() || $columns[$pk]->isSequence()) && $exceptColumns[] = $pk;
+        foreach ($columns as $column) {
+            ($column->isIdentity() || $column->isSequence() || $column->isRelation()) && $exceptColumns[] = $column->getName();
         }
 
         // If the primary key is a sequence, serial or identity column, exclude the PK from the array of columns to insert
@@ -394,17 +373,39 @@ class Mapper
         }
 
         // Save only known, defined fields
-        #$entityFields = $this->entityManager->fields($entityName);
         $data = array_intersect_key($data, $columns);
 
-        // Send to adapter
-        $result = $this->getAdapter()->createEntity($this->entityManager->getTable($entityName), $data, $options);
+        // Initialize options array
+        $options = ['identity' => false, 'sequence' => false, 'primaryKey' => false];
 
-d(__METHOD__, __LINE__, $result);
+        // Get meta data
+        $metaData = $entityName::getMetaData();
+
+        // Loop through each $exceptColumns (which will be identity or sequence columns)
+        foreach ($exceptColumns as $column) {
+            if ($metaData->getColumn($column)->isSequence()) {
+                $options['primaryKey'] = $column;
+                $options['sequence'] = !empty($metaData->getSequence()) ? $metaData->getSequence() : $metaData->getTable() . "_{$column}_seq";
+            }
+        }
+
+        // Create binds from data
+        $binds = [];
+        foreach ($data as $key => $value) {
+            $binds[$key] = [
+                'value' => $value,
+                'bindType' => $metaData->getColumn($key)->getBindType(),
+            ];
+        }
+
+        // Send to adapter
+        $result = $this->getAdapter()->createEntity($this->entityManager->getTable($entityName), $binds, $options);
 
         // Update primary key on entity object
-        $pkField = $this->entityManager->getPrimaryKeyField($entityName);
-        $entity->$pkField = $result;
+        if ($result !== false) {
+            $primaryKeys = $this->entityManager->getPrimaryKeys($entityName);
+            $entity->{$primaryKeys[0]} = $result;
+        }
 
         // Load relations on new entity
         $this->relationManager->loadRelations($entity, $this);

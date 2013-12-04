@@ -609,7 +609,7 @@ class Query implements Countable, IteratorAggregate, QueryInterface
      */
     public function toString()
     {
-        return $this->mapper->getDi()->get($this->mapper->getAdapterName())->getSqlQuery($this);
+        return $this->mapper->getDi()->get($this->mapper->getAdapterName())->getQuerySql($this);
     }
 
     /**

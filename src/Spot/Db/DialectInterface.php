@@ -36,7 +36,7 @@ interface DialectInterface
 	 * @param array $options
 	 * @return string
 	 */
-	public function insert($tableName, array $data, array $binds, array $options);
+	public function insert($tableName, array $columns, array $binds, array $options);
 
 	/**
 	 * Creates an INSERT statement

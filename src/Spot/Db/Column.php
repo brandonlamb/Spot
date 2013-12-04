@@ -208,6 +208,26 @@ class Column
 	}
 
 	/**
+	 * Set the bind type
+	 * @param int $bindType
+	 * @throws \InvalidArgumentException
+	 */
+	public function setBindType($bindType)
+	{
+		switch ($bindType) {
+			case self::BIND_SKIP:
+			case self::BIND_PARAM_DECIMAL:
+			case self::BIND_PARAM_BOOL:
+			case self::BIND_PARAM_STR:
+			case self::BIND_PARAM_INT:
+			case self::BIND_PARAM_NULL:
+				break;
+			default:
+				throw new \InvalidArgumentException("'$bindType' is not a valid bind type");
+		}
+	}
+
+	/**
 	 * Get the default value
 	 * @return mixed
 	 */

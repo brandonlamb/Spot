@@ -170,7 +170,28 @@ abstract class AbstractAdapter
     /**
      * {@inheritDoc}
      */
-    public function getSqlQuery(QueryInterface $query)
+    public function getQuerySql(QueryInterface $query)
+    {
+        $sqlQuery = $this->select(null, $query->getFields());
+        $sqlQuery = $this->from($sqlQuery, $query->getTableName());
+        $sqlQuery = $this->join($sqlQuery, $query->getJoins());
+        $sqlQuery = $this->where($sqlQuery, $query->getConditions());
+        $sqlQuery = $this->group($sqlQuery, $query->getGroupBy());
+        $sqlQuery = $this->order($sqlQuery, $query->getOrderBy());
+        $sqlQuery = $this->limit($sqlQuery, $query->getLimit());
+        $sqlQuery = $this->offset($sqlQuery, $query->getOffset());
+
+        if ($query->getHaving()) {
+            $sqlQuery = $this->where($sqlQuery, $query->getHaving());
+        }
+
+        return $sqlQuery;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getDeleteSql(QueryInterface $query)
     {
         $sqlQuery = $this->select(null, $query->getFields());
         $sqlQuery = $this->from($sqlQuery, $query->getTableName());
@@ -253,35 +274,61 @@ abstract class AbstractAdapter
         return $this->dialect->offset($sqlQuery, $number);
     }
 
-
-
-
-
-
-
-
-
-
-
-
     /**
      * {@inheritdoc}
      */
     public function createEntity($tableName, array $data, array $options = [])
     {
-        #$binds = $this->getQueryBinds($data);
+        $columns = [];
         $binds = [];
-d(__METHOD__, $sql, $data);
-        $sql = $this->insert($tableName, $data, $binds, $options);
+
+        foreach ($data as $key => $value) {
+            $columns[] = $key;
+
+            if ($value['bindType'] === Column::BIND_SKIP) {
+                $binds[] = $value['value'];
+            } else if ($value['bindType'] === Column::BIND_PARAM_NULL && null === $value['value']) {
+                $binds[] = 'NULL';
+            } else {
+                $binds[] = ':' . $key;
+            }
+        }
+
+        $sql = $this->insert($tableName, $columns, $binds, $options);
 
         try {
             // Prepare update query
-echo __LINE__ . ": $sql\n";
             $stmt = $this->pdo->prepare($sql);
 
             if ($stmt) {
+                // Bind each parameter
+                foreach ($data as $key => $value) {
+                    $param = ':' . $key;
+
+                    switch ($value['bindType']) {
+                        case Column::BIND_SKIP:
+                            break;
+                        case Column::BIND_PARAM_NULL:
+                            if (null === $value['value']) {
+                                $stmt->bindValue($param, null, \PDO::PARAM_NULL);
+                                break;
+                            }
+                        case Column::BIND_PARAM_BOOL:
+                            $stmt->bindValue($param, $value['value'], \PDO::PARAM_BOOL);
+                            break;
+                        case Column::BIND_PARAM_INT:
+                            $stmt->bindValue($param, $value['value'], \PDO::PARAM_INT);
+                            break;
+                        case Column::BIND_PARAM_DECIMAL:
+                        case Column::BIND_PARAM_STR:
+                        default:
+                            $stmt->bindValue($param, $value['value'], \PDO::PARAM_STR);
+                            break;
+                    }
+                }
+
                 // Execute
-                if ($stmt->execute($binds)) {
+                if ($stmt->execute()) {
                     // Use 'id' if PK exists, otherwise returns true
                     $id = $this->lastInsertId($options['sequence']);
                     $result = $id ? $id : true;
@@ -309,7 +356,7 @@ echo __LINE__ . ": $sql\n";
      */
     public function readEntity(QueryInterface $query, array $options = [])
     {
-        $sqlQuery = $this->getSqlQuery($query);
+        $sqlQuery = $this->getQuerySql($query);
         $binds = $this->getQueryBinds($query);
 
         // Unset any NULL values in binds (compared as "IS NULL" and "IS NOT NULL" in SQL instead)
@@ -321,10 +368,7 @@ echo __LINE__ . ": $sql\n";
             }
         }
 
-#d(__METHOD__);
-
         // Prepare update query
-echo __LINE__ . ": $sqlQuery\n";
         if ($stmt = $this->pdo->prepare($sqlQuery)) {
             // Execute
             return ($stmt->execute($binds)) ? $this->getResultSet($query, $stmt) : false;
@@ -357,7 +401,7 @@ echo __LINE__ . ": $sqlQuery\n";
 
             try {
                 // Prepare update query
-echo __LINE__ . ":$sql\n";
+#echo __LINE__ . ":$sql\n";
                 $stmt = $this->pdo->prepare($sql);
 
                 if ($stmt) {
@@ -398,7 +442,7 @@ echo __LINE__ . ":$sql\n";
         $sql .= ($conditions ? ' WHERE ' . $conditions : '');
 
         try {
-echo __LINE__ . ": $sql\n";
+#echo __LINE__ . ": $sql\n";
             $stmt = $this->pdo->prepare($sql);
             if ($stmt) {
                 // Execute
@@ -448,7 +492,7 @@ echo __LINE__ . ": $sql\n";
         $result = false;
         try {
             // Prepare count query
-echo __LINE__ . ": $sql\n";
+#echo __LINE__ . ": $sql\n";
             $stmt = $this->pdo->prepare($sql);
 
             // if prepared, execute

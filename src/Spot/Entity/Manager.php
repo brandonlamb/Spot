@@ -42,6 +42,17 @@ class Manager
     }
 
     /**
+     * Get name of sequence for given entity class
+     * @param string $entityName Name of the entity class
+     * @return string
+     */
+    public function getSequence($entityName)
+    {
+        $entityName instanceof ResultsetInterface && $entityName = $entityName->getEntityName();
+        return $entityName::getMetaData()->getSequence();
+    }
+
+    /**
      * Get value of primary key for given row result
      *
      * @param string $entityName Name of the entity class
@@ -49,7 +60,8 @@ class Manager
      */
     public function getPrimaryKeys($entityName)
     {
-        $entityName instanceof EntityInterface && $entityName = $entityName->toString();
+        #$entityName instanceof EntityInterface && $entityName = $entityName->toString();
+        $entityName instanceof ResultsetInterface && $entityName = $entityName->getEntityName();
 
         // Store primary key(s)
         if (!isset($this->primaryKeyColumns[$entityName])) {
@@ -83,18 +95,10 @@ class Manager
      * @param string $entityName Name of the entity class
      * @param string $column Name of the field to return attributes for
      * @return array Defined columns plus all defaults for full array of all possible options
-     * @throws \Spot\Exception|\InvalidArgumentException
      */
     public function getColumns($entityName, $column = null)
     {
-        if (!is_string($entityName)) {
-            throw new \Spot\Exception(__METHOD__ . " only accepts a string. Given (" . gettype($entityName) . ")");
-        }
-
-        if (!is_subclass_of($entityName, '\\Spot\\Entity\\EntityInterface')) {
-            throw new \Spot\Exception(__METHOD__ . ": $entityName must be subclass of '\Spot\Entity\EntityInterface'.");
-        }
-
+        $entityName instanceof ResultsetInterface && $entityName = $entityName->getEntityName();
         $metaData = $entityName::getMetaData();
         return null === $column ? $metaData->getColumns() : $metaData->getColumn($column);
     }
@@ -107,6 +111,7 @@ class Manager
      */
     public function getDefaultColumnValues($entityName)
     {
+        $entityName instanceof ResultsetInterface && $entityName = $entityName->getEntityName();
         return $entityName::getMetaData()->getDefault();
     }
 
@@ -119,6 +124,7 @@ class Manager
      */
     public function hasColumn($entityName, $column)
     {
+        $entityName instanceof ResultsetInterface && $entityName = $entityName->getEntityName();
         return false !== $entityName::getMetaData()->getColumn($column);
     }
 
@@ -127,14 +133,16 @@ class Manager
      *
      * @param string $entityName Name of the entity class
      * @param string $column Column name
-     * @return int|bool Column type string or boolean false
+     * @return int Column type string or boolean false
+     * @throws \InvalidArgumentException
      */
     public function getColumnType($entityName, $column)
     {
+        $entityName instanceof ResultsetInterface && $entityName = $entityName->getEntityName();
         if ($column = $entityName::getMetaData()->getColumn($column)) {
             return $column->getType();
         }
-        return false;
+        throw new \InvalidArgumentException("'$column' is not a properly configured column");
     }
 
     /**
@@ -145,6 +153,7 @@ class Manager
      */
     public function getRelations($entityName)
     {
+        $entityName instanceof ResultsetInterface && $entityName = $entityName->getEntityName();
         return $entityName::getMetaData()->getRelations();
     }
 }

@@ -111,7 +111,7 @@ interface AdapterInterface
      * @param \Spot\QueryInterface $query
      * @return string
      */
-    public function getSqlQuery(QueryInterface $query);
+    public function getQuerySql(QueryInterface $query);
 
     /**
      * Build SELECT statement from fields
@@ -206,11 +206,6 @@ interface AdapterInterface
      * @return string
      */
     public function offset($sqlQuery, $number);
-
-
-
-
-
 
     /**
      * Create new row object with set properties
