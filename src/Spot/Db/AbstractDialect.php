@@ -152,7 +152,11 @@ abstract class AbstractDialect
                     }
 
                     #$sqlWhere[] = "$columnName $operator (" . trim($valueIn, ',') . ')';
-                    $sqlWhere[] = "$columnName $operator (" . implode(', ', $valueIn) . ')';
+                    if ($operator != 'BETWEEN') {
+                        $sqlWhere[] = "$columnName $operator (" . implode(', ', $valueIn) . ')';
+                    } else {
+                        $sqlWhere[] = "$columnName $operator " . implode(' AND ', $valueIn);
+                    }
                 } else if (is_null($value)) {
                     $sqlWhere[] = $columnName . ' ' . $operator;
                 } else {
