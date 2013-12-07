@@ -105,7 +105,8 @@ class Mapper
      */
     public function hydrateEntity($entityName, array $data)
     {
-        return is_string($entityName) ? new $entityName($data) : $entityName->setData($data);
+        is_string($entityName) && $entityName = new $entityName();
+        return $entityName->setData($data);
     }
 
 /* ====================================================================================================== */
@@ -134,7 +135,7 @@ class Mapper
         $entityFields = $this->entityManager->getColumns($entityName);
         foreach ($stmt as $data) {
             // Entity with data set
-            $data = array_intersect_key($data, $entityFields);
+            #$data = array_intersect_key($data, $entityFields);
 
             // Entity with data set
             $entity = $this->hydrateEntity($entityName, $data);
