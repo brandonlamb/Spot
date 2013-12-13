@@ -12,9 +12,10 @@ namespace Spot\Entity;
 use Spot\Mapper,
     Spot\Entity\EntityInterface,
     Spot\Entity\ResultsetInterface,
-    Spot\Entity\Manager as EntityManager;
+    Spot\Entity\Manager as EntityManager,
+    Serializable;
 
-abstract class AbstractRelation
+abstract class AbstractRelation implements Serializable
 {
     /**
      * @var \Spot\Mapper
@@ -346,6 +347,23 @@ abstract class AbstractRelation
     abstract protected function toQuery();
 
     // SPL - ArrayAccess functions
+
+    /**
+     * {@inheritDoc}
+     */
+    public function serialize()
+    {
+        $this->execute();
+        return serialize($this->results);
+    }
+
+    /**
+     * {@inherit}
+     */
+    public function unserialize($serialized)
+    {
+        $this->results = $serialized;
+    }
 
     public function offsetExists($key)
     {

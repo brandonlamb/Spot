@@ -12,9 +12,10 @@ namespace Spot\Entity;
 use Spot\Entity\EntityInterface,
     Iterator,
     Countable,
-    ArrayAccess;
+    ArrayAccess,
+    Serializable;
 
-interface ResultsetInterface extends Iterator, Countable, ArrayAccess
+interface ResultsetInterface extends Iterator, Countable, ArrayAccess, Serializable
 {
     /**
     * Add a single entity to the resultset

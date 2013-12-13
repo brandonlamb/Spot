@@ -130,7 +130,13 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
      */
     public function serialize()
     {
-        return serialize($this->getData());
+        $data = $this->getData();
+        foreach ($data as $key => $value) {
+            if ($property instanceof RelationInterface) {
+                unset($data[$key]);
+            }
+        }
+        return serialize($data);
     }
 
     /**
