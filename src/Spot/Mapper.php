@@ -249,7 +249,8 @@ class Mapper
      */
     public function first($entityName, array $conditions = [])
     {
-        return ($resultset = $this->select($entityName)->where($conditions)->limit(1)->execute()) ? $resultset->first() : false;
+        $resultset = $this->select($entityName)->where($conditions)->limit(1)->execute();
+        return ($resultset instanceof ResultsetInterface) ? $resultset->first() : false;
     }
 
     /**

@@ -24,6 +24,7 @@ class Column
 	const TYPE_FLOAT	= 8;
 	const TYPE_BOOLEAN	= 9;
 	const TYPE_DOUBLE	= 10;
+	const TYPE_TIME		= 11;
 
 	/**
 	 * @var int Entity column bind data types
