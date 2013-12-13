@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="Spot" default="build">
+	<target name="build" depends="prepare,lint,phpab"/>
+
+	<target name="clean" description="Cleanup build artifacts">
+		<delete dir="${basedir}/build/logs"/>
+	</target>
+
+	<target name="prepare" depends="clean" description="Prepare for build">
+		<mkdir dir="${basedir}/build/logs"/>
+	</target>
+
+	<target name="lint" description="Perform syntax check of sourcecode files">
+		<apply executable="php" failonerror="true">
+			<arg value="-l" />
+
+			<fileset dir="${basedir}/src">
+				<include name="**/*.php" />
+				<modified />
+			</fileset>
+
+			<fileset dir="${basedir}/tests">
+				<include name="**/*.php" />
+				<modified />
+			</fileset>
+		</apply>
+	</target>
+
+	<target name="phpab" description="Generate autoloader scripts">
+		<exec executable="phpab">
+			<arg value="--output" />
+			<arg path="${basedir}/src/autoload.php" />
+			<arg value="${basedir}/src" />
+		</exec>
+
+		<exec executable="phpab">
+			<arg value="--output" />
+			<arg path="${basedir}/tests/autoload.php" />
+			<arg path="${basedir}/tests" />
+		</exec>
+	</target>
+</project>
