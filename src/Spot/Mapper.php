@@ -134,9 +134,6 @@ class Mapper
         $entityFields = $this->entityManager->getColumns($entityName);
         foreach ($stmt as $data) {
             // Entity with data set
-            #$data = array_intersect_key($data, $entityFields);
-
-            // Entity with data set
             $entity = $this->hydrateEntity($entityName, $data);
 
             // Load relation objects

@@ -290,9 +290,9 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
             throw new \InvalidArgumentException(__METHOD__ . " Expected array or object, " . gettype($data) . " given");
         }
 
-        $entityName = (string) $this;
-        $columns = $entityName::getMetaData()->getColumns();
-        #$columns = $this::getMetaData()->getColumns();
+        #$entityName = (string) $this;
+        #$columns = $entityName::getMetaData()->getColumns();
+        $columns = $this::getMetaData()->getColumns();
 
         foreach ($data as $k => $v) {
             // Ensure value is set with type handler if Entity field type
