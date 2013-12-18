@@ -370,7 +370,7 @@ abstract class AbstractAdapter
         // Prepare update query
         if ($stmt = $this->pdo->prepare($sqlQuery)) {
             // Execute
-            return ($stmt->execute($binds)) ? $this->getResultSet($query, $stmt) : false;
+            return ($stmt->execute($binds)) ? $this->getResultset($query, $stmt) : false;
         }
         return false;
     }
@@ -449,7 +449,7 @@ abstract class AbstractAdapter
         // Prepare update query
         if ($stmt = $this->pdo->prepare($sqlQuery)) {
             // Execute
-            return ($stmt->execute($binds)) ? $this->getResultSet($query, $stmt) : false;
+            return ($stmt->execute($binds)) ? $this->getResultset($query, $stmt) : false;
         }
         return false;
 
@@ -550,7 +550,7 @@ abstract class AbstractAdapter
     /**
      * {@inheritDoc}
      */
-    public function getResultSet(QueryInterface $query, \PDOStatement $stmt)
+    public function getResultset(QueryInterface $query, \PDOStatement $stmt)
     {
         $mapper = $query->getMapper();
         $entityClass = $query->getEntityName();

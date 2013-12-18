@@ -36,6 +36,7 @@ class Manager
      */
     public function loadRelations($entity, Mapper $mapper, $reload = false)
     {
+#d(__METHOD__, $entity);
         $entityName = $entity instanceof ResultsetInterface ? $entity->getEntityName() : $entity->toString();
         if (empty($entityName)) {
             throw new \InvalidArgumentException("Cannot load relation with a null \$entityName");

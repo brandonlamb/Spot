@@ -253,14 +253,11 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
 
         // Check if accessing a column alias
         ($alias = static::getMetaData()->getColumnMap($offset)) && $offset = $alias;
-
-        $columns = static::getMetaData();
+        $columns = static::getMetaData()->getColumns();
 
         // Run value through a filter call if set
-        if ($this->container[$alias] instanceof \Closure) {
-            $value = $this->container[$alias]($value);
-        } else if (isset($fields[$offset]['filter'])) {
-            $value = call_user_func($fields[$offset]['filter'], $value);
+        if (isset($columns[$offset]) && null !== ($filter = $columns[$offset]->getFilter())) {
+            $value = call_user_func($filter, $value);
         } else if (method_exists($this, $setMethod) && !array_key_exists($offset, $this->setterIgnore)) {
             // Tell this function to ignore the overload on further calls for this variable
             $this->setterIgnore[$offset] = 1;
@@ -270,7 +267,7 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
 
             // Remove ignore rule
             unset($this->setterIgnore[$offset]);
-        } else if (isset($fields[$offset])) {
+        } else if (isset($columns[$offset])) {
             // Ensure value is set with type handler
 #            $typeHandler = Config::getTypeHandler($fields[$offset]['type']);
 #            $value = $typeHandler::set($this, $value);
@@ -289,17 +286,18 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
      */
     public function setData(array $data, $modified = true)
     {
-#        d(__METHOD__, $data);
         if (!is_object($data) && !is_array($data)) {
             throw new \InvalidArgumentException(__METHOD__ . " Expected array or object, " . gettype($data) . " given");
         }
 
         $entityName = (string) $this;
-        $fields = $entityName::getMetaData();
+        $columns = $entityName::getMetaData()->getColumns();
+        #$columns = $this::getMetaData()->getColumns();
+
         foreach ($data as $k => $v) {
             // Ensure value is set with type handler if Entity field type
-            if (array_key_exists($k, $fields)) {
-#                $typeHandler = Config::getTypeHandler($fields[$k]['type']);
+            if (array_key_exists($k, $columns)) {
+#                $typeHandler = Config::getTypeHandler($columns[$k]['type']);
 #                $v = $typeHandler::set($this, $v);
             }
 

@@ -125,16 +125,16 @@ class Mapper
 
         // Ensure PDO only gives key => value pairs, not index-based fields as well
         // Raw PDOStatement objects generally only come from running raw SQL queries or other custom stuff
-        if ($stmt instanceof \PDOStatement) {
-            $stmt->setFetchMode(\PDO::FETCH_ASSOC);
-        }
+        #if ($stmt instanceof \PDOStatement) {
+        #    $stmt->setFetchMode(\PDO::FETCH_ASSOC);
+        #}
 
         // Fetch all results into new entity class
         // @todo Move this to resultset class so entities will be lazy-loaded by Resultset iteration
         $entityFields = $this->entityManager->getColumns($entityName);
         foreach ($stmt as $data) {
             // Entity with data set
-            $data = array_intersect_key($data, $entityFields);
+            #$data = array_intersect_key($data, $entityFields);
 
             // Entity with data set
             $entity = $this->hydrateEntity($entityName, $data);

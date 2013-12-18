@@ -261,7 +261,7 @@ interface AdapterInterface
      * @param \PDOStatement $stmt
      * @return \Spot\Entity\ResultsetInterface
      */
-    public function getResultSet(QueryInterface $query, \PDOStatement $stmt);
+    public function getResultset(QueryInterface $query, \PDOStatement $stmt);
 
     /**
      * Returns array of binds to pass to query function
