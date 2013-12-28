@@ -64,6 +64,14 @@ abstract class AbstractDialect
         return "UPDATE $tableName SET " . implode(', ', $placeholders) . " WHERE " . $conditions;
     }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function delete($tableName, array $conditions)
+    {
+        return $this->where("DELETE FROM $tableName", $conditions);
+    }
+
 	/**
 	 * {@inheritDoc}
 	 */

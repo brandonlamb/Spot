@@ -481,15 +481,16 @@ class Mapper
      * @param mixed $entityName Name of the entity class or entity object
      * @param array $conditions Optional array of conditions in column => value pairs
      * @param array $options Optional array of adapter-specific options
-     * @todo Clear entity from identity map on delete, when implemented
      * @return bool
+     * @throws \Exception
+     * @todo Clear entity from identity map on delete, when implemented
      */
     public function delete($entityName, array $conditions = [], array $options = [])
     {
-        if (is_object($entityName)) {
+        if ($entityName instanceof EntityInterface) {
             $entity = $entityName;
-            $entityName = get_class($entityName);
-            $conditions = [$this->entityManager->getPrimaryKeyField($entityName) => $this->entityManager->getPrimaryKey($entity)];
+            $entityName = $entityName->toString();
+            $conditions = $this->entityManager->getPrimaryKeyValues($entity);
 
             // Run beforeUpdate to know whether or not we can continue
             $resultAfter = null;
@@ -497,7 +498,11 @@ class Mapper
 #                return false;
 #            }
 
-            $result = $this->getAdapter()->deleteEntity($this->entityManager->getTable($entityName), $conditions, $options);
+            $result = $this->getAdapter()->deleteEntity(
+                $this->entityManager->getTable($entityName),
+                [['conditions' => $conditions]],
+                $options
+            );
 
             // Run afterUpdate
 #            $resultAfter = $this->eventsManager->triggerInstanceHook($entity, 'afterDelete', [$this, $result]);
@@ -505,11 +510,11 @@ class Mapper
             return (null !== $resultAfter) ? $resultAfter : $result;
         }
 
-        if (is_array($conditions)) {
-            $conditions = [0 => ['conditions' => $conditions]];
+        if (is_string($entityName) && is_array($conditions)) {
+            $conditions = [['conditions' => $conditions]];
             return $this->getAdapter()->deleteEntity($this->entityManager->getTable($entityName), $conditions, $options);
         } else {
-            throw new $this->exceptionClass(__METHOD__ . " conditions must be an array, given " . gettype($conditions) . "");
+            throw new \Exception(__METHOD__ . " conditions must be an array, given " . gettype($conditions) . "");
         }
     }
 

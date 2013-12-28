@@ -168,6 +168,14 @@ abstract class AbstractAdapter
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function delete($tableName, array $conditions)
+    {
+        return $this->dialect->delete($tableName, $conditions);
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function getQuerySql(QueryInterface $query)
@@ -432,57 +440,21 @@ abstract class AbstractAdapter
     /**
      * {@inheritdoc}
      */
-    public function deleteEntity($tableName, array $data, array $options = [])
+    public function deleteEntity($tableName, array $conditions = [], array $options = [])
     {
-        $sqlQuery = $this->getDeleteSql($query);
-        $binds = $this->getQueryBinds($query);
-
-        // Unset any NULL values in binds (compared as "IS NULL" and "IS NOT NULL" in SQL instead)
-        if ($binds && count($binds) > 0) {
-            foreach ($binds as $field => $value) {
-                if (null === $value) {
-                    unset($binds[$field]);
-                }
-            }
-        }
-
-        // Prepare update query
-        if ($stmt = $this->pdo->prepare($sqlQuery)) {
-            // Execute
-            return ($stmt->execute($binds)) ? $this->getResultset($query, $stmt) : false;
-        }
-        return false;
-
-
-
-
-
-        $binds = $this->getBinds($data, 0);
-        $conditions = $this->getConditionsSql($data);
-
-        $sql = "DELETE FROM " . $tableName . "";
-        $sql .= ($conditions ? ' WHERE ' . $conditions : '');
+        $sqlQuery = $this->delete($tableName, $conditions);
+        $binds = $this->getBinds($conditions, 0);
 
         try {
-#echo __LINE__ . ": $sql\n";
-            $stmt = $this->pdo->prepare($sql);
+            $stmt = $this->pdo->prepare($sqlQuery);
+
             if ($stmt) {
                 // Execute
-                if ($stmt->execute($binds)) {
-                    $result = $stmt->rowCount();
-                } else {
-                    $result = false;
-                }
+                return ($stmt->execute($binds)) ? $stmt->rowCount() : false;
             } else {
-                $result = false;
+                return false;
             }
-            return $result;
         } catch(\PDOException $e) {
-            // Table does not exist
-            if ($e->getCode() == '42S02') {
-                throw new \Spot\Exception\Adapter("Table or datasource '" . $tableName . "' does not exist");
-            }
-
             // Throw new Spot exception
             throw new \Spot\Exception\Adapter(__METHOD__ . ': ' . $e->getMessage());
         }
@@ -576,11 +548,19 @@ abstract class AbstractAdapter
      */
     public function getQueryBinds(QueryInterface $query, $ci = true)
     {
+        return $this->getBinds($query->getparameters(), $ci);
+    }
+
+    /**
+     * Get binds from conditions array
+     * @param array $conditions
+     * @param bool $ci, add unique id to parameter names
+     * @return array
+     */
+    protected function getBinds(array $conditions, $ci = true)
+    {
         $params = [];
         $ci !== false && $ci = 0;
-
-        // WHERE + HAVING
-        $conditions = $query->getparameters();
 
         foreach ($conditions as $i => $data) {
             if (isset($data['conditions']) && is_array($data['conditions'])) {

@@ -106,6 +106,14 @@ interface AdapterInterface
     public function update($tableName, array $placeholders, $conditions);
 
     /**
+     * Return delete statement
+     * @param string $tableName
+     * @param array $conditions
+     * @return string
+     */
+    public function delete($tableName, array $conditions);
+
+    /**
      * Return a sql statement built by dialect
      *
      * @param \Spot\QueryInterface $query
@@ -241,11 +249,11 @@ interface AdapterInterface
     /**
      * Delete entities matching given conditions
      * @param string $tableName The name of the table
-     * @param array $data
+     * @param array $conditions
      * @param array $options
      * @throws \Spot\Exception\Adapter
      */
-    public function deleteEntity($tableName, array $data, array $options = []);
+    public function deleteEntity($tableName, array $conditions = [], array $options = []);
 
     /**
      * Count number of rows in source based on conditions
