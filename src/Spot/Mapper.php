@@ -346,6 +346,18 @@ class Mapper
      */
     public function insert(EntityInterface $entity)
     {
+        return $this->saveEntity($entity, true);
+    }
+
+    /**
+     * Handle writes, save the entity
+     * @param \Spot\Entity\EntityInterface $entity
+     * @param bool $insert, use insert if true, or use update
+     * @return bool
+     * @todo - UPDATE operation should only update modified data
+     */
+    public function saveEntity(EntityInterface $entity, $insert = true)
+    {
         // Run beforeInsert to know whether or not we can continue
         $resultAfter = null;
         #if (false === $this->eventsManager->triggerInstanceHook($entity, 'beforeInsert', $this)) {
@@ -397,16 +409,20 @@ class Mapper
         }
 
         // Send to adapter
-        $result = $this->getAdapter()->createEntity($this->entityManager->getTable($entityName), $binds, $options);
+        if ($insert === true) {
+            $result = $this->getAdapter()->createEntity($this->entityManager->getTable($entityName), $binds, $options);
 
-        // Update primary key on entity object
-        if ($result !== false) {
-            $primaryKeys = $this->entityManager->getPrimaryKeys($entityName);
-            $entity->{$primaryKeys[0]} = $result;
+            // Update primary key on entity object
+            if ($result !== false) {
+                $primaryKeys = $this->entityManager->getPrimaryKeys($entityName);
+                $entity->{$primaryKeys[0]} = $result;
+            }
+
+            // Load relations on new entity
+            $this->relationManager->loadRelations($entity, $this);
+        } else {
+            $result = $this->getAdapter()->updateEntity($this->entityManager->getTable($entityName), $binds, $options);
         }
-
-        // Load relations on new entity
-        $this->relationManager->loadRelations($entity, $this);
 
         // Run afterInsert
 #        $resultAfter = $this->eventsManager->triggerInstanceHook($entity, 'afterInsert', [$this, $result]);
@@ -419,11 +435,33 @@ class Mapper
      * Update record using entity object
      * You can override the entity's primary key options by passing the respective
      * option in the options array (second parameter)
-     * @param \Spot\Entity\EntityInterface $entity, Entity object already populated to be updated
+     * @param mixed $entityName Name of the entity class or entity object
+     * @param array $conditions
+     * @param array $options
      * @return bool
      */
-    public function update(EntityInterface $entity)
+    public function update($entityName, array $conditions = [], array $options = [])
     {
+        if ($entityName instanceof EntityInterface) {
+            return $this->saveEntity($entity, false);
+        }
+
+        if ($entityName instanceof ResultsetInterface) {
+            return $this->updateResultset($entityName);
+        }
+
+        if (is_string($entityName) && is_array($conditions)) {
+            $conditions = [['conditions' => $conditions]];
+            return $this->getAdapter()->updateEntity($this->entityManager->getTable($entityName), $conditions, $options);
+        } else {
+            throw new \Exception(__METHOD__ . " conditions must be an array, given " . gettype($conditions) . "");
+        }
+
+
+
+
+
+
         $entityName = $entity->toString();
 
         // Run beforeUpdate to know whether or not we can continue
@@ -459,14 +497,66 @@ class Mapper
     }
 
     /**
-     * Upsert save entity - insert or update on duplicate key
-     * @param string $entityClass, Name of the entity class
-     * @param array $data, array of key/values to set on new Entity instance
-     * @return \Spot\Entity\EntityInterface, Instance of $entityClass with $data set on it
+     * Update an entity
+     *
+     * @param \Spot\Entity\EntityInterface $entity entity object
+     * @param array $conditions Optional array of conditions in column => value pairs
+     * @param array $options Optional array of adapter-specific options
+     * @return bool
+     * @todo Clear entity from identity map on delete, when implemented
      */
-    public function upsert($entityClass, array $data)
+    public function updateEntity(EntityInterface $entity, array $conditions = [], array $options = [])
     {
-        $entity = new $entityClass($data);
+        $entityName = $entity->toString();
+        $conditions = $this->entityManager->getPrimaryKeyValues($entity);
+
+        // Run beforeUpdate to know whether or not we can continue
+        $resultAfter = null;
+#            if (false === $this->eventsManager->triggerInstanceHook($entity, 'beforeDelete', $this)) {
+#                return false;
+#            }
+
+        $result = $this->getAdapter()->updateEntity(
+            $this->entityManager->getTable($entityName),
+            [['conditions' => $conditions]],
+            $options
+        );
+
+        // Run afterUpdate
+#            $resultAfter = $this->eventsManager->triggerInstanceHook($entity, 'afterDelete', [$this, $result]);
+        $resultAfter = null;
+        return (null !== $resultAfter) ? $resultAfter : $result;
+    }
+
+    /**
+     * Update a resultset
+     *
+     * @param \Spot\Entity\ResultsetInterface $resultset result set
+     * @param array $conditions Optional array of conditions in column => value pairs
+     * @param array $options Optional array of adapter-specific options
+     * @return bool
+     */
+    public function updateResultset(ResultsetInterface $resultset, array $conditions = [], array $options = [])
+    {
+        $result = true;
+        foreach ($resultset as $entity) {
+            if ($this->updateEntity($entity)) {
+                $result = false;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Upsert save entity - insert or update on duplicate key
+     * @param string $entityName, Name of the entity class
+     * @param array $data, array of key/values to set on new Entity instance
+     * @return \Spot\Entity\EntityInterface, Instance of $entityName with $data set on it
+     * @todo - not really implemented yet
+     */
+    public function upsert($entityName, array $data)
+    {
+        $entity = new $entityName($data);
 
         try {
             $this->insert($entity);

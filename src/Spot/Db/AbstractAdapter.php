@@ -388,6 +388,27 @@ abstract class AbstractAdapter
      */
     public function updateEntity($tableName, array $data, array $where = [], array $options = [])
     {
+        $sqlQuery = $this->update($tableName, $conditions);
+        $binds = $this->getBinds($conditions, 0);
+
+        try {
+            $stmt = $this->pdo->prepare($sqlQuery);
+
+            if ($stmt) {
+                return ($stmt->execute($binds)) ? $stmt->rowCount() : false;
+            } else {
+                return false;
+            }
+        } catch(\PDOException $e) {
+            // Throw new Spot exception
+            throw new \Spot\Exception\Adapter(__METHOD__ . ': ' . $e->getMessage());
+        }
+
+
+
+
+
+
         $dataBinds = $this->getBinds($data, 0);
         $whereBinds = $this->getBinds($where, count($dataBinds));
         $binds = array_merge($dataBinds, $whereBinds);
