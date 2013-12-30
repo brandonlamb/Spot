@@ -543,13 +543,18 @@ class Mapper
      * @param array $conditions Optional array of conditions in column => value pairs
      * @param array $options Optional array of adapter-specific options
      * @return bool
-     * @todo Figure out implementation
+     * @todo Figure out implementation. Happy path is that there is a single PK to do a delete where pk in (). But
+     * if the entity has a composite key for pk we have to call delete one by one
      */
     public function deleteResultset(ResultsetInterface $resultset, array $conditions = [], array $options = [])
     {
+        $result = true;
         foreach ($resultset as $entity) {
-
+            if ($this->deleteEntity($entity)) {
+                $result = false;
+            }
         }
+        return $result;
     }
 
 /* ====================================================================================================== */
