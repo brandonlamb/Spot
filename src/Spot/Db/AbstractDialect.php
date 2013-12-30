@@ -227,7 +227,7 @@ abstract class AbstractDialect
 	/**
 	 * {@inheritDoc}
 	 */
-	public function limit($sqlQuery, $number = null)
+	public function limit($sqlQuery, $number)
 	{
 		return is_numeric($number) ? $sqlQuery . ' LIMIT ' . $number : $sqlQuery;
 	}
@@ -235,7 +235,7 @@ abstract class AbstractDialect
 	/**
 	 * {@inheritDoc}
 	 */
-	public function offset($sqlQuery, $number = null)
+	public function offset($sqlQuery, $number)
 	{
 		return is_numeric($number) ? $sqlQuery . ' OFFSET ' . $number : $sqlQuery;
 	}

@@ -115,11 +115,8 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
      */
     public function & toArray($recurse = false)
     {
-        $aliases = array_flip($this->aliases);
         $data = [];
         foreach ($this->getData() as $offset => $value) {
-            // Check if a column alias is defined and use as the offset
-            isset($aliases[$offset]) && $offset = $aliases[$offset];
             $data[$offset] = $recurse && method_exists($value, 'toArray') ? $value->toArray() : $value;
         }
         return $data;
@@ -132,7 +129,7 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
     {
         $data = $this->getData();
         foreach ($data as $key => $value) {
-            if ($property instanceof RelationInterface) {
+            if ($value instanceof RelationInterface) {
                 unset($data[$key]);
             }
         }
