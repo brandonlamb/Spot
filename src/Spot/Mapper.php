@@ -14,7 +14,8 @@ namespace Spot;
 
 use Spot\Di\DiInterface,
     Spot\Di\InjectableTrait,
-    Spot\Entity\EntityInterface;
+    Spot\Entity\EntityInterface,
+    Spot\Entity\ResultsetInterface;
 
 class Mapper
 {
@@ -488,26 +489,11 @@ class Mapper
     public function delete($entityName, array $conditions = [], array $options = [])
     {
         if ($entityName instanceof EntityInterface) {
-            $entity = $entityName;
-            $entityName = $entityName->toString();
-            $conditions = $this->entityManager->getPrimaryKeyValues($entity);
+            return $this->deleteEntity($entityName, $conditions, $options);
+        }
 
-            // Run beforeUpdate to know whether or not we can continue
-            $resultAfter = null;
-#            if (false === $this->eventsManager->triggerInstanceHook($entity, 'beforeDelete', $this)) {
-#                return false;
-#            }
-
-            $result = $this->getAdapter()->deleteEntity(
-                $this->entityManager->getTable($entityName),
-                [['conditions' => $conditions]],
-                $options
-            );
-
-            // Run afterUpdate
-#            $resultAfter = $this->eventsManager->triggerInstanceHook($entity, 'afterDelete', [$this, $result]);
-            $resultAfter = null;
-            return (null !== $resultAfter) ? $resultAfter : $result;
+        if ($entityName instanceof ResultsetInterface) {
+            return $this->deleteResultset($entityName, $conditions, $options);
         }
 
         if (is_string($entityName) && is_array($conditions)) {
@@ -515,6 +501,54 @@ class Mapper
             return $this->getAdapter()->deleteEntity($this->entityManager->getTable($entityName), $conditions, $options);
         } else {
             throw new \Exception(__METHOD__ . " conditions must be an array, given " . gettype($conditions) . "");
+        }
+    }
+
+    /**
+     * Delete an entity
+     *
+     * @param \Spot\Entity\EntityInterface $entity entity object
+     * @param array $conditions Optional array of conditions in column => value pairs
+     * @param array $options Optional array of adapter-specific options
+     * @return bool
+     * @todo Clear entity from identity map on delete, when implemented
+     */
+    public function deleteEntity(EntityInterface $entity, array $conditions = [], array $options = [])
+    {
+        $entityName = $entity->toString();
+        $conditions = $this->entityManager->getPrimaryKeyValues($entity);
+
+        // Run beforeUpdate to know whether or not we can continue
+        $resultAfter = null;
+#            if (false === $this->eventsManager->triggerInstanceHook($entity, 'beforeDelete', $this)) {
+#                return false;
+#            }
+
+        $result = $this->getAdapter()->deleteEntity(
+            $this->entityManager->getTable($entityName),
+            [['conditions' => $conditions]],
+            $options
+        );
+
+        // Run afterUpdate
+#            $resultAfter = $this->eventsManager->triggerInstanceHook($entity, 'afterDelete', [$this, $result]);
+        $resultAfter = null;
+        return (null !== $resultAfter) ? $resultAfter : $result;
+    }
+
+    /**
+     * Delete a resultset
+     *
+     * @param \Spot\Entity\ResultsetInterface $resultset result set
+     * @param array $conditions Optional array of conditions in column => value pairs
+     * @param array $options Optional array of adapter-specific options
+     * @return bool
+     * @todo Figure out implementation
+     */
+    public function deleteResultset(ResultsetInterface $resultset, array $conditions = [], array $options = [])
+    {
+        foreach ($resultset as $entity) {
+
         }
     }
 
