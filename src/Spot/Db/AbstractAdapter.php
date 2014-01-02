@@ -162,9 +162,9 @@ abstract class AbstractAdapter
     /**
      * {@inheritdoc}
      */
-    public function update($tableName, array $placeholders, $conditions)
+    public function update($tableName, array $columns, array $binds, array $conditions, array $options)
     {
-        return $this->dialect->update($tableName, $placeholders, $conditions);
+        return $this->dialect->update($tableName, $columns, $binds, $conditions, $options);
     }
 
     /**
@@ -301,11 +301,11 @@ abstract class AbstractAdapter
             }
         }
 
-        $sql = $this->insert($tableName, $columns, $binds, $options);
+        $sqlQuery = $this->insert($tableName, $columns, $binds, $options);
 
         try {
             // Prepare update query
-            $stmt = $this->pdo->prepare($sql);
+            $stmt = $this->pdo->prepare($sqlQuery);
 
             if ($stmt) {
                 // Bind each parameter
@@ -386,23 +386,94 @@ abstract class AbstractAdapter
     /**
      * {@inheritdoc}
      */
-    public function updateEntity($tableName, array $data, array $where = [], array $options = [])
+    public function updateEntity($tableName, array $data, array $conditions = [], array $options = [])
     {
-        $sqlQuery = $this->update($tableName, $conditions);
-        $binds = $this->getBinds($conditions, 0);
+        #$sqlQuery = $this->update($tableName, $data, $conditions);
+        #$binds = $this->getBinds($conditions, 0);
+        $columns = [];
+        $binds = [];
+
+        foreach ($data as $key => $value) {
+            $columns[] = $key;
+
+            if ($value['bindType'] === Column::BIND_SKIP) {
+                $binds[] = $value['value'];
+            } else if ($value['bindType'] === Column::BIND_PARAM_NULL && null === $value['value']) {
+                $binds[] = 'NULL';
+            } else {
+                $binds[] = ':' . $key;
+            }
+        }
+
+        $sqlQuery = $this->update($tableName, $columns, $binds, $conditions, $options);
 
         try {
+            // Prepare update query
             $stmt = $this->pdo->prepare($sqlQuery);
 
             if ($stmt) {
-                return ($stmt->execute($binds)) ? $stmt->rowCount() : false;
+                // Bind each parameter
+                foreach ($data as $key => $value) {
+                    $param = ':' . $key;
+
+                    switch ($value['bindType']) {
+                        case Column::BIND_SKIP:
+                            break;
+                        case Column::BIND_PARAM_NULL:
+                            if (null === $value['value']) {
+                                $stmt->bindValue($param, null, \PDO::PARAM_NULL);
+                                break;
+                            }
+                        case Column::BIND_PARAM_BOOL:
+                            $stmt->bindValue($param, $value['value'], \PDO::PARAM_BOOL);
+                            break;
+                        case Column::BIND_PARAM_INT:
+                            $stmt->bindValue($param, $value['value'], \PDO::PARAM_INT);
+                            break;
+                        case Column::BIND_PARAM_DECIMAL:
+                        case Column::BIND_PARAM_STR:
+                        default:
+                            $stmt->bindValue($param, $value['value'], \PDO::PARAM_STR);
+                            break;
+                    }
+                }
+
+
+        $binds = $this->getQueryBinds($query);
+
+        // Unset any NULL values in binds (compared as "IS NULL" and "IS NOT NULL" in SQL instead)
+        if ($binds && count($binds) > 0) {
+            foreach ($binds as $field => $value) {
+                if (null === $value) {
+                    unset($binds[$field]);
+                }
+            }
+        }
+d($binds);
+
+                // Execute
+                if ($stmt->execute()) {
+                    // Use 'id' if PK exists, otherwise returns true
+                    $id = $this->lastInsertId($options['sequence']);
+                    $result = $id ? $id : true;
+                } else {
+                    $result = false;
+                }
             } else {
-                return false;
+                $result = false;
             }
         } catch(\PDOException $e) {
+            // Table does not exist
+            if ($e->getCode() == '42S02') {
+                throw new \Spot\Exception\Datasource\Missing("Table or datasource '" . $tableName . "' does not exist");
+            }
+
             // Throw new Spot exception
             throw new \Spot\Exception\Adapter(__METHOD__ . ': ' . $e->getMessage());
         }
+
+d(__METHOD__, $result);
+        return $result;
 
 
 

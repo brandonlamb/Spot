@@ -59,9 +59,13 @@ abstract class AbstractDialect
     /**
      * {@inheritdoc}
      */
-    public function update($tableName, array $placeholders, $conditions)
+    public function update($tableName, array $columns, array $binds, array $conditions, array $options)
     {
-        return "UPDATE $tableName SET " . implode(', ', $placeholders) . " WHERE " . $conditions;
+        $set = [];
+        for ($i = 0, $c = count($columns); $i < $c; $i++) {
+            $set[] = $columns[$i] . ' = ' . $binds[$i];
+        }
+        return $this->where("UPDATE $tableName SET " . implode(', ', $set), $conditions);
     }
 
     /**

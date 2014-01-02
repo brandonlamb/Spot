@@ -45,11 +45,13 @@ interface DialectInterface
 	 * </code>
 	 *
 	 * @param string $tableName
-	 * @param array $placeholders
+	 * @param array $columns
+	 * @param array $binds
 	 * @param string $conditions
+	 * @param array $options
 	 * @return string
 	 */
-	public function update($tableName, array $placeholders, $conditions);
+	public function update($tableName, array $columns, array $binds, array $conditions, array $options);
 
 	/**
 	 * Creates an DELETE statement

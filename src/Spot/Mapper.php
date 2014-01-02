@@ -421,7 +421,12 @@ class Mapper
             // Load relations on new entity
             $this->relationManager->loadRelations($entity, $this);
         } else {
-            $result = $this->getAdapter()->updateEntity($this->entityManager->getTable($entityName), $binds, $options);
+            $result = $this->getAdapter()->updateEntity(
+                $this->entityManager->getTable($entityName),
+                $binds,
+                $this->entityManager->getPrimaryKeyValues($entity),
+                $options
+            );
         }
 
         // Run afterInsert
@@ -443,7 +448,7 @@ class Mapper
     public function update($entityName, array $conditions = [], array $options = [])
     {
         if ($entityName instanceof EntityInterface) {
-            return $this->saveEntity($entity, false);
+            return $this->saveEntity($entityName, false);
         }
 
         if ($entityName instanceof ResultsetInterface) {

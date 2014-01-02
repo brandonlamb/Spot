@@ -99,11 +99,13 @@ interface AdapterInterface
     /**
      * Return update statement
      * @param string $tableName
-     * @param array $placeholders
-     * @param string $conditions
+     * @param array $columns
+     * @param array $binds
+     * @param array $conditions
+     * @param array $options
      * @return string
      */
-    public function update($tableName, array $placeholders, $conditions);
+    public function update($tableName, array $columns, array $binds, array $conditions, array $options);
 
     /**
      * Return delete statement
