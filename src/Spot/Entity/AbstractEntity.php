@@ -62,7 +62,11 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
     public function __construct(array $data = [])
     {
         $this->initialize();
-        !empty($data) && $this->setData($data, false);
+        if (!empty($data)) {
+            foreach ($data as $key => $value) {
+                $this->$key = $value;
+            }
+        }
     }
 
     /**
