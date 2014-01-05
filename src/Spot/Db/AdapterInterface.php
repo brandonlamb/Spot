@@ -99,11 +99,21 @@ interface AdapterInterface
     /**
      * Return update statement
      * @param string $tableName
-     * @param array $placeholders
-     * @param string $conditions
+     * @param array $columns
+     * @param array $binds
+     * @param array $conditions
+     * @param array $options
      * @return string
      */
-    public function update($tableName, array $placeholders, $conditions);
+    public function update($tableName, array $columns, array $binds, array $conditions, array $options);
+
+    /**
+     * Return delete statement
+     * @param string $tableName
+     * @param array $conditions
+     * @return string
+     */
+    public function delete($tableName, array $conditions);
 
     /**
      * Return a sql statement built by dialect
@@ -241,11 +251,11 @@ interface AdapterInterface
     /**
      * Delete entities matching given conditions
      * @param string $tableName The name of the table
-     * @param array $data
+     * @param array $conditions
      * @param array $options
      * @throws \Spot\Exception\Adapter
      */
-    public function deleteEntity($tableName, array $data, array $options = []);
+    public function deleteEntity($tableName, array $conditions = [], array $options = []);
 
     /**
      * Count number of rows in source based on conditions
@@ -261,7 +271,7 @@ interface AdapterInterface
      * @param \PDOStatement $stmt
      * @return \Spot\Entity\ResultsetInterface
      */
-    public function getResultSet(QueryInterface $query, \PDOStatement $stmt);
+    public function getResultset(QueryInterface $query, \PDOStatement $stmt);
 
     /**
      * Returns array of binds to pass to query function

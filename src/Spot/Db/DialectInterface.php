@@ -39,17 +39,31 @@ interface DialectInterface
 	public function insert($tableName, array $columns, array $binds, array $options);
 
 	/**
-	 * Creates an INSERT statement
+	 * Creates an UPDATE statement
 	 *
 	 * <code>
 	 * </code>
 	 *
 	 * @param string $tableName
-	 * @param array $placeholders
+	 * @param array $columns
+	 * @param array $binds
 	 * @param string $conditions
+	 * @param array $options
 	 * @return string
 	 */
-	public function update($tableName, array $placeholders, $conditions);
+	public function update($tableName, array $columns, array $binds, array $conditions, array $options);
+
+	/**
+	 * Creates an DELETE statement
+	 *
+	 * <code>
+	 * </code>
+	 *
+	 * @param string $tableName
+	 * @param array $conditions
+	 * @return string
+	 */
+	public function delete($tableName, array $conditions);
 
 	/**
 	 * Creates a SELECT statement

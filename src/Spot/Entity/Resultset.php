@@ -160,6 +160,22 @@ class Resultset implements ResultsetInterface
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function serialize()
+    {
+        return serialize($this->results);
+    }
+
+    /**
+     * {@inherit}
+     */
+    public function unserialize($serialized)
+    {
+        $this->results = unserialize($serialized);
+    }
+
+    /**
      * Provides a string representation of the class.
      * Brackets contain the number of elements contained in the resultset
      * @return string

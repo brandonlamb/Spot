@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<phpunit bootstrap="tests/bootstrap/index.php"
+	backupGlobals="false"
+	backupStaticAttributes="false"
+	strict="true"
+	verbose="true"
+	timeoutForSmallTests="5"
+	printsummary="true"
+	codecoverage="false">
+
+	<testsuites>
+		<testsuite name="functional">
+			<directory suffix="Test.php">tests/functional</directory>
+		</testsuite>
+
+		<testsuite name="integration">
+			<directory suffix="Test.php">tests/integration</directory>
+		</testsuite>
+
+		<testsuite name="unit">
+			<directory suffix="Test.php">tests/unit</directory>
+		</testsuite>
+	</testsuites>
+
+	<filter>
+		<whitelist addUncoveredFilesFromWhitelist="true">
+			<directory suffix=".php">src</directory>
+			<exclude>
+				<group>exceptions</group>
+				<file>src/autoload.php</file>
+			</exclude>
+		</whitelist>
+	</filter>
+</phpunit>

@@ -59,9 +59,21 @@ abstract class AbstractDialect
     /**
      * {@inheritdoc}
      */
-    public function update($tableName, array $placeholders, $conditions)
+    public function update($tableName, array $columns, array $binds, array $conditions, array $options)
     {
-        return "UPDATE $tableName SET " . implode(', ', $placeholders) . " WHERE " . $conditions;
+        $set = [];
+        for ($i = 0, $c = count($columns); $i < $c; $i++) {
+            $set[] = $columns[$i] . ' = ' . $binds[$i];
+        }
+        return $this->where("UPDATE $tableName SET " . implode(', ', $set), $conditions);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function delete($tableName, array $conditions)
+    {
+        return $this->where("DELETE FROM $tableName", $conditions);
     }
 
 	/**
@@ -223,7 +235,7 @@ abstract class AbstractDialect
 	/**
 	 * {@inheritDoc}
 	 */
-	public function limit($sqlQuery, $number = null)
+	public function limit($sqlQuery, $number)
 	{
 		return is_numeric($number) ? $sqlQuery . ' LIMIT ' . $number : $sqlQuery;
 	}
@@ -231,7 +243,7 @@ abstract class AbstractDialect
 	/**
 	 * {@inheritDoc}
 	 */
-	public function offset($sqlQuery, $number = null)
+	public function offset($sqlQuery, $number)
 	{
 		return is_numeric($number) ? $sqlQuery . ' OFFSET ' . $number : $sqlQuery;
 	}

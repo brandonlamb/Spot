@@ -14,7 +14,8 @@ namespace Spot;
 
 use Spot\Di\DiInterface,
     Spot\Di\InjectableTrait,
-    Spot\Entity\EntityInterface;
+    Spot\Entity\EntityInterface,
+    Spot\Entity\ResultsetInterface;
 
 class Mapper
 {
@@ -105,8 +106,7 @@ class Mapper
      */
     public function hydrateEntity($entityName, array $data)
     {
-        is_string($entityName) && $entityName = new $entityName();
-        return $entityName->setData($data);
+        return is_string($entityName) ? new $entityName($data) : $entityName->setData($data);
     }
 
 /* ====================================================================================================== */
@@ -126,17 +126,14 @@ class Mapper
 
         // Ensure PDO only gives key => value pairs, not index-based fields as well
         // Raw PDOStatement objects generally only come from running raw SQL queries or other custom stuff
-        if ($stmt instanceof \PDOStatement) {
-            $stmt->setFetchMode(\PDO::FETCH_ASSOC);
-        }
+        #if ($stmt instanceof \PDOStatement) {
+        #    $stmt->setFetchMode(\PDO::FETCH_ASSOC);
+        #}
 
         // Fetch all results into new entity class
         // @todo Move this to resultset class so entities will be lazy-loaded by Resultset iteration
         $entityFields = $this->entityManager->getColumns($entityName);
         foreach ($stmt as $data) {
-            // Entity with data set
-            #$data = array_intersect_key($data, $entityFields);
-
             // Entity with data set
             $entity = $this->hydrateEntity($entityName, $data);
 
@@ -249,8 +246,7 @@ class Mapper
      */
     public function first($entityName, array $conditions = [])
     {
-        $resultset = $this->select($entityName)->where($conditions)->limit(1)->execute();
-        return ($resultset instanceof ResultsetInterface) ? $resultset->first() : false;
+        return ($resultset = $this->select($entityName)->where($conditions)->limit(1)->execute()) ? $resultset->first() : false;
     }
 
     /**
@@ -350,6 +346,18 @@ class Mapper
      */
     public function insert(EntityInterface $entity)
     {
+        return $this->saveEntity($entity, true);
+    }
+
+    /**
+     * Handle writes, save the entity
+     * @param \Spot\Entity\EntityInterface $entity
+     * @param bool $insert, use insert if true, or use update
+     * @return bool
+     * @todo - UPDATE operation should only update modified data
+     */
+    public function saveEntity(EntityInterface $entity, $insert = true)
+    {
         // Run beforeInsert to know whether or not we can continue
         $resultAfter = null;
         #if (false === $this->eventsManager->triggerInstanceHook($entity, 'beforeInsert', $this)) {
@@ -401,16 +409,25 @@ class Mapper
         }
 
         // Send to adapter
-        $result = $this->getAdapter()->createEntity($this->entityManager->getTable($entityName), $binds, $options);
+        if ($insert === true) {
+            $result = $this->getAdapter()->createEntity($this->entityManager->getTable($entityName), $binds, $options);
 
-        // Update primary key on entity object
-        if ($result !== false) {
-            $primaryKeys = $this->entityManager->getPrimaryKeys($entityName);
-            $entity->{$primaryKeys[0]} = $result;
+            // Update primary key on entity object
+            if ($result !== false) {
+                $primaryKeys = $this->entityManager->getPrimaryKeys($entityName);
+                $entity->{$primaryKeys[0]} = $result;
+            }
+
+            // Load relations on new entity
+            $this->relationManager->loadRelations($entity, $this);
+        } else {
+            $result = $this->getAdapter()->updateEntity(
+                $this->entityManager->getTable($entityName),
+                $binds,
+                $this->entityManager->getPrimaryKeyValues($entity),
+                $options
+            );
         }
-
-        // Load relations on new entity
-        $this->relationManager->loadRelations($entity, $this);
 
         // Run afterInsert
 #        $resultAfter = $this->eventsManager->triggerInstanceHook($entity, 'afterInsert', [$this, $result]);
@@ -423,11 +440,33 @@ class Mapper
      * Update record using entity object
      * You can override the entity's primary key options by passing the respective
      * option in the options array (second parameter)
-     * @param \Spot\Entity\EntityInterface $entity, Entity object already populated to be updated
+     * @param mixed $entityName Name of the entity class or entity object
+     * @param array $conditions
+     * @param array $options
      * @return bool
      */
-    public function update(EntityInterface $entity)
+    public function update($entityName, array $conditions = [], array $options = [])
     {
+        if ($entityName instanceof EntityInterface) {
+            return $this->saveEntity($entityName, false);
+        }
+
+        if ($entityName instanceof ResultsetInterface) {
+            return $this->updateResultset($entityName);
+        }
+
+        if (is_string($entityName) && is_array($conditions)) {
+            $conditions = [['conditions' => $conditions]];
+            return $this->getAdapter()->updateEntity($this->entityManager->getTable($entityName), $conditions, $options);
+        } else {
+            throw new \Exception(__METHOD__ . " conditions must be an array, given " . gettype($conditions) . "");
+        }
+
+
+
+
+
+
         $entityName = $entity->toString();
 
         // Run beforeUpdate to know whether or not we can continue
@@ -463,14 +502,66 @@ class Mapper
     }
 
     /**
-     * Upsert save entity - insert or update on duplicate key
-     * @param string $entityClass, Name of the entity class
-     * @param array $data, array of key/values to set on new Entity instance
-     * @return \Spot\Entity\EntityInterface, Instance of $entityClass with $data set on it
+     * Update an entity
+     *
+     * @param \Spot\Entity\EntityInterface $entity entity object
+     * @param array $conditions Optional array of conditions in column => value pairs
+     * @param array $options Optional array of adapter-specific options
+     * @return bool
+     * @todo Clear entity from identity map on delete, when implemented
      */
-    public function upsert($entityClass, array $data)
+    public function updateEntity(EntityInterface $entity, array $conditions = [], array $options = [])
     {
-        $entity = new $entityClass($data);
+        $entityName = $entity->toString();
+        $conditions = $this->entityManager->getPrimaryKeyValues($entity);
+
+        // Run beforeUpdate to know whether or not we can continue
+        $resultAfter = null;
+#            if (false === $this->eventsManager->triggerInstanceHook($entity, 'beforeDelete', $this)) {
+#                return false;
+#            }
+
+        $result = $this->getAdapter()->updateEntity(
+            $this->entityManager->getTable($entityName),
+            [['conditions' => $conditions]],
+            $options
+        );
+
+        // Run afterUpdate
+#            $resultAfter = $this->eventsManager->triggerInstanceHook($entity, 'afterDelete', [$this, $result]);
+        $resultAfter = null;
+        return (null !== $resultAfter) ? $resultAfter : $result;
+    }
+
+    /**
+     * Update a resultset
+     *
+     * @param \Spot\Entity\ResultsetInterface $resultset result set
+     * @param array $conditions Optional array of conditions in column => value pairs
+     * @param array $options Optional array of adapter-specific options
+     * @return bool
+     */
+    public function updateResultset(ResultsetInterface $resultset, array $conditions = [], array $options = [])
+    {
+        $result = true;
+        foreach ($resultset as $entity) {
+            if ($this->updateEntity($entity)) {
+                $result = false;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Upsert save entity - insert or update on duplicate key
+     * @param string $entityName, Name of the entity class
+     * @param array $data, array of key/values to set on new Entity instance
+     * @return \Spot\Entity\EntityInterface, Instance of $entityName with $data set on it
+     * @todo - not really implemented yet
+     */
+    public function upsert($entityName, array $data)
+    {
+        $entity = new $entityName($data);
 
         try {
             $this->insert($entity);
@@ -486,36 +577,79 @@ class Mapper
      * @param mixed $entityName Name of the entity class or entity object
      * @param array $conditions Optional array of conditions in column => value pairs
      * @param array $options Optional array of adapter-specific options
-     * @todo Clear entity from identity map on delete, when implemented
      * @return bool
+     * @throws \Exception
+     * @todo Clear entity from identity map on delete, when implemented
      */
     public function delete($entityName, array $conditions = [], array $options = [])
     {
-        if (is_object($entityName)) {
-            $entity = $entityName;
-            $entityName = get_class($entityName);
-            $conditions = [$this->entityManager->getPrimaryKeyField($entityName) => $this->entityManager->getPrimaryKey($entity)];
+        if ($entityName instanceof EntityInterface) {
+            return $this->deleteEntity($entityName, $conditions, $options);
+        }
 
-            // Run beforeUpdate to know whether or not we can continue
-            $resultAfter = null;
+        if ($entityName instanceof ResultsetInterface) {
+            return $this->deleteResultset($entityName, $conditions, $options);
+        }
+
+        if (is_string($entityName) && is_array($conditions)) {
+            $conditions = [['conditions' => $conditions]];
+            return $this->getAdapter()->deleteEntity($this->entityManager->getTable($entityName), $conditions, $options);
+        } else {
+            throw new \Exception(__METHOD__ . " conditions must be an array, given " . gettype($conditions) . "");
+        }
+    }
+
+    /**
+     * Delete an entity
+     *
+     * @param \Spot\Entity\EntityInterface $entity entity object
+     * @param array $conditions Optional array of conditions in column => value pairs
+     * @param array $options Optional array of adapter-specific options
+     * @return bool
+     * @todo Clear entity from identity map on delete, when implemented
+     */
+    public function deleteEntity(EntityInterface $entity, array $conditions = [], array $options = [])
+    {
+        $entityName = $entity->toString();
+        $conditions = $this->entityManager->getPrimaryKeyValues($entity);
+
+        // Run beforeUpdate to know whether or not we can continue
+        $resultAfter = null;
 #            if (false === $this->eventsManager->triggerInstanceHook($entity, 'beforeDelete', $this)) {
 #                return false;
 #            }
 
-            $result = $this->getAdapter()->deleteEntity($this->entityManager->getTable($entityName), $conditions, $options);
+        $result = $this->getAdapter()->deleteEntity(
+            $this->entityManager->getTable($entityName),
+            [['conditions' => $conditions]],
+            $options
+        );
 
-            // Run afterUpdate
+        // Run afterUpdate
 #            $resultAfter = $this->eventsManager->triggerInstanceHook($entity, 'afterDelete', [$this, $result]);
-            $resultAfter = null;
-            return (null !== $resultAfter) ? $resultAfter : $result;
-        }
+        $resultAfter = null;
+        return (null !== $resultAfter) ? $resultAfter : $result;
+    }
 
-        if (is_array($conditions)) {
-            $conditions = [0 => ['conditions' => $conditions]];
-            return $this->getAdapter()->deleteEntity($this->entityManager->getTable($entityName), $conditions, $options);
-        } else {
-            throw new $this->exceptionClass(__METHOD__ . " conditions must be an array, given " . gettype($conditions) . "");
+    /**
+     * Delete a resultset
+     *
+     * @param \Spot\Entity\ResultsetInterface $resultset result set
+     * @param array $conditions Optional array of conditions in column => value pairs
+     * @param array $options Optional array of adapter-specific options
+     * @return bool
+     * @todo Figure out implementation. Happy path is that there is a single PK to do a delete where pk in (). But
+     * if the entity has a composite key for pk we have to call delete one by one
+     */
+    public function deleteResultset(ResultsetInterface $resultset, array $conditions = [], array $options = [])
+    {
+        $result = true;
+        foreach ($resultset as $entity) {
+            if ($this->deleteEntity($entity)) {
+                $result = false;
+            }
         }
+        return $result;
     }
 
 /* ====================================================================================================== */
