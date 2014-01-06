@@ -35,6 +35,7 @@ class Column
 	const BIND_PARAM_BOOL		= 4;
 	const BIND_PARAM_DECIMAL	= 5;
 	const BIND_SKIP				= 6;
+	const BIND_NONE				= 7;
 
 	/**
 	 * @var string
@@ -217,6 +218,7 @@ class Column
 	{
 		switch ($bindType) {
 			case self::BIND_SKIP:
+			case self::BIND_NONE:
 			case self::BIND_PARAM_DECIMAL:
 			case self::BIND_PARAM_BOOL:
 			case self::BIND_PARAM_STR:

@@ -290,8 +290,11 @@ abstract class AbstractAdapter
         $binds = [];
 
         foreach ($data as $key => $value) {
-            $columns[] = $key;
+            if ($value['bindType'] === Column::BIND_NONE) {
+                continue;
+            }
 
+            $columns[] = $key;
             if ($value['bindType'] === Column::BIND_SKIP) {
                 $binds[] = $value['value'];
             } else if ($value['bindType'] === Column::BIND_PARAM_NULL && null === $value['value']) {
