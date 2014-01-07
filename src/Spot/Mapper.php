@@ -172,7 +172,7 @@ class Mapper
     {
         $return = true;
         #$return = $this->eventsManager->triggerStaticHook($entityName, 'beforeWith', [$resultset, $with, $this]);
-        if (false === $return) {
+        if (false === $return || count($resultset) === 0) {
             return $resultset;
         }
 
