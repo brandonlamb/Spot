@@ -317,6 +317,7 @@ class Mapper
         // Get the primary key values
         $primaryKeyValues = $this->entityManager->getPrimaryKeyValues($entity);
 
+        // If primary is not set then we are inserting
         foreach ($primaryKeyValues as $key => $value) {
             if (null === $value) {
                 $isCreate = true;
@@ -410,7 +411,11 @@ class Mapper
 
         // Send to adapter
         if ($insert === true) {
-            $result = $this->getAdapter()->createEntity($this->entityManager->getTable($entityName), $binds, $options);
+            $result = $this->getAdapter()->createEntity(
+                $this->entityManager->getTable($entityName),
+                $binds,
+                $options
+            );
 
             // Update primary key on entity object
             if ($result !== false) {
@@ -421,10 +426,16 @@ class Mapper
             // Load relations on new entity
             $this->relationManager->loadRelations($entity, $this);
         } else {
+            // Build conditions using PK
+            $conditions = [];
+            foreach ($this->entityManager->getPrimaryKeyValues($entity) as $key => $value) {
+                $conditions[] = ['conditions' => [$key . ' :eq' => $value]];
+            }
+#d(__METHOD__, $binds, $conditions);
             $result = $this->getAdapter()->updateEntity(
                 $this->entityManager->getTable($entityName),
                 $binds,
-                $this->entityManager->getPrimaryKeyValues($entity),
+                $conditions,
                 $options
             );
         }

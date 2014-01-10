@@ -391,8 +391,6 @@ abstract class AbstractAdapter
      */
     public function updateEntity($tableName, array $data, array $conditions = [], array $options = [])
     {
-        #$sqlQuery = $this->update($tableName, $data, $conditions);
-        #$binds = $this->getBinds($conditions, 0);
         $columns = [];
         $binds = [];
 
@@ -409,6 +407,7 @@ abstract class AbstractAdapter
         }
 
         $sqlQuery = $this->update($tableName, $columns, $binds, $conditions, $options);
+        $conditionBinds = $this->getBinds($conditions, true);
 
         try {
             // Prepare update query
@@ -441,27 +440,23 @@ abstract class AbstractAdapter
                     }
                 }
 
-
-        $binds = $this->getQueryBinds($query);
-
-        // Unset any NULL values in binds (compared as "IS NULL" and "IS NOT NULL" in SQL instead)
-        if ($binds && count($binds) > 0) {
-            foreach ($binds as $field => $value) {
-                if (null === $value) {
-                    unset($binds[$field]);
+                // Loop each condition bind
+                foreach ($conditionBinds as $key => $value) {
+                    $param = ':' . $key;
+                    $stmt->bindValue($param, $value, \PDO::PARAM_STR);
                 }
-            }
-        }
-d($binds);
+
+                // Unset any NULL values in binds (compared as "IS NULL" and "IS NOT NULL" in SQL instead)
+                if ($binds && count($binds) > 0) {
+                    foreach ($binds as $field => $value) {
+                        if (null === $value) {
+                            unset($binds[$field]);
+                        }
+                    }
+                }
 
                 // Execute
-                if ($stmt->execute()) {
-                    // Use 'id' if PK exists, otherwise returns true
-                    $id = $this->lastInsertId($options['sequence']);
-                    $result = $id ? $id : true;
-                } else {
-                    $result = false;
-                }
+                $result = $stmt->execute();
             } else {
                 $result = false;
             }
@@ -475,14 +470,13 @@ d($binds);
             throw new \Spot\Exception\Adapter(__METHOD__ . ': ' . $e->getMessage());
         }
 
-d(__METHOD__, $result);
         return $result;
 
 
 
 
 
-
+        /*
         $dataBinds = $this->getBinds($data, 0);
         $whereBinds = $this->getBinds($where, count($dataBinds));
         $binds = array_merge($dataBinds, $whereBinds);
@@ -530,6 +524,7 @@ d(__METHOD__, $result);
         }
 
         return $result;
+        */
     }
 
     /**
@@ -581,7 +576,6 @@ d(__METHOD__, $result);
         $result = false;
         try {
             // Prepare count query
-#echo __LINE__ . ": $sql\n";
             $stmt = $this->pdo->prepare($sql);
 
             // if prepared, execute
@@ -643,7 +637,7 @@ d(__METHOD__, $result);
      */
     public function getQueryBinds(QueryInterface $query, $ci = true)
     {
-        return $this->getBinds($query->getparameters(), $ci);
+        return $this->getBinds($query->getParameters(), $ci);
     }
 
     /**

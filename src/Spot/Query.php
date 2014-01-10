@@ -631,6 +631,8 @@ class Query implements Countable, IteratorAggregate, QueryInterface
      */
     public function count()
     {
+        return count($this->execute());
+
         $that = $this;
 
         // New scope with closure to get only PUBLIC properties of object instance (can't include cache property)
