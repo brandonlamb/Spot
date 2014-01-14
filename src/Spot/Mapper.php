@@ -327,7 +327,7 @@ class Mapper
 
         // If the pk value is empty and the pk is set to an autoincremented type (identity, sequence, serial)
         if ($isCreate) {
-            // No primary key, insert
+             // No primary key, insert
             $result = $this->insert($entity);
         } else {
             // Has primary key, update
@@ -426,12 +426,16 @@ class Mapper
             // Load relations on new entity
             $this->relationManager->loadRelations($entity, $this);
         } else {
+            // Return false if nothing to update
+            if (!count($data)) {
+                return true;
+            }
             // Build conditions using PK
             $conditions = [];
             foreach ($this->entityManager->getPrimaryKeyValues($entity) as $key => $value) {
                 $conditions[] = ['conditions' => [$key . ' :eq' => $value]];
             }
-#d(__METHOD__, $binds, $conditions);
+
             $result = $this->getAdapter()->updateEntity(
                 $this->entityManager->getTable($entityName),
                 $binds,
@@ -472,11 +476,6 @@ class Mapper
         } else {
             throw new \Exception(__METHOD__ . " conditions must be an array, given " . gettype($conditions) . "");
         }
-
-
-
-
-
 
         $entityName = $entity->toString();
 
