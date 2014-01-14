@@ -65,9 +65,10 @@ interface EntityInterface
      * Setter for field properties
      * @param string $offset
      * @param mixed $value
+     * @param bool $modified, is data modified?
      * @return \Spot\Entity\EntityInterface
      */
-    public function set($offset, $value);
+    public function set($offset, $value, $modified = true);
 
     /**
      * Set the entity data

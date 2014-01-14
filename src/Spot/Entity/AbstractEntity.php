@@ -64,7 +64,7 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
         $this->initialize();
         if (!empty($data)) {
             foreach ($data as $key => $value) {
-                $this->$key = $value;
+                $this->set($key, $value, false);
             }
         }
     }
@@ -247,7 +247,7 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
      * {@inheritDoc}
      * @todo - figure out how to remove dependency on Config static method
      */
-    public function set($offset, $value)
+    public function set($offset, $value, $modified = true)
     {
         // Check for custom setter method (override)
         $setMethod = 'set' . $offset;
@@ -275,7 +275,11 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
         }
 
         // Set the data value
-        $this->dataModified[$offset] = $value;
+        if ($modified) {
+            $this->dataModified[$offset] = $value;
+        } else {
+            $this->data[$offset] = $value;
+        }
 
         return $this;
     }
@@ -344,6 +348,19 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
             return isset($this->dataModified[$field]) ? $this->dataModified[$field] : $this->dataModified;
         }
         return $this->dataModified;
+    }
+
+    /**
+     * Return array of field data with data from the field names listed removed.
+     * Essentially if your entity has fields id, first_name, last_name and you call
+     * this method passing array('first_name'), you will be returned an array WITHOUT
+     * the first_name field returned.
+     * @param array $except, List of field names to exclude in data list returned
+     * @return array
+     */
+    public function getModifiedExcept(array $except)
+    {
+        return array_diff_key($this->getModified(), array_flip($except));
     }
 
     /**
