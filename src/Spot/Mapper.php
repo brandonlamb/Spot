@@ -378,7 +378,12 @@ class Mapper
         }
 
         // If the primary key is a sequence, serial or identity column, exclude the PK from the array of columns to insert
-        $data = (!empty($exceptColumns)) ? $entity->getModifiedExcept($exceptColumns) : $entity->getModified();
+        if ($insert) {
+            $data = (!empty($exceptColumns)) ? $entity->getDataExcept($exceptColumns) : $entity->getData();
+        } else {
+            $data = (!empty($exceptColumns)) ? $entity->getModifiedExcept($exceptColumns) : $entity->getModified();
+        }
+
         if (count($data) <= 0) {
             return false;
         }
