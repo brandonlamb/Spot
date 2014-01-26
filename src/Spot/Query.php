@@ -415,12 +415,11 @@ class Query implements Countable, IteratorAggregate, QueryInterface
     {
         // Don't add WHERE clause if array is empty (easy way to support dynamic request options that modify current query)
         if (!empty($conditions)) {
-            $where = [];
-            $where['conditions'] = $conditions;
-            $where['type'] = strtoupper($type);
-            $where['setType'] = strtoupper($setType);
-
-            $this->conditions[] = $where;
+            $this->conditions[] = [
+                'conditions' => $conditions,
+                'type' => strtoupper($type),
+                'setType' => strtoupper($setType),
+            ];
         }
         return $this;
     }

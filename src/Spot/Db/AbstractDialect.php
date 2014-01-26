@@ -316,6 +316,7 @@ abstract class AbstractDialect
             case '<>':
             case '!=':
             case ':ne':
+            case ':neq':
             case ':not':
             case ':isnot':
                 if (is_array($value)) {
