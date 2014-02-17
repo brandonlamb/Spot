@@ -80,7 +80,7 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
     /**
      * {@inheritDoc}
      */
-    public function __get($offset)
+    public function & __get($offset)
     {
         return $this->get($offset);
     }
@@ -159,7 +159,7 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
     /**
      * {@inheritDoc}
      */
-    public function offsetGet($offset)
+    public function & offsetGet($offset)
     {
         return $this->get($offset);
     }
@@ -194,7 +194,7 @@ abstract class AbstractEntity implements Serializable, ArrayAccess, EntityInterf
     /**
      * {@inheritDoc}
      */
-    public function get($offset, $default = null)
+    public function & get($offset, $default = null)
     {
         // Check for custom getter method (override)
         $getMethod = 'get' . $offset;

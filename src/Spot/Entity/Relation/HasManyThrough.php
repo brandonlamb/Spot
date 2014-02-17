@@ -33,21 +33,24 @@ class HasManyThrough
         if (null === $throughEntity) {
             throw new \InvalidArgumentException("Relation description key 'throughEntity' not set.");
         }
+#d(__METHOD__, $throughEntity);
 
         // "Through" WHERE conditions
-        $throughWhere = isset($this->relationData['throughWhere']) ? $this->relationData['throughWhere'] : array();
+        $throughWhere = isset($this->relationData['throughWhere']) ? $this->relationData['throughWhere'] : [];
         if (!$throughWhere || !is_array($throughWhere)) {
             throw new \InvalidArgumentException("Relation description key 'throughWhere' not set or is not a valid array.");
         }
         $throughWhereResolved = $this->resolveEntityConditions($this->sourceEntity(), $throughWhere);
+#d(__METHOD__, $throughEntity, $throughWhereResolved);
 
         // Get IDs of "Through" entites
         $throughEntities = $this->mapper()->all($throughEntity, $throughWhereResolved);
+d(__METHOD__, $throughEntities);
 
         $twe = false;
         if (count($throughEntities) > 0) {
             // Resolve "where" conditions with current entity object and all returned "Through" entities
-            $twe = array();
+            $twe = [];
             foreach ($throughEntities as $tEntity) {
                 $twe = array_merge_recursive($twe, $this->resolveEntityConditions($tEntity, $this->conditions(), ':throughEntity.'));
             }
