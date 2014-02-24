@@ -39,7 +39,8 @@ class HasOne extends AbstractRelation implements RelationInterface
      */
     public function __get($offset)
     {
-        return $this->entity()->get($offset);
+        $entity = $this->entity();
+        return ($entity instanceof EntityInterface) ? $entity->get($offset) : null;
     }
 
     /**
