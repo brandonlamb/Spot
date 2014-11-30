@@ -384,7 +384,7 @@ abstract class AbstractAdapter
         if ($resultset === true) {
             return $this->getResultset($query, $stmt);
         } else {
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
         }
     }
 
