@@ -232,11 +232,11 @@ interface AdapterInterface
      * Can be overridden by adapters for custom syntax
      *
      * @param \Sbux\QueryInterface $query
-     * @param array $options
+     * @param bool $resultset, whether to return Resultset or just arrays
      * @return bool|array
      * @throws \Spot\Exception\Adapter
      */
-    public function readEntity(QueryInterface $query, array $options = []);
+    public function readEntity(QueryInterface $query, $resultset = true);
 
     /**
      * Update entity

@@ -364,7 +364,7 @@ abstract class AbstractAdapter
     /**
      * {@inheritdoc}
      */
-    public function readEntity(QueryInterface $query, array $options = [])
+    public function readEntity(QueryInterface $query, $resultset = true)
     {
         $sqlQuery = $this->getQuerySql($query);
         $binds = $this->getQueryBinds($query);
@@ -379,11 +379,13 @@ abstract class AbstractAdapter
         }
 
         // Prepare update query
-        if ($stmt = $this->pdo->prepare($sqlQuery)) {
-            // Execute
-            return ($stmt->execute($binds)) ? $this->getResultset($query, $stmt) : false;
+        $stmt = $this->pdo->prepare($sqlQuery);
+        $stmt->execute($binds);
+        if ($resultset === true) {
+            return $this->getResultset($query, $stmt);
+        } else {
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
-        return false;
     }
 
     /**

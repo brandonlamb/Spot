@@ -613,11 +613,13 @@ class Query implements Countable, IteratorAggregate, QueryInterface
 
     /**
      * Execute and return query as a resultset
+     *
+     *
      * @return mixed ResultSet object on success, boolean false on failure
      */
-    public function execute()
+    public function execute($resultset = true)
     {
-        return $this->mapper->getAdapter()->readEntity($this);
+        return $this->mapper->getAdapter()->readEntity($this, $resultset);
     }
 
     /**
